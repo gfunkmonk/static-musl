@@ -92,7 +92,7 @@ strip axel && \
 upx --lzma axel"
 
 if [ ! -f "./pasta/axel-${AXEL_VERSION}/axel" ]; then
-  echo "Error: axel binary not found after build" >&2
+  echo -e "${TOMATO}Error: axel binary not found after build${NC}" >&2
   exit 1
 fi
 
