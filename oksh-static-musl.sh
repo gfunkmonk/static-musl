@@ -115,7 +115,7 @@ cd oksh-${OKSH_VERSION}/ && \
 ./configure --cc=gcc --cflags=\"-Os -fomit-frame-pointer\" --enable-curses --enable-lto --enable-static && \
 make -j\$(nproc) && \
 strip oksh && \
-if [ ! -f "./pasta/oksh-${OKSH_VERSION}/oksh" ]; then
+if [ ! -f "oksh-${OKSH_VERSION}/oksh" ]; then
   echo -e "${TOMATO}Error: oksh binary not found after build${NC}" >&2
   exit 1
 fi
@@ -124,5 +124,4 @@ mkdir -p dist
 cp "./pasta/oksh-${OKSH_VERSION}/oksh" "dist/oksh-${ARCH}"
 if command -v file >/dev/null 2>&1; then echo -e "${ORANGE} File Info:  $(file "dist/oksh-${ARCH}" | cut -d: -f2-)${NC}"; fi
 tar -C dist -cJf "dist/oksh-${ARCH}.tar.xz" "oksh-${ARCH}"
-echo -e "${LEMON}= All done!${NC}"
 echo -e "${LEMON}= All done! Binary: dist/oksh-${ARCH} ($(du -sh "dist/oksh-${ARCH}" | cut -f1))${NC}"

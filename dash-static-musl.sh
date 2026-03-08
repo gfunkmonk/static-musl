@@ -127,12 +127,9 @@ autoreconf -f -i && \
   LDFLAGS='-static' \
   CFLAGS='-Os -no-pie -fomit-frame-pointer -fstack-clash-protection' \
   CXXFLAGS='-fno-delete-null-pointer-checks -fno-schedule-insns2' && \
-  LDFLAGS='-static' \
-  CFLAGS='-Os -no-pie -fomit-frame-pointer -fstack-clash-protection' \
-  CXXFLAGS='-fno-delete-null-pointer-checks -fno-schedule-insns2' && \
 make -j\$(nproc) && \
 strip src/dash && \
-if [ ! -f "./pasta/dash-${DASH_VERSION}/src/dash" ]; then
+if [ ! -f "dash-${DASH_VERSION}/src/dash" ]; then
   echo -e "${TOMATO}Error: dash binary not found after build${NC}" >&2
   exit 1
 fi
@@ -141,5 +138,4 @@ mkdir -p dist
 cp "./pasta/dash-${DASH_VERSION}/src/dash" "dist/dash-${ARCH}"
 if command -v file >/dev/null 2>&1; then echo -e "${ORANGE} File Info:  $(file "dist/dash-${ARCH}" | cut -d: -f2-)${NC}"; fi
 tar -C dist -cJf "dist/dash-${ARCH}.tar.xz" "dash-${ARCH}"
-echo -e "${LEMON}= All done!${NC}"
 echo -e "${LEMON}= All done! Binary: dist/dash-${ARCH} ($(du -sh "dist/dash-${ARCH}" | cut -f1))${NC}"

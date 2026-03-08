@@ -107,7 +107,7 @@ upx \
 python3-dev \
 perl-dev \
 perl && \
-tar xf ${VIM_TARBALL} && \
+tar xf "${VIM_TARBALL}" && \
 cd vim-${VIM_VERSION}/ && \
 sed -i 's#emsg(_(e_failed_to_source_defaults));#(void)0;#g' src/main.c && \
 ./configure CC='gcc' \
@@ -119,7 +119,7 @@ sed -i 's#emsg(_(e_failed_to_source_defaults));#(void)0;#g' src/main.c && \
   LDFLAGS='-static' CFLAGS='-Os -static -fno-stack-protector -no-pie' && \
 CC='gcc' make -j\$(nproc) && \
 strip src/vim && \
-if [ ! -f "./pasta/vim-${VIM_VERSION}/src/vim" ]; then
+if [ ! -f "vim-${VIM_VERSION}/src/vim" ]; then
   echo -e "${TOMATO}Error: vim binary not found after build${NC}" >&2
   exit 1
 fi
