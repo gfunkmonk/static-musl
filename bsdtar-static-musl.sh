@@ -50,7 +50,7 @@ cleanup() {
 trap cleanup EXIT
 
 echo -e "${AQUA}= install dependencies${NC}"
-DEBIAN_DEPS=(wget curl binutils libxml2-dev)
+DEBIAN_DEPS=(wget curl binutils)
 [ -n "${QEMU_ARCH}" ] && DEBIAN_DEPS+=(qemu-user-static)
 sudo apt-get update -qy && sudo apt-get install -y "${DEBIAN_DEPS[@]}"
 
@@ -59,7 +59,8 @@ BSDTAR_TARBALL="libarchive-${BSDTAR_VERSION}.tar.xz"
 BSDTAR_DOWNLOADED=false
 for mirror in "${BSDTAR_MIRRORS[@]}"; do
   echo -e "${TAWNY}= trying mirror: ${mirror}${NC}"
-  if curl -fsSL --retry 3 --retry-delay 2 -o "${BSDTAR_TARBALL}" "${mirror}"; then
+  if curl -fsSL --retry 3 --retry-delay 2 --connect-timeout 10 --max-time 120 \
+      -o "${BSDTAR_TARBALL}" "${mirror}"; then
     echo -e "${MINT}= downloaded from: ${mirror}${NC}"
     BSDTAR_DOWNLOADED=true
     break
@@ -93,66 +94,38 @@ echo -e "${VIOLET}= mount, bind and chroot into dir${NC}"
 sudo mount -t proc none "./pasta/proc/"
 sudo mount --rbind /dev "./pasta/dev/"
 sudo mount --rbind /sys "./pasta/sys/"
+# Note: --with-zlib, --without-bz2lib; lzma/zstd/xml2/openssl linked via pkg-config --static
 sudo chroot ./pasta/ /bin/sh -c "set -e && apk update && apk add build-base \
 musl-dev \
-clang \
 make \
 pkgconfig \
-git \
-automake \
-autoconf \
-libtool \
-bison \
-flex \
-python3 \
-perl \
-wget \
-texinfo \
-gettext \
-gettext-dev \
-gettext-static \
-gettext-libs \
-xz-dev \
-xz-static \
-xz-libs \
-zlib \
 zlib-dev \
 zlib-static \
-zlib-ng \
-zlib-ng-dev \
-bzip2-dev \
-bzip2-static \
-lz4-dev \
-lz4-static \
+xz-dev \
+xz-static \
 zstd-dev \
 zstd-static \
-openssl \
+lz4-dev \
+lz4-static \
 openssl-dev \
 openssl-libs-static \
-openssl-misc \
-libssl3 \
-libintl \
-libbsd \
-libbsd-dev \
-libbsd-static \
-libselinux-dev \
-sqlite \
-sqlite-dev \
-pcre-dev \
-libxml2 \
 libxml2-dev \
 libxml2-static \
-docbook-xsl \
-libxslt \
-docbook2x \
 upx && \
 tar xf libarchive-${BSDTAR_VERSION}.tar.xz && \
 cd libarchive-${BSDTAR_VERSION}/ && \
-./configure CC=gcc --disable-shared --enable-bsdtar=static --disable-bsdcat --disable-bsdcpio --with-zlib --without-bz2lib --disable-maintainer-mode --disable-dependency-tracking LDFLAGS='-static' CFLAGS='-Os -no-pie' && \
-LDFLAGS='-static' make -j\$(nproc) && \
+./configure CC=gcc \
+  --disable-shared --enable-static \
+  --enable-bsdtar=static \
+  --disable-bsdcat --disable-bsdcpio \
+  --with-zlib --without-bz2lib \
+  --disable-maintainer-mode --disable-dependency-tracking \
+  LDFLAGS='-static' PKG_CONFIG='pkg-config --static' \
+  CFLAGS='-Os -no-pie' && \
+make -j\$(nproc) && \
 gcc -static -o bsdtar tar/bsdtar-bsdtar.o tar/bsdtar-cmdline.o tar/bsdtar-creation_set.o tar/bsdtar-read.o tar/bsdtar-subst.o tar/bsdtar-util.o tar/bsdtar-write.o .libs/libarchive.a .libs/libarchive_fe.a -lz -llzma -lzstd -lxml2 -lcrypto -lssl && \
 strip bsdtar && \
-if [ ! -f "./pasta/bsdtar-${BSDTAR_VERSION}/bsdtar" ]; then
+if [ ! -f "./pasta/libarchive-${BSDTAR_VERSION}/bsdtar" ]; then
   echo -e "${TOMATO}Error: bsdtar binary not found after build${NC}" >&2
   exit 1
 fi
@@ -161,4 +134,4 @@ mkdir -p dist
 cp "./pasta/libarchive-${BSDTAR_VERSION}/bsdtar" "dist/bsdtar-${ARCH}"
 if command -v file >/dev/null 2>&1; then echo -e "${ORANGE} File Info:  $(file "dist/bsdtar-${ARCH}" | cut -d: -f2-)${NC}"; fi
 tar -C dist -cJf "dist/bsdtar-${ARCH}.tar.xz" "bsdtar-${ARCH}"
-echo -e "${LEMON}= All done!${NC}"
+echo -e "${LEMON}= All done! Binary: dist/bsdtar-${ARCH} ($(du -sh "dist/bsdtar-${ARCH}" | cut -f1))${NC}"

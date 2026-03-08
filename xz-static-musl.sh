@@ -58,7 +58,8 @@ XZ_TARBALL="xz-${XZ_VERSION}.tar.xz"
 XZ_DOWNLOADED=false
 for mirror in "${XZ_MIRRORS[@]}"; do
   echo -e "${TAWNY}= trying mirror: ${mirror}${NC}"
-  if curl -fsSL --retry 3 --retry-delay 2 -o "${XZ_TARBALL}" "${mirror}"; then
+  if curl -fsSL --retry 3 --retry-delay 2 --connect-timeout 10 --max-time 120 \
+      -o "${XZ_TARBALL}" "${mirror}"; then
     echo -e "${MINT}= downloaded from: ${mirror}${NC}"
     XZ_DOWNLOADED=true
     break
@@ -97,47 +98,14 @@ musl-dev \
 clang \
 make \
 pkgconfig \
-git \
-automake \
-autoconf \
-libtool \
-bison \
-flex \
-python3 \
-perl \
-wget \
-texinfo \
-gettext \
-gettext-dev \
-gettext-static \
-gettext-libs \
-xz-dev \
-xz-static \
-xz-libs \
-zlib \
-zlib-dev \
-zlib-static \
-openssl \
-openssl-dev \
-openssl-libs-static \
-openssl-misc \
-libssl3 \
-libintl \
-libbsd \
-libbsd-dev \
-libbsd-static \
-libselinux-dev \
-sqlite \
-sqlite-dev \
-pcre-dev \
-docbook-xsl \
-libxslt \
-docbook2x \
 upx && \
 tar xf xz-${XZ_VERSION}.tar.xz && \
 cd xz-${XZ_VERSION}/ && \
-./configure CC=clang --enable-static --disable-shared --disable-nls LDFLAGS='-static -Wl,--gc-sections -ffunction-sections -fdata-sections' CFLAGS='-Os -Wno-unterminated-string-initialization' && \
-CC=clang LDFLAGS='-static -Wl,--gc-sections -ffunction-sections -fdata-sections' make -j\$(nproc) && \
+./configure CC=clang \
+  --enable-static --disable-shared --disable-nls \
+  LDFLAGS='-static -Wl,--gc-sections' \
+  CFLAGS='-Os -ffunction-sections -fdata-sections -Wno-unterminated-string-initialization' && \
+CC=clang LDFLAGS='-static -Wl,--gc-sections' make -j\$(nproc) && \
 strip src/xz/xz && \
 if [ ! -f "./pasta/xz-${XZ_VERSION}/src/xz/xz" ]; then
   echo -e "${TOMATO}Error: xz binary not found after build${NC}" >&2
@@ -148,4 +116,4 @@ mkdir -p dist
 cp "./pasta/xz-${XZ_VERSION}/src/xz/xz" "dist/xz-${ARCH}"
 if command -v file >/dev/null 2>&1; then echo -e "${ORANGE} File Info:  $(file "dist/xz-${ARCH}" | cut -d: -f2-)${NC}"; fi
 tar -C dist -cJf "dist/xz-${ARCH}.tar.xz" "xz-${ARCH}"
-echo -e "${LEMON}= All done!${NC}"
+echo -e "${LEMON}= All done! Binary: dist/xz-${ARCH} ($(du -sh "dist/xz-${ARCH}" | cut -f1))${NC}"

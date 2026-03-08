@@ -19,6 +19,15 @@ AXEL_VERSION="2.17.14"
 ALPINE_VERSION="3.23.3"
 ALPINE_MAJOR_MINOR="${ALPINE_VERSION%.*}"
 
+AXEL_MIRRORS=(
+  "https://github.com/axel-download-accelerator/axel/releases/download/v${AXEL_VERSION}/axel-${AXEL_VERSION}.tar.xz"
+  "https://bos.us.distfiles.macports.org/axel/axel-${AXEL_VERSION}.tar.xz"
+  "http://download.nus.edu.sg/mirror/gentoo/distfiles/d5/axel-${AXEL_VERSION}.tar.xz"
+  "https://mse.uk.distfiles.macports.org/axel/axel-${AXEL_VERSION}.tar.xz"
+  "https://mirror.ismdeep.com/axel/v2.17.14/axel-${AXEL_VERSION}.tar.xz"
+  "https://code.opensuse.org/package/axel/blob/master/f/axel-${AXEL_VERSION}.tar.xz"
+)
+
 case "${ARCH}" in
   x86_64)  QEMU_ARCH="" ;;
   x86)     QEMU_ARCH="i386" ;;
@@ -42,11 +51,30 @@ cleanup() {
 }
 trap cleanup EXIT
 
-## install all host dependencies in a single apt-get call
 echo -e "${AQUA}= install dependencies${NC}"
 DEBIAN_DEPS=(wget curl binutils)
 [ -n "${QEMU_ARCH}" ] && DEBIAN_DEPS+=(qemu-user-static)
 sudo apt-get update -qy && sudo apt-get install -y "${DEBIAN_DEPS[@]}"
+
+echo -e "${AQUA}= downloading axel-${AXEL_VERSION} tarball${NC}"
+AXEL_TARBALL="axel-${AXEL_VERSION}.tar.xz"
+AXEL_DOWNLOADED=false
+for mirror in "${AXEL_MIRRORS[@]}"; do
+  echo -e "${TAWNY}= trying mirror: ${mirror}${NC}"
+  if curl -fsSL --retry 3 --retry-delay 2 --connect-timeout 10 --max-time 120 \
+      -o "${AXEL_TARBALL}" "${mirror}"; then
+    echo -e "${MINT}= downloaded from: ${mirror}${NC}"
+    AXEL_DOWNLOADED=true
+    break
+  else
+    echo -e "${LEMON}= failed: ${mirror}${NC}"
+    rm -f "${AXEL_TARBALL}"
+  fi
+done
+if [ "${AXEL_DOWNLOADED}" = false ]; then
+  echo -e "${TOMATO}= ERROR: all mirrors failed for axel-${AXEL_VERSION}.tar.xz${NC}"
+  exit 1
+fi
 
 echo -e "${HELIOTROPE}= download alpine rootfs${NC}"
 wget -c "${ALPINE_URL}"
@@ -55,8 +83,9 @@ echo -e "${MINT}= extract rootfs${NC}"
 mkdir -p pasta
 tar xf "${TARBALL}" -C pasta/
 
-echo -e "${PEACH}= copy resolv.conf into the folder${NC}"
+echo -e "${PEACH}= copy resolv.conf and axel tarball into chroot${NC}"
 cp /etc/resolv.conf ./pasta/etc/
+cp "${AXEL_TARBALL}" "./pasta/${AXEL_TARBALL}"
 
 if [ -n "${QEMU_ARCH}" ]; then
   echo -e "${TAWNY}= setup QEMU for cross-arch builds${NC}"
@@ -65,29 +94,23 @@ if [ -n "${QEMU_ARCH}" ]; then
 fi
 
 echo -e "${VIOLET}= mount, bind and chroot into dir${NC}"
-sudo mount -t proc none ./pasta/proc/
-sudo mount --rbind /dev ./pasta/dev/
-sudo mount --rbind /sys ./pasta/sys/
+sudo mount -t proc none "./pasta/proc/"
+sudo mount --rbind /dev "./pasta/dev/"
+sudo mount --rbind /sys "./pasta/sys/"
 sudo chroot ./pasta/ /bin/sh -c "set -e && apk update && apk add build-base \
 musl-dev \
 openssl-dev \
 zlib-dev \
 libidn2-dev \
 libpsl-dev \
-libuuid \
-curl \
-gawk \
 libidn2-static \
 openssl-libs-static \
 zlib-static \
 libpsl-static \
-flex \
-bison \
 libunistring-dev \
 libunistring-static \
-upx \
-perl && curl -fsSL -O 'https://github.com/axel-download-accelerator/axel/releases/download/v${AXEL_VERSION}/axel-${AXEL_VERSION}.tar.gz' && \
-tar xf axel-${AXEL_VERSION}.tar.gz && \
+upx && \
+tar xf axel-${AXEL_VERSION}.tar.xz && \
 cd axel-${AXEL_VERSION}/ && \
 ./configure CC=gcc LDFLAGS='-static' CFLAGS='-Os -Wno-unterminated-string-initialization' && \
 make -j\$(nproc) && \
@@ -101,4 +124,4 @@ mkdir -p dist
 cp "./pasta/axel-${AXEL_VERSION}/axel" "dist/axel-${ARCH}"
 if command -v file >/dev/null 2>&1; then echo -e "${ORANGE} File Info:  $(file "dist/axel-${ARCH}" | cut -d: -f2-)${NC}"; fi
 tar -C dist -cJf "dist/axel-${ARCH}.tar.xz" "axel-${ARCH}"
-echo -e "${LEMON}= All done!${NC}"
+echo -e "${LEMON}= All done! Binary: dist/axel-${ARCH} ($(du -sh "dist/axel-${ARCH}" | cut -f1))${NC}"

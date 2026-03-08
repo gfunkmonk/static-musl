@@ -47,13 +47,46 @@ DEBIAN_DEPS=(wget curl binutils)
 sudo apt-get update -qy && sudo apt-get install -y "${DEBIAN_DEPS[@]}"
 
 echo -e "${AQUA}= fetching latest aria2 version${NC}"
-ARIA2_VERSION=$(curl -fsSL "https://api.github.com/repos/aria2/aria2/releases/latest" \
+ARIA2_VERSION=$(curl -fsSL --connect-timeout 10 --max-time 30 \
+  "https://api.github.com/repos/aria2/aria2/releases/latest" \
   | grep '"tag_name"' | sed 's/.*"release-\([^"]*\)".*/\1/') || true
 if [ -z "${ARIA2_VERSION}" ]; then
   echo -e "${TAWNY}= GitHub API unavailable, falling back to aria2 1.37.0${NC}"
   ARIA2_VERSION="1.37.0"
 fi
 echo -e "${MINT}= building aria2 version: ${ARIA2_VERSION}${NC}"
+
+ARIA2_MIRRORS=(
+  "https://github.com/aria2/aria2/releases/download/release-${ARIA2_VERSION}/aria2-${ARIA2_VERSION}.tar.gz"
+  "https://distfiles.alpinelinux.org/distfiles/v3.21/aria2-${ARIA2_VERSION}.tar.gz"
+  "https://sources.voidlinux.org/aria2-${ARIA2_VERSION}/aria2-${ARIA2_VERSION}.tar.gz"
+  "https://mirrors.lug.mtu.edu/gentoo/distfiles/aria2-${ARIA2_VERSION}.tar.gz"
+)
+
+echo -e "${AQUA}= downloading aria2-${ARIA2_VERSION} tarball${NC}"
+ARIA2_TARBALL="aria2-${ARIA2_VERSION}.tar.gz"
+ARIA2_DOWNLOADED=false
+for mirror in "${ARIA2_MIRRORS[@]}"; do
+  echo -e "${TAWNY}= trying mirror: ${mirror}${NC}"
+  if curl -fsSL --retry 3 --retry-delay 2 --connect-timeout 10 --max-time 120 \
+      -o "${ARIA2_TARBALL}" "${mirror}"; then
+    echo -e "${MINT}= downloaded from: ${mirror}${NC}"
+    ARIA2_DOWNLOADED=true
+    break
+  else
+    echo -e "${TOMATO}= failed: ${mirror}${NC}"
+    rm -f "${ARIA2_TARBALL}"
+  fi
+done
+if [ "${ARIA2_DOWNLOADED}" = false ]; then
+  echo -e "${TOMATO}= ERROR: all mirrors failed for aria2-${ARIA2_VERSION}.tar.gz${NC}"
+  exit 1
+fi
+
+echo -e "${AQUA}= downloading patch for aria2${NC}"
+curl -fsSL --retry 3 --retry-delay 2 --connect-timeout 10 --max-time 30 \
+  -o aria2.patch \
+  "https://github.com/gfunkmonk/aria2c-static-musl/raw/refs/heads/main/aria2.patch"
 
 echo -e "${HELIOTROPE}= download alpine rootfs${NC}"
 wget -c "${ALPINE_URL}"
@@ -62,8 +95,10 @@ echo -e "${MINT}= extract rootfs${NC}"
 mkdir -p pasta
 tar xf "${TARBALL}" -C pasta/
 
-echo -e "${PEACH}= copy resolv.conf into the folder${NC}"
+echo -e "${PEACH}= copy resolv.conf, tarball and patch into chroot${NC}"
 cp /etc/resolv.conf ./pasta/etc/
+cp "${ARIA2_TARBALL}" "./pasta/${ARIA2_TARBALL}"
+cp aria2.patch   ./pasta/aria2.patch
 
 if [ -n "${QEMU_ARCH}" ]; then
   echo -e "${TAWNY}= setup QEMU for cross-arch builds${NC}"
@@ -95,15 +130,18 @@ util-linux-static \
 curl \
 patch \
 pkgconfig \
-upx \
-xz-dev \
-xz-static \
-perl && curl -fsSL -O 'https://github.com/aria2/aria2/releases/download/release-${ARIA2_VERSION}/aria2-${ARIA2_VERSION}.tar.gz' && \
-curl -fsSL -O 'https://github.com/gfunkmonk/aria2c-static-musl/raw/refs/heads/main/aria2-1.37.0.conf.patch' && \
+upx && \
 tar xf aria2-${ARIA2_VERSION}.tar.gz && \
 cd aria2-${ARIA2_VERSION}/ && \
-patch -p1 < ../aria2-1.37.0.conf.patch && \
-./configure CC=gcc ARIA2_STATIC=yes --with-ca-bundle=/etc/ssl/certs/ca-certificates.crt --without-gnutls --with-openssl --disable-bittorrent --with-libcares --with-sqlite3 --enable-shared=no --enable-static --disable-shared LDFLAGS='-static' PKG_CONFIG='pkg-config --static' CFLAGS='-Os -Wno-unterminated-string-initialization' && \
+patch -p1 < ../aria2.patch && \
+./configure CC=gcc ARIA2_STATIC=yes \
+  --with-ca-bundle=/etc/ssl/certs/ca-certificates.crt \
+  --without-gnutls --with-openssl \
+  --disable-bittorrent \
+  --with-libcares --with-sqlite3 \
+  --enable-shared=no --enable-static --disable-shared \
+  LDFLAGS='-static' PKG_CONFIG='pkg-config --static' \
+  CFLAGS='-Os -Wno-unterminated-string-initialization' && \
 make -j\$(nproc) && \
 strip src/aria2c && \
 if [ ! -f "./pasta/aria2-${ARIA2_VERSION}/src/aria2c" ]; then

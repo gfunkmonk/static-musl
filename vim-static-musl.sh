@@ -59,7 +59,8 @@ for mirror in "${VIM_MIRRORS[@]}"; do
   echo -e "${TAWNY}= trying mirror: ${mirror}${NC}"
   VIM_EXT="${mirror##*.}"
   VIM_TARBALL="vim-${VIM_VERSION}.tar.${VIM_EXT}"
-  if curl -fsSL --retry 3 --retry-delay 2 -o "${VIM_TARBALL}" "${mirror}"; then
+  if curl -fsSL --retry 3 --retry-delay 2 --connect-timeout 10 --max-time 120 \
+      -o "${VIM_TARBALL}" "${mirror}"; then
     echo -e "${MINT}= downloaded from: ${mirror}${NC}"
     VIM_DOWNLOADED=true
     break
@@ -97,18 +98,11 @@ sudo mount --rbind /sys "./pasta/sys/"
 sudo chroot ./pasta/ /bin/sh -c "set -e && apk update && apk add build-base \
 musl-dev \
 sed \
-wget \
 make \
 gcc \
-automake \
-libtool \
-bison \
-flex \
 pkgconfig \
 ncurses-dev \
 ncurses-static \
-autoconf \
-patch \
 upx \
 python3-dev \
 perl-dev \
@@ -116,7 +110,13 @@ perl && \
 tar xf ${VIM_TARBALL} && \
 cd vim-${VIM_VERSION}/ && \
 sed -i 's#emsg(_(e_failed_to_source_defaults));#(void)0;#g' src/main.c && \
-./configure CC='gcc' --disable-channel --disable-gpm --disable-gtktest --disable-gui --disable-netbeans --disable-nls --disable-selinux --disable-smack --disable-sysmouse --disable-xsmp --enable-multibyte --with-features=huge --with-tlib=ncursesw --without-x LDFLAGS='-static' CFLAGS='-Os -static -fno-stack-protector -no-pie' && \
+./configure CC='gcc' \
+  --disable-channel --disable-gpm --disable-gtktest --disable-gui \
+  --disable-netbeans --disable-nls --disable-selinux --disable-smack \
+  --disable-sysmouse --disable-xsmp \
+  --enable-multibyte \
+  --with-features=huge --with-tlib=ncursesw --without-x \
+  LDFLAGS='-static' CFLAGS='-Os -static -fno-stack-protector -no-pie' && \
 CC='gcc' make -j\$(nproc) && \
 strip src/vim && \
 if [ ! -f "./pasta/vim-${VIM_VERSION}/src/vim" ]; then
@@ -128,4 +128,4 @@ mkdir -p dist
 cp "./pasta/vim-${VIM_VERSION}/src/vim" "dist/vim-${ARCH}"
 if command -v file >/dev/null 2>&1; then echo -e "${ORANGE} File Info:  $(file "dist/vim-${ARCH}" | cut -d: -f2-)${NC}"; fi
 tar -C dist -cJf "dist/vim-${ARCH}.tar.xz" "vim-${ARCH}"
-echo -e "${LEMON}= All done!${NC}"
+echo -e "${LEMON}= All done! Binary: dist/vim-${ARCH} ($(du -sh "dist/vim-${ARCH}" | cut -f1))${NC}"

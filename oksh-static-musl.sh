@@ -56,7 +56,8 @@ OKSH_TARBALL="oksh-${OKSH_VERSION}.tar.gz"
 OKSH_DOWNLOADED=false
 for mirror in "${OKSH_MIRRORS[@]}"; do
   echo -e "${TAWNY}= trying mirror: ${mirror}${NC}"
-  if curl -fsSL --retry 3 --retry-delay 2 -o "${OKSH_TARBALL}" "${mirror}"; then
+  if curl -fsSL --retry 3 --retry-delay 2 --connect-timeout 10 --max-time 120 \
+      -o "${OKSH_TARBALL}" "${mirror}"; then
     echo -e "${MINT}= downloaded from: ${mirror}${NC}"
     OKSH_DOWNLOADED=true
     break
@@ -92,7 +93,6 @@ sudo mount --rbind /dev "./pasta/dev/"
 sudo mount --rbind /sys "./pasta/sys/"
 sudo chroot ./pasta/ /bin/sh -c "set -e && apk update && apk add build-base \
 musl-dev \
-wget \
 make \
 automake \
 clang \
@@ -109,8 +109,7 @@ ncurses-dev \
 ncurses-static \
 autoconf \
 patch \
-upx \
-perl && \
+upx && \
 tar xf oksh-${OKSH_VERSION}.tar.gz && \
 cd oksh-${OKSH_VERSION}/ && \
 ./configure --cc=gcc --cflags=\"-Os -fomit-frame-pointer\" --enable-curses --enable-lto --enable-static && \
@@ -126,3 +125,4 @@ cp "./pasta/oksh-${OKSH_VERSION}/oksh" "dist/oksh-${ARCH}"
 if command -v file >/dev/null 2>&1; then echo -e "${ORANGE} File Info:  $(file "dist/oksh-${ARCH}" | cut -d: -f2-)${NC}"; fi
 tar -C dist -cJf "dist/oksh-${ARCH}.tar.xz" "oksh-${ARCH}"
 echo -e "${LEMON}= All done!${NC}"
+echo -e "${LEMON}= All done! Binary: dist/oksh-${ARCH} ($(du -sh "dist/oksh-${ARCH}" | cut -f1))${NC}"

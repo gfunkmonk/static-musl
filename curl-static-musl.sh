@@ -60,7 +60,8 @@ CURL_TARBALL="curl-${CURL_VERSION}.tar.xz"
 CURL_DOWNLOADED=false
 for mirror in "${CURL_MIRRORS[@]}"; do
   echo -e "${TAWNY}= trying mirror: ${mirror}${NC}"
-  if curl -fsSL --retry 3 --retry-delay 2 -o "${CURL_TARBALL}" "${mirror}"; then
+  if curl -fsSL --retry 3 --retry-delay 2 --connect-timeout 10 --max-time 120 \
+      -o "${CURL_TARBALL}" "${mirror}"; then
     echo -e "${MINT}= downloaded from: ${mirror}${NC}"
     CURL_DOWNLOADED=true
     break
@@ -107,19 +108,19 @@ zlib-static \
 zstd-dev \
 zstd-static \
 clang \
-curl-static \
-gawk \
-flex \
-bison \
-upx \
-patch \
-perl && \
+upx && \
 tar xf curl-${CURL_VERSION}.tar.xz && \
 cd curl-${CURL_VERSION}/ && \
-./configure --disable-shared --enable-static --disable-ldap --enable-ipv6 --enable-unix-sockets --with-ssl --with-libssh2 --disable-docs --disable-manual --without-libpsl CC=clang LDFLAGS='-static' PKG_CONFIG='pkg-config --static' CFLAGS='-Os -Wno-unterminated-string-initialization' && \
+./configure \
+  --disable-shared --enable-static \
+  --disable-ldap --enable-ipv6 --enable-unix-sockets \
+  --with-ssl --with-libssh2 \
+  --disable-docs --disable-manual --without-libpsl \
+  CC=clang LDFLAGS='-static' PKG_CONFIG='pkg-config --static' \
+  CFLAGS='-Os -Wno-unterminated-string-initialization' && \
 make -j\$(nproc) V=1 LDFLAGS='-static -all-static' && \
 strip src/curl && \
-if [ ! -f "./pasta/curl-${CURL_VERSION}/src/curll" ]; then
+if [ ! -f "./pasta/curl-${CURL_VERSION}/src/curl" ]; then
   echo -e "${TOMATO}Error: curl binary not found after build${NC}" >&2
   exit 1
 fi
@@ -128,4 +129,4 @@ mkdir -p dist
 cp "./pasta/curl-${CURL_VERSION}/src/curl" "dist/curl-${ARCH}"
 if command -v file >/dev/null 2>&1; then echo -e "${ORANGE} File Info:  $(file "dist/curl-${ARCH}" | cut -d: -f2-)${NC}"; fi
 tar -C dist -cJf "dist/curl-${ARCH}.tar.xz" "curl-${ARCH}"
-echo -e "${LEMON}= All done!${NC}"
+echo -e "${LEMON}= All done! Binary: dist/curl-${ARCH} ($(du -sh "dist/curl-${ARCH}" | cut -f1))${NC}"

@@ -63,7 +63,8 @@ WGET_TARBALL="wget-${WGET_VERSION}.tar.gz"
 WGET_DOWNLOADED=false
 for mirror in "${WGET_MIRRORS[@]}"; do
   echo -e "${TAWNY}= trying mirror: ${mirror}${NC}"
-  if curl -fsSL --retry 3 --retry-delay 2 -o "${WGET_TARBALL}" "${mirror}"; then
+  if curl -fsSL --retry 3 --retry-delay 2 --connect-timeout 10 --max-time 120 \
+      -o "${WGET_TARBALL}" "${mirror}"; then
     echo -e "${MINT}= downloaded from: ${mirror}${NC}"
     WGET_DOWNLOADED=true
     break
@@ -77,6 +78,11 @@ if [ "${WGET_DOWNLOADED}" = false ]; then
   exit 1
 fi
 
+echo -e "${LAGOON}= downloading patch${NC}"
+curl -fsSL --retry 3 --retry-delay 2 --connect-timeout 10 --max-time 30 \
+  -o "wget-passive-ftp.patch" \
+  "https://github.com/gfunkmonk/wget-static-musl/raw/refs/heads/main/wget-passive-ftp.patch"
+
 echo -e "${HELIOTROPE}= download alpine rootfs${NC}"
 wget -c "${ALPINE_URL}"
 
@@ -86,6 +92,7 @@ tar xf "${TARBALL}" -C pasta/
 echo -e "${PEACH}= copy resolv.conf and wget tarball into chroot${NC}"
 cp /etc/resolv.conf ./pasta/etc/
 cp "${WGET_TARBALL}" "./pasta/${WGET_TARBALL}"
+cp "wget-passive-ftp.patch" "./pasta/wget-passive-ftp.patch"
 
 if [ -n "${QEMU_ARCH}" ]; then
   echo -e "${TAWNY}= setup QEMU for cross-arch builds${NC}"
@@ -103,15 +110,10 @@ openssl-dev \
 zlib-dev \
 libidn2-dev \
 libpsl-dev \
-libuuid \
-curl \
-gawk \
 libidn2-static \
 openssl-libs-static \
 zlib-static \
 libpsl-static \
-flex \
-bison \
 libunistring-dev \
 libunistring-static \
 upx \
@@ -120,11 +122,13 @@ texinfo \
 pcre2-dev \
 pcre2-static \
 perl && \
-curl -fsSL -O 'https://github.com/gfunkmonk/wget-static-musl/raw/refs/heads/main/wget-passive-ftp.patch' && \
 tar xf wget-${WGET_VERSION}.tar.gz && \
 cd wget-${WGET_VERSION}/ && \
 patch -p1 < ../wget-passive-ftp.patch && \
-./configure CC=gcc --with-ssl=openssl --with-libidn --disable-nls LDFLAGS='-static -lidn2 -lunistring' CFLAGS='-Os -Wno-unterminated-string-initialization' PERL=/usr/bin/perl && \
+./configure CC=gcc --with-ssl=openssl --with-libidn --disable-nls \
+  LDFLAGS='-static -lidn2 -lunistring' \
+  CFLAGS='-Os -Wno-unterminated-string-initialization' \
+  PERL=/usr/bin/perl && \
 make -j\$(nproc) && \
 strip src/wget && \
 if [ ! -f "./pasta/wget-${WGET_VERSION}/src/wget" ]; then
@@ -136,4 +140,4 @@ mkdir -p dist
 cp "./pasta/wget-${WGET_VERSION}/src/wget" "dist/wget-${ARCH}"
 if command -v file >/dev/null 2>&1; then echo -e "${ORANGE} File Info:  $(file "dist/wget-${ARCH}" | cut -d: -f2-)${NC}"; fi
 tar -C dist -cJf "dist/wget-${ARCH}.tar.xz" "wget-${ARCH}"
-echo -e "${LEMON}= All done!${NC}"
+echo -e "${LEMON}= All done! Binary: dist/wget-${ARCH} ($(du -sh "dist/wget-${ARCH}" | cut -f1))${NC}"

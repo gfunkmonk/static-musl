@@ -60,7 +60,8 @@ DASH_TARBALL="dash-${DASH_VERSION}.tar.gz"
 DASH_DOWNLOADED=false
 for mirror in "${DASH_MIRRORS[@]}"; do
   echo -e "${TAWNY}= trying mirror: ${mirror}${NC}"
-  if curl -fsSL --retry 3 --retry-delay 2 -o "${DASH_TARBALL}" "${mirror}"; then
+  if curl -fsSL --retry 3 --retry-delay 2 --connect-timeout 10 --max-time 120 \
+      -o "${DASH_TARBALL}" "${mirror}"; then
     echo -e "${MINT}= downloaded from: ${mirror}${NC}"
     DASH_DOWNLOADED=true
     break
@@ -74,6 +75,11 @@ if [ "${DASH_DOWNLOADED}" = false ]; then
   exit 1
 fi
 
+echo -e "${LAGOON}= downloading patches${NC}"
+curl -fsSL --retry 3 --retry-delay 2 --connect-timeout 10 --max-time 30 \
+  -o "mega.patch" \
+  "https://github.com/gfunkmonk/dash-static-musl/raw/refs/heads/main/mega.patch"
+
 echo -e "${HELIOTROPE}= download alpine rootfs${NC}"
 wget -c "${ALPINE_URL}"
 
@@ -83,6 +89,7 @@ tar xf "${TARBALL}" -C pasta/
 echo -e "${PEACH}= copy resolv.conf and dash tarball into chroot${NC}"
 cp /etc/resolv.conf ./pasta/etc/
 cp "${DASH_TARBALL}" "./pasta/${DASH_TARBALL}"
+cp "mega.patch" "./pasta/mega.patch"
 
 if [ -n "${QEMU_ARCH}" ]; then
   echo -e "${TAWNY}= setup QEMU for cross-arch builds${NC}"
@@ -96,7 +103,6 @@ sudo mount --rbind /dev "./pasta/dev/"
 sudo mount --rbind /sys "./pasta/sys/"
 sudo chroot ./pasta/ /bin/sh -c "set -e && apk update && apk add build-base \
 musl-dev \
-wget \
 make \
 automake \
 clang \
@@ -112,14 +118,18 @@ autoconf \
 patch \
 libedit-dev \
 libedit-static \
-upx \
-perl && \
-wget 'https://github.com/gfunkmonk/dash-static-musl/raw/refs/heads/main/mega.patch' && \
+upx && \
 tar xf dash-${DASH_VERSION}.tar.gz && \
 cd dash-${DASH_VERSION}/ && \
 patch -p1 --fuzz=4 < ../mega.patch && \
 autoreconf -f -i && \
-./configure --enable-static LDFLAGS='-static' CFLAGS='-Os -no-pie -fomit-frame-pointer -fstack-clash-protection' CXXFLAGS='-fno-delete-null-pointer-checks -fno-schedule-insns2' && \
+./configure --enable-static \
+  LDFLAGS='-static' \
+  CFLAGS='-Os -no-pie -fomit-frame-pointer -fstack-clash-protection' \
+  CXXFLAGS='-fno-delete-null-pointer-checks -fno-schedule-insns2' && \
+  LDFLAGS='-static' \
+  CFLAGS='-Os -no-pie -fomit-frame-pointer -fstack-clash-protection' \
+  CXXFLAGS='-fno-delete-null-pointer-checks -fno-schedule-insns2' && \
 make -j\$(nproc) && \
 strip src/dash && \
 if [ ! -f "./pasta/dash-${DASH_VERSION}/src/dash" ]; then
@@ -132,3 +142,4 @@ cp "./pasta/dash-${DASH_VERSION}/src/dash" "dist/dash-${ARCH}"
 if command -v file >/dev/null 2>&1; then echo -e "${ORANGE} File Info:  $(file "dist/dash-${ARCH}" | cut -d: -f2-)${NC}"; fi
 tar -C dist -cJf "dist/dash-${ARCH}.tar.xz" "dash-${ARCH}"
 echo -e "${LEMON}= All done!${NC}"
+echo -e "${LEMON}= All done! Binary: dist/dash-${ARCH} ($(du -sh "dist/dash-${ARCH}" | cut -f1))${NC}"
