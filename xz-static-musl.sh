@@ -135,7 +135,7 @@ upx && \
 tar xf xz-${XZ_VERSION}.tar.xz && \
 cd xz-${XZ_VERSION}/ && \
 ./configure CC=clang --enable-static --disable-shared --disable-nls LDFLAGS='-static -Wl,--gc-sections -ffunction-sections -fdata-sections' CFLAGS='-Os -Wno-unterminated-string-initialization' && \
-CC=clang LDFLAGS='--static -Wl,--gc-sections -ffunction-sections -fdata-sections' make -j\$(nproc) && \
+CC=clang LDFLAGS='-static -Wl,--gc-sections -ffunction-sections -fdata-sections' make -j\$(nproc) && \
 strip src/xz/xz && \
 upx --lzma src/xz/xz"
 mkdir -p dist
