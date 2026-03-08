@@ -110,7 +110,7 @@ ARIA2_KNOWN_SHA256_1_37_0="8e7021c6d5e8f8240c9cc19482e0c8589540836747744724d86bf
 if [ "${ARIA2_VERSION}" = "1.37.0" ]; then
   verify_checksum "${ARIA2_TARBALL}" "${ARIA2_KNOWN_SHA256_1_37_0}"
 else
-  echo -e "${TOMATO}= ERROR: no hardcoded checksum for aria2-${ARIA2_VERSION}, cannot verify integrity${NC}"
+  echo -e "${OCHRE}= ERROR: no hardcoded checksum for aria2-${ARIA2_VERSION}, cannot verify integrity${NC}"
   exit 1
 fi
 
