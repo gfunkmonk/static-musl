@@ -131,7 +131,7 @@ patch -p1 < ../wget-passive-ftp.patch && \
   PERL=/usr/bin/perl && \
 make -j\$(nproc) && \
 strip src/wget && \
-if [ ! -f "./pasta/wget-${WGET_VERSION}/src/wget" ]; then
+if [ ! -f "wget-${WGET_VERSION}/src/wget" ]; then
   echo -e "${TOMATO}Error: wget binary not found after build${NC}" >&2
   exit 1
 fi

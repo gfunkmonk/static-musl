@@ -144,7 +144,7 @@ patch -p1 < ../aria2.patch && \
   CFLAGS='-Os -Wno-unterminated-string-initialization' && \
 make -j\$(nproc) && \
 strip src/aria2c && \
-if [ ! -f "./pasta/aria2-${ARIA2_VERSION}/src/aria2c" ]; then
+if [ ! -f "aria2-${ARIA2_VERSION}/src/aria2c" ]; then
   echo -e "${TOMATO}Error: aria2c binary not found after build${NC}" >&2
   exit 1
 fi

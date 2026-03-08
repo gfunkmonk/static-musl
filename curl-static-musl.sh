@@ -120,7 +120,7 @@ cd curl-${CURL_VERSION}/ && \
   CFLAGS='-Os -Wno-unterminated-string-initialization' && \
 make -j\$(nproc) V=1 LDFLAGS='-static -all-static' && \
 strip src/curl && \
-if [ ! -f "./pasta/curl-${CURL_VERSION}/src/curl" ]; then
+if [ ! -f "curl-${CURL_VERSION}/src/curl" ]; then
   echo -e "${TOMATO}Error: curl binary not found after build${NC}" >&2
   exit 1
 fi
