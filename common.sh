@@ -27,7 +27,6 @@ setup_arch() {
     x86_64)  QEMU_ARCH="" ;;
     x86)     QEMU_ARCH="i386" ;;
     aarch64) QEMU_ARCH="aarch64" ;;
-    armhf)   QEMU_ARCH="arm" ;;
     armv7)   QEMU_ARCH="arm" ;;
     *)
       echo -e "${LAGOON}Unknown architecture: ${HOTPINK}${ARCH}${NC}"

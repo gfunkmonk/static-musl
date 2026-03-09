@@ -20,7 +20,7 @@ jobs:
       fail-fast: false
       matrix:
         tool: [aria2c, axel, bsdtar, curl, dash, oksh, tar, vim, wget, xz]
-        arch: [x86_64, x86, aarch64, armhf, armv7]
+        arch: [x86_64, x86, aarch64, armv7]
 
     steps:
     - uses: actions/checkout@v4
