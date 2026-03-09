@@ -49,6 +49,9 @@ jobs:
   build:
     needs: setup
     runs-on: ubuntu-latest
+    env:
+      CCACHE_DIR: ${{ github.workspace }}/pasta/ccache
+      CCACHE_CHROOT_DIR: /ccache
     strategy:
       fail-fast: false
       matrix:
@@ -57,6 +60,35 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+
+    - name: Prepare ccache directory
+      run: |
+            mkdir -p "${CCACHE_DIR}"
+            cat >> $GITHUB_ENV << 'EOF'
+            CCACHE_NOHASHDIR=true
+            CCACHE_NOHARDLINK=true
+            CCACHE_NLEVELS=4
+            CCACHE_COMPILERCHECK=content
+            CCACHE_COMPRESS=1
+            CCACHE_COMPRESSLEVEL=7
+            CCACHE_INODECACHE=true
+            CCACHE_RECACHE=false
+            CCACHE_SLOPINESS=file_macro,locale,time_macros
+            CCACHE_NOFILECLONE=true
+            CCACHE_DIRECT=true
+            CCACHE_DEPEND=true
+            EOF
+            echo "CCACHE Environment set!"
+            
+    - name: Set up ccache
+      uses: hendrikmuhs/ccache-action@v1.2
+      with:
+        create-symlink: true
+        key: ccache-${{ env.ALPINE_VERSION }}-${{ matrix.arch }}-${{ matrix.tool }}-${{ hashFiles(format('{0}-static-musl.sh', matrix.tool)) }}
+        restore-keys: |
+          ccache-${{ env.ALPINE_VERSION }}-${{ matrix.arch }}-${{ matrix.tool }}-
+        append-timestamp: false
+        max-size: 3G
 
     - name: Cache tarballs
       uses: actions/cache@v4
