@@ -18,7 +18,7 @@ setup_cleanup
 install_host_deps
 download_source "wget" "${WGET_VERSION}" "${WGET_TARBALL}" "${WGET_MIRRORS[@]}"
 setup_alpine_chroot "${WGET_TARBALL}"
-copy_patches "wget-passive-ftp.patch"
+copy_patches "wget-1.25.0-passive-ftp.patch"
 setup_qemu
 mount_chroot
 
@@ -42,7 +42,7 @@ pcre2-static \
 perl && \
 tar xf wget-${WGET_VERSION}.tar.gz && \
 cd wget-${WGET_VERSION}/ && \
-patch -p1 < ../wget-passive-ftp.patch && \
+patch -p1 < ../wget-1.25.0-passive-ftp.patch && \
 ./configure CC=gcc --with-ssl=openssl --with-libidn --disable-nls \
   --disable-rpath --sysconfdir=/etc \
   LDFLAGS='-static -lidn2 -lunistring' \

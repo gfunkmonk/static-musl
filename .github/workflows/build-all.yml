@@ -10,6 +10,9 @@ on:
 env:
   ALPINE_VERSION: "3.23.3"
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest

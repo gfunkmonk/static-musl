@@ -18,7 +18,7 @@ setup_cleanup
 install_host_deps
 download_source "dash" "${DASH_VERSION}" "${DASH_TARBALL}" "${DASH_MIRRORS[@]}"
 setup_alpine_chroot "${DASH_TARBALL}"
-copy_patches "mega.patch"
+copy_patches "dash-0.5.13.1.patch"
 setup_qemu
 mount_chroot
 
@@ -42,7 +42,7 @@ libedit-static \
 upx && \
 tar xf dash-${DASH_VERSION}.tar.gz && \
 cd dash-${DASH_VERSION}/ && \
-patch -p1 --fuzz=4 < ../mega.patch && \
+patch -p1 --fuzz=4 < ../dash-0.5.13.1.patch && \
 autoreconf -f -i && \
 ./configure --enable-static \
   LDFLAGS='-static' \

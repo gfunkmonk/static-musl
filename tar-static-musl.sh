@@ -16,7 +16,7 @@ setup_cleanup
 install_host_deps
 download_source "tar" "${TAR_VERSION}" "${TAR_TARBALL}" "${TAR_MIRRORS[@]}"
 setup_alpine_chroot "${TAR_TARBALL}"
-copy_patches "bigass-tar.patch"
+copy_patches "tar-1.35.patch"
 setup_qemu
 mount_chroot
 
@@ -42,7 +42,7 @@ bzip2-static \
 upx && \
 tar xf tar-${TAR_VERSION}.tar.xz && \
 cd tar-${TAR_VERSION}/ && \
-patch -p1 < ../bigass-tar.patch && \
+patch -p1 < ../tar-1.35.patch && \
 autoreconf -f -i && \
 FORCE_UNSAFE_CONFIGURE=1 ./configure CC=gcc  --without-selinux \
   --disable-nls --disable-rpath --enable-largefile \
