@@ -5,11 +5,11 @@ set -euo pipefail
 NANO_VERSION="8.7.1"
 NANO_TARBALL=nano-${NANO_VERSION}.tar.gz"
 NANO_MIRRORS=(
-  "https://www.nano-editor.org/dist/v8/nano-8.7.1.tar.xz"
-  "https://fossies.org/linux/misc/nano-8.7.1.tar.xz"
-  "https://mirrors.slackware.com/slackware/slackware-current/source/ap/nano/nano-8.7.1.tar.xz"
-  "https://artfiles.org/gnupg.org/nano/nano-8.7.1.tar.xz"
-  "https://pilotfiber.dl.sourceforge.net/project/immortalwrt/sources/nano-8.7.1.tar.xz"
+  "https://www.nano-editor.org/dist/v8/nano-${NANO_VERSION}.tar.xz"
+  "https://fossies.org/linux/misc/nano-${NANO_VERSION}.tar.xz"
+  "https://mirrors.slackware.com/slackware/slackware-current/source/ap/nano/nano-${NANO_VERSION}.tar.xz"
+  "https://artfiles.org/gnupg.org/nano/nano-${NANO_VERSION}.tar.xz"
+  "https://pilotfiber.dl.sourceforge.net/project/immortalwrt/sources/nano-${NANO_VERSION}.tar.xz"
 )
 
 setup_arch
@@ -44,7 +44,7 @@ patch -p1 --fuzz=4 < ../nano-8.7.1-colors.patch && \
   --enable-libmagic --disable-justify \
   LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
   CFLAGS='-Os -static -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie' && \
-CC='gcc' make -j\$(nproc) && \
+CC='gcc' make -j\$((nproc)) && \
 strip src/nano && \
 ../upx --ultra-brute src/nano"
 
