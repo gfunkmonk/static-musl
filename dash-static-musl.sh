@@ -41,7 +41,7 @@ patch \
 libedit-dev \
 libedit-static \
 upx && \
-mkdir -p /ccache && export CCACHE_DIR=/ccache CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH && \
+mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR:-/ccache} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH && \
 tar xf dash-${DASH_VERSION}.tar.gz && \
 cd dash-${DASH_VERSION}/ && \
 patch -p1 --fuzz=4 < ../dash-0.5.13.1.patch && \

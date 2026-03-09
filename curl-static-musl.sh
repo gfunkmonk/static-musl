@@ -36,7 +36,7 @@ zstd-dev \
 zstd-static \
 clang \
 upx && \
-mkdir -p /ccache && export CCACHE_DIR=/ccache CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH && \
+mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR:-/ccache} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH && \
 tar xf curl-${CURL_VERSION}.tar.xz && \
 cd curl-${CURL_VERSION}/ && \
 ./configure \

@@ -35,7 +35,7 @@ libpsl-static \
 libunistring-dev \
 libunistring-static \
 upx && \
-mkdir -p /ccache && export CCACHE_DIR=/ccache CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH && \
+mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR:-/ccache} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH && \
 tar xf axel-${AXEL_VERSION}.tar.xz && \
 cd axel-${AXEL_VERSION}/ && \
 ./configure CC=gcc LDFLAGS='-static' PKG_CONFIG='pkg-config --static' \

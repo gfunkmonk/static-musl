@@ -53,7 +53,7 @@ curl \
 patch \
 pkgconfig \
 upx && \
-mkdir -p /ccache && export CCACHE_DIR=/ccache CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH && \
+mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR:-/ccache} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH && \
 tar xf aria2-${ARIA2_VERSION}.tar.gz && \
 cd aria2-${ARIA2_VERSION}/ && \
 patch -p1 --fuzz=4 < ../aria2-1.37.0.patch && \
