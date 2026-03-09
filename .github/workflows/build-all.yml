@@ -16,6 +16,7 @@ on:
           - all
           - aria2c
           - axel
+          - bash
           - bsdtar
           - curl
           - dash
