@@ -6,9 +6,9 @@ LFTP_VERSION="4.9.3"
 PACKAGE_VERSION="${LFTP_VERSION}"
 LFTP_TARBALL="lftp-${LFTP_VERSION}.tar.xz"
 LFTP_MIRRORS=(
-  "https://lftp.yar.ru/ftp/lftp-4.9.3.tar.xz"
-  "https://distfiles.openadk.org/lftp-4.9.3.tar.xz"
-  "https://fossies.org/linux/misc/lftp-4.9.3.tar.xz"
+  "https://lftp.yar.ru/ftp/lftp-${LFTP_VERSION}.tar.xz"
+  "https://distfiles.openadk.org/lftp-${LFTP_VERSION}.tar.xz"
+  "https://fossies.org/linux/misc/lftp-${LFTP_VERSION}.tar.xz"
 )
 
 setup_arch
@@ -56,9 +56,9 @@ autoreconf -i -f && \
 ./configure CC=gcc LIBS='-l:libreadline.a -l:libncursesw.a' \
   --with-openssl --without-gnutls --enable-static --enable-threads=posix --disable-nls --disable-shared
   LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
-  CFLAGS='-Os -ffunction-sections -fdata-sections -Wno-unterminated-string-initialization' && \
+  CFLAGS='-std=c17 -Os -fomit-frame-pointer -ffunction-sections -fdata-sections -Wno-unterminated-string-initialization -Wno-deprecated-declarations' && \
 CC=gcc LDFLAGS='-static -Wl,--gc-sections' make -j\$(nproc) && \
 strip src/lftp && \
-../upx --lzma src/lftp"
+../upx --best src/lftp"
 
 package_output "lftp" "./pasta/lftp-${LFTP_VERSION}/src/lftp"
