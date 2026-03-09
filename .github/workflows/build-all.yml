@@ -1,59 +1,53 @@
-name: Build vim musl static
-# Controls when the action will run.
+name: Build all musl static binaries
+
 on:
   # Build at 00:00 every 6th day
   schedule:
     - cron: "0 0 */6 * *"
-  # Triggers the workflow on push or pull request events but only for the main branch
-  #push:
-  #  branches: [ main ]
-  #  paths-ignore: [ '**/README.md' ]
-  #pull_request:
-  #  branches: [ main ]
-  #  paths-ignore: [ '**/README.md' ]
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
+
 env:
   ALPINE_VERSION: "3.23.3"
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+
 jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
+        tool: [aria2c, axel, bsdtar, curl, dash, oksh, tar, vim, wget, xz]
         arch: [x86_64, x86, aarch64, armhf, armv7]
+
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - uses: actions/checkout@v4
+
     - name: Cache Alpine rootfs
       uses: actions/cache@v4
       with:
         path: alpine-minirootfs-${{ env.ALPINE_VERSION }}-${{ matrix.arch }}.tar.gz
         key: alpine-rootfs-${{ env.ALPINE_VERSION }}-${{ matrix.arch }}
-    - name: build vim
-      run: |
-        COLOR='\x1B[1;32m'
-        NC='\x1B[0m'
 
-        echo -e "${COLOR} $PATH ${NC}"
-        chmod +x vim-static-musl.sh
-        ./vim-static-musl.sh
+    - name: Build ${{ matrix.tool }} for ${{ matrix.arch }}
+      run: |
+        chmod +x ${{ matrix.tool }}-static-musl.sh
+        ./${{ matrix.tool }}-static-musl.sh
       env:
         ARCH: ${{ matrix.arch }}
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: vim-${{ matrix.arch }}
-        path: dist/vim-${{ matrix.arch }}.tar.xz
+        name: ${{ matrix.tool }}-${{ matrix.arch }}
+        path: dist/${{ matrix.tool }}-${{ matrix.arch }}.tar.xz
 
   release:
     needs: build
     runs-on: ubuntu-latest
-    if: github.event_name != 'pull_request'
+    if: ${{ !cancelled() && github.event_name != 'pull_request' }}
     permissions:
       contents: write
+
     steps:
     - name: Download all artifacts
       uses: actions/download-artifact@v4
