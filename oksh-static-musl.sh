@@ -3,6 +3,7 @@ set -euo pipefail
 . "$(dirname "$0")/common.sh"
 
 OKSH_VERSION="7.8"
+PACKAGE_VERSION="${OKSH_VERSION}"
 OKSH_TARBALL="oksh-${OKSH_VERSION}.tar.gz"
 OKSH_MIRRORS=(
   "https://github.com/ibara/oksh/releases/download/oksh-${OKSH_VERSION}/oksh-${OKSH_VERSION}.tar.gz"

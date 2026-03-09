@@ -3,6 +3,7 @@ set -euo pipefail
 . "$(dirname "$0")/common.sh"
 
 WGET_VERSION="1.25.0"
+PACKAGE_VERSION="${WGET_VERSION}"
 WGET_TARBALL="wget-${WGET_VERSION}.tar.gz"
 WGET_MIRRORS=(
   "https://gnu.askapache.com/wget/wget-${WGET_VERSION}.tar.gz"

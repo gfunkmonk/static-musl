@@ -3,6 +3,7 @@ set -euo pipefail
 . "$(dirname "$0")/common.sh"
 
 VIM_VERSION="9.2.0119"
+PACKAGE_VERSION="${VIM_VERSION}"
 VIM_TARBALL="vim-${VIM_VERSION}.tar.gz"
 VIM_MIRRORS=(
   "https://github.com/vim/vim/archive/v${VIM_VERSION}/vim-${VIM_VERSION}.tar.gz"

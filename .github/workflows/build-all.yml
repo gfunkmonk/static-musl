@@ -63,6 +63,27 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Determine tool version
+      id: tool-version
+      run: |
+        set -euo pipefail
+        if [ "${{ matrix.tool }}" = "aria2c" ]; then
+          version=$(curl -fsSL --connect-timeout 10 --max-time 30 \
+            "https://api.github.com/repos/aria2/aria2/releases/latest" \
+            | grep '"tag_name"' | sed 's/.*"release-\([^"]*\)".*/\1/') || true
+          if [ -z "${version}" ]; then
+            version="1.37.0"
+          fi
+        else
+          version=$(sed -n 's/^[A-Z_]*VERSION="\([^"]*\)".*/\1/p' "${{ matrix.tool }}-static-musl.sh" | head -n1)
+        fi
+        if [ -z "${version}" ]; then
+          echo "Unable to determine version for ${{ matrix.tool }}" >&2
+          exit 1
+        fi
+        echo "version=${version}" >> "$GITHUB_OUTPUT"
+        echo "PACKAGE_VERSION=${version}" >> "$GITHUB_ENV"
+
     - name: Prepare ccache directory
       run: |
             mkdir -p "${CCACHE_DIR}"
@@ -108,11 +129,32 @@ jobs:
       env:
         ARCH: ${{ matrix.arch }}
 
+    - name: Gather artifact info
+      id: artifact-info
+      run: |
+        set -euo pipefail
+        shopt -s nullglob
+        files=(dist/${{ matrix.tool }}-*-${{ matrix.arch }}.tar.xz)
+        if [ "${#files[@]}" -ne 1 ]; then
+          echo "Expected exactly one artifact, found ${#files[@]}" >&2
+          ls -al dist || true
+          exit 1
+        fi
+        file="${files[0]}"
+        name="$(basename "${file}")"
+        base="${name%.tar.xz}"
+        version="${base#${{ matrix.tool }}-}"
+        version="${version%-${{ matrix.arch }}}"
+        echo "file=${file}" >> "$GITHUB_OUTPUT"
+        echo "name=${name}" >> "$GITHUB_OUTPUT"
+        echo "version=${version}" >> "$GITHUB_OUTPUT"
+        echo "TOOL_VERSION=${version}" >> "$GITHUB_ENV"
+
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ matrix.tool }}-${{ matrix.arch }}
-        path: dist/${{ matrix.tool }}-${{ matrix.arch }}.tar.xz
+        name: ${{ steps.artifact-info.outputs.name }}
+        path: ${{ steps.artifact-info.outputs.file }}
 
   release:
     needs: [setup, build]
@@ -133,9 +175,28 @@ jobs:
         pattern: ${{ matrix.tool }}-*
         merge-multiple: true
 
+    - name: Determine version
+      id: release-version
+      run: |
+        set -euo pipefail
+        shopt -s nullglob
+        files=(dist/${{ matrix.tool }}-*-*.tar.xz)
+        if [ "${#files[@]}" -eq 0 ]; then
+          echo "No artifacts found for ${{ matrix.tool }}" >&2
+          ls -al dist || true
+          exit 1
+        fi
+        name="$(basename "${files[0]}")"
+        base="${name%.tar.xz}"
+        arch="${base##*-}"
+        version="${base#${{ matrix.tool }}-}"
+        version="${version%-${arch}}"
+        echo "version=${version}" >> "$GITHUB_OUTPUT"
+        echo "TOOL_VERSION=${version}" >> "$GITHUB_ENV"
+
     - name: Delete Previous Release
       run: |
-        gh release delete "${{ matrix.tool }}-latest" --repo "${GITHUB_REPOSITORY}" --cleanup-tag -y || echo "No release to delete"
+        gh release delete "${{ matrix.tool }}-${{ steps.release-version.outputs.version }}" --repo "${GITHUB_REPOSITORY}" --cleanup-tag -y || echo "No release to delete"
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       continue-on-error: true
@@ -143,8 +204,8 @@ jobs:
     - name: Create Release
       uses: softprops/action-gh-release@v2
       with:
-        name: "${{ matrix.tool }} latest"
-        tag_name: ${{ matrix.tool }}-latest
+        name: "${{ matrix.tool }} ${{ steps.release-version.outputs.version }}"
+        tag_name: ${{ matrix.tool }}-${{ steps.release-version.outputs.version }}
         prerelease: false
         draft: false
         generate_release_notes: false

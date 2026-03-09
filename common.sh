@@ -137,11 +137,16 @@ mount_chroot() {
 # Copies the built binary to dist/, creates a tar.xz archive, and prints info.
 package_output() {
   local tool="$1" binary="$2"
-  mkdir -p dist
-  cp "${binary}" "dist/${tool}-${ARCH}"
-  if command -v file >/dev/null 2>&1; then
-    echo -e "${ORANGE} File Info:  $(file "dist/${tool}-${ARCH}" | cut -d: -f2-)${NC}"
+  local version_suffix=""
+  if [ -n "${PACKAGE_VERSION:-}" ]; then
+    version_suffix="-${PACKAGE_VERSION}"
   fi
-  tar -C dist -cJf "dist/${tool}-${ARCH}.tar.xz" "${tool}-${ARCH}"
-  echo -e "${JUNEBUD}= All done! Binary: dist/${tool}-${ARCH} ($(du -sh "dist/${tool}-${ARCH}" | cut -f1))${NC}"
+  local filename="${tool}${version_suffix}-${ARCH}"
+  mkdir -p dist
+  cp "${binary}" "dist/${filename}"
+  if command -v file >/dev/null 2>&1; then
+    echo -e "${ORANGE} File Info:  $(file "dist/${filename}" | cut -d: -f2-)${NC}"
+  fi
+  tar -C dist -cJf "dist/${filename}.tar.xz" "${filename}"
+  echo -e "${JUNEBUD}= All done! Binary: dist/${filename} ($(du -sh "dist/${filename}" | cut -f1))${NC}"
 }

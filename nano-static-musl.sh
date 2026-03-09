@@ -3,6 +3,7 @@ set -euo pipefail
 . "$(dirname "$0")/common.sh"
 
 NANO_VERSION="8.7.1"
+PACKAGE_VERSION="${NANO_VERSION}"
 NANO_TARBALL="nano-${NANO_VERSION}.tar.xz"
 NANO_MIRRORS=(
   "https://www.nano-editor.org/dist/v8/nano-${NANO_VERSION}.tar.xz"

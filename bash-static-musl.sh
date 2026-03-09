@@ -3,6 +3,7 @@ set -euo pipefail
 . "$(dirname "$0")/common.sh"
 
 BASH_VERSION="5.3"
+PACKAGE_VERSION="${BASH_VERSION}"
 BASH_TARBALL="bash-${BASH_VERSION}.tar.gz"
 IFS='.' read -r bash_major bash_minor _ <<< "${BASH_VERSION}"
 BASH_MAJOR_MINOR="${bash_major}${bash_minor}"

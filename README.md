@@ -31,7 +31,7 @@ Build scripts that produce fully static, multi-architecture binaries using musl 
 ARCH=aarch64 ./curl-static-musl.sh
 ```
 
-Output binaries are written to `dist/` as `<tool>-<arch>.tar.xz`.
+Output binaries are written to `dist/` as `<tool>-<version>-<arch>.tar.xz`.
 
 ## Structure
 
@@ -47,6 +47,5 @@ Output binaries are written to `dist/` as `<tool>-<arch>.tar.xz`.
 ## CI
 
 The workflow in `.github/workflows/build-all.yml` builds all tools for all
-architectures on a schedule (every 6 days) and publishes a
-[continuous release](../../releases/tag/continuous-universal).
-
+architectures on a schedule (every 6 days) and publishes releases tagged with
+the specific tool version (e.g., `bash-5.3`).

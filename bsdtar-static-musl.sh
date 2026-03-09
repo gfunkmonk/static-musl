@@ -3,6 +3,7 @@ set -euo pipefail
 . "$(dirname "$0")/common.sh"
 
 BSDTAR_VERSION="3.8.5"
+PACKAGE_VERSION="${BSDTAR_VERSION}"
 BSDTAR_TARBALL="libarchive-${BSDTAR_VERSION}.tar.xz"
 BSDTAR_MIRRORS=(
   "https://github.com/libarchive/libarchive/releases/download/v${BSDTAR_VERSION}/libarchive-${BSDTAR_VERSION}.tar.xz"

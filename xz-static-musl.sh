@@ -3,6 +3,7 @@ set -euo pipefail
 . "$(dirname "$0")/common.sh"
 
 XZ_VERSION="5.8.2"
+PACKAGE_VERSION="${XZ_VERSION}"
 XZ_TARBALL="xz-${XZ_VERSION}.tar.xz"
 XZ_MIRRORS=(
   "https://github.com/tukaani-project/xz/releases/download/v${XZ_VERSION}/xz-${XZ_VERSION}.tar.xz"

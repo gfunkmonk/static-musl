@@ -3,6 +3,7 @@ set -euo pipefail
 . "$(dirname "$0")/common.sh"
 
 AXEL_VERSION="2.17.14"
+PACKAGE_VERSION="${AXEL_VERSION}"
 AXEL_TARBALL="axel-${AXEL_VERSION}.tar.xz"
 AXEL_MIRRORS=(
   "https://github.com/axel-download-accelerator/axel/releases/download/v${AXEL_VERSION}/axel-${AXEL_VERSION}.tar.xz"

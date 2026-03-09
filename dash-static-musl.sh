@@ -3,6 +3,7 @@ set -euo pipefail
 . "$(dirname "$0")/common.sh"
 
 DASH_VERSION="0.5.13.1"
+PACKAGE_VERSION="${DASH_VERSION}"
 DASH_TARBALL="dash-${DASH_VERSION}.tar.gz"
 DASH_MIRRORS=(
   "http://gondor.apana.org.au/~herbert/dash/files/dash-${DASH_VERSION}.tar.gz"

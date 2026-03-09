@@ -3,6 +3,7 @@ set -euo pipefail
 . "$(dirname "$0")/common.sh"
 
 CURL_VERSION="8.18.0"
+PACKAGE_VERSION="${CURL_VERSION}"
 CURL_TARBALL="curl-${CURL_VERSION}.tar.xz"
 CURL_MIRRORS=(
   "https://curl.se/download/curl-${CURL_VERSION}.tar.xz"

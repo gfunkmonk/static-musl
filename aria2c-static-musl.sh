@@ -11,6 +11,7 @@ if [ -z "${ARIA2_VERSION}" ]; then
   ARIA2_VERSION="1.37.0"
 fi
 echo -e "${MINT}= building aria2 version: ${ARIA2_VERSION}${NC}"
+PACKAGE_VERSION="${ARIA2_VERSION}"
 
 ARIA2_TARBALL="aria2-${ARIA2_VERSION}.tar.gz"
 ARIA2_MIRRORS=(
