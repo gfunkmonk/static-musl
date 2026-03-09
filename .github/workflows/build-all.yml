@@ -58,11 +58,15 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Cache Alpine rootfs
+    - name: Cache tarballs
       uses: actions/cache@v4
       with:
-        path: alpine-minirootfs-${{ env.ALPINE_VERSION }}-${{ matrix.arch }}.tar.gz
-        key: alpine-rootfs-${{ env.ALPINE_VERSION }}-${{ matrix.arch }}
+        path: |
+          *.tar.gz
+          *.tar.xz
+        key: build-${{ env.ALPINE_VERSION }}-${{ matrix.arch }}-${{ matrix.tool }}-${{ hashFiles(format('{0}-static-musl.sh', matrix.tool)) }}
+        restore-keys: |
+          build-${{ env.ALPINE_VERSION }}-${{ matrix.arch }}-${{ matrix.tool }}-
 
     - name: Build ${{ matrix.tool }} for ${{ matrix.arch }}
       run: |
