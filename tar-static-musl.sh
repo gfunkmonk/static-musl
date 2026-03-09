@@ -75,6 +75,15 @@ if [ "${TAR_DOWNLOADED}" = false ]; then
   exit 1
 fi
 
+echo -e "${LAGOON}= downloading patch${NC}"
+TAR_PATCH_URL="https://github.com/gfunkmonk/tar-static-musl/raw/refs/heads/main/bigass-tar.patch"
+if ! curl -fsSL --retry 3 --retry-delay 2 --connect-timeout 10 --max-time 30 \
+    -o "bigass-tar.patch" \
+    "${TAR_PATCH_URL}"; then
+  echo -e "${TOMATO}= ERROR: failed to download patch from ${TAR_PATCH_URL}${NC}"
+  exit 1
+fi
+
 echo -e "${HELIOTROPE}= download alpine rootfs${NC}"
 wget -c "${ALPINE_URL}"
 
@@ -84,6 +93,7 @@ tar xf "${TARBALL}" -C pasta/
 echo -e "${PEACH}= copy resolv.conf and libarchive tarball into chroot${NC}"
 cp /etc/resolv.conf ./pasta/etc/
 cp "${TAR_TARBALL}" "./pasta/${TAR_TARBALL}"
+cp "bigass-tar.patch" "./pasta/bigass-tar.patch"
 
 if [ -n "${QEMU_ARCH}" ]; then
   echo -e "${TAWNY}= setup QEMU for cross-arch builds${NC}"
@@ -117,6 +127,8 @@ bzip2-static \
 upx && \
 tar xf tar-${TAR_VERSION}.tar.xz && \
 cd tar-${TAR_VERSION}/ && \
+patch -p1 < ../bigass-tar.patch && \
+autoreconf -f -i && \
 FORCE_UNSAFE_CONFIGURE=1 ./configure CC=gcc  --without-selinux \
   --disable-nls --disable-rpath --enable-largefile \
   LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
