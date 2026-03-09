@@ -45,16 +45,3 @@ index 1ea9579f6..eb5d0186b 100644
        if(AbsolutePath(path)) {
  	 if(real_cwd && !strncmp(real_cwd,path,real_cwd.length())
  	 && path[real_cwd.length()]=='/') {
-diff --git a/lib/libc-config.h.old b/lib/libc-config.h
-index 33bdb73..000850c 100644
---- a/lib/libc-config.h.old
-+++ b/lib/libc-config.h
-@@ -179,7 +179,7 @@
- # endif
- 
- /* Include our copy of glibc <sys/cdefs.h>.  */
--# include <cdefs.h>
-+#include <sys/cdefs.h>
- 
- /* <cdefs.h> __inline is too pessimistic for non-GCC.  */
- # undef __inline
