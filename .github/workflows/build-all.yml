@@ -6,6 +6,24 @@ on:
     - cron: "0 0 */6 * *"
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
+    inputs:
+      tool:
+        description: "Tool to build and release (choose 'all' to build every tool)"
+        required: true
+        default: all
+        type: choice
+        options:
+          - all
+          - aria2c
+          - axel
+          - bsdtar
+          - curl
+          - dash
+          - oksh
+          - tar
+          - vim
+          - wget
+          - xz
 
 env:
   ALPINE_VERSION: "3.23.3"
@@ -14,12 +32,27 @@ permissions:
   contents: read
 
 jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Determine tool matrix
+        id: set-matrix
+        run: |
+          if [[ "${{ github.event_name }}" == "schedule" || "${{ inputs.tool }}" == "all" || "${{ inputs.tool }}" == "" ]]; then
+            echo 'matrix=["aria2c","axel","bsdtar","curl","dash","oksh","tar","vim","wget","xz"]' >> "$GITHUB_OUTPUT"
+          else
+            echo 'matrix=["${{ inputs.tool }}"]' >> "$GITHUB_OUTPUT"
+          fi
+
   build:
+    needs: setup
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        tool: [aria2c, axel, bsdtar, curl, dash, oksh, tar, vim, wget, xz]
+        tool: ${{ fromJson(needs.setup.outputs.matrix) }}
         arch: [x86_64, x86, aarch64, armv7]
 
     steps:
@@ -45,7 +78,7 @@ jobs:
         path: dist/${{ matrix.tool }}-${{ matrix.arch }}.tar.xz
 
   release:
-    needs: build
+    needs: [setup, build]
     runs-on: ubuntu-latest
     if: ${{ !cancelled() && github.event_name != 'pull_request' }}
     permissions:
@@ -53,7 +86,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        tool: [aria2c, axel, bsdtar, curl, dash, oksh, tar, vim, wget, xz]
+        tool: ${{ fromJson(needs.setup.outputs.matrix) }}
 
     steps:
     - name: Download artifacts for ${{ matrix.tool }}
