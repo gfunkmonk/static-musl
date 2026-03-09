@@ -22,9 +22,10 @@ fetch_bash_patches() {
   mapfile -t BASH_OFFICIAL_PATCHES < <(echo "${listing}" | grep -oE "${BASH_PATCH_PREFIX}-[0-9]{3}" | sort -u)
   if [ ${#BASH_OFFICIAL_PATCHES[@]} -eq 0 ]; then
     echo -e "${LEMON}= directory listing empty, probing sequential patches${NC}"
-    for num in $(seq -w 1 300); do
-      local candidate="${BASH_PATCH_PREFIX}-${num}"
-      if curl -sfI --retry 2 --retry-delay 1 --connect-timeout 5 --max-time 10 "${BASH_PATCH_URL}${candidate}" >/dev/null; then
+    local candidate
+    for num in $(seq -w 1 120); do
+      candidate="${BASH_PATCH_PREFIX}-${num}"
+      if curl -sfI --retry 3 --retry-delay 2 --connect-timeout 10 --max-time 30 "${BASH_PATCH_URL}${candidate}" >/dev/null; then
         BASH_OFFICIAL_PATCHES+=("${candidate}")
       else
         break
