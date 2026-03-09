@@ -44,7 +44,7 @@ patch -p1 --fuzz=4 < ../nano-8.7.1-colors.patch && \
   --enable-libmagic --disable-justify \
   LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
   CFLAGS='-Os -static -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie' && \
-CC='gcc' make -j\$((nproc)) && \
+CC='gcc' make -j\$(nproc) && \
 strip src/nano && \
 ../upx --ultra-brute src/nano"
 
