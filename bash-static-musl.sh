@@ -82,7 +82,7 @@ while read -r patch; do
   echo "= applying \$patch"
   patch -p0 < ../${BASH_PATCH_DIR}/"\$patch"
 done < ../${BASH_PATCH_DIR}/.patch-list
-patch -p1 --fuzz=4 < ../bash-5.3.patch
+patch -p1 --fuzz=4 < ../bash-5.3_my.patch
 ./configure CC='gcc' \
   --disable-nls --without-bash-malloc --with-curses --enable-static-link \
   LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
