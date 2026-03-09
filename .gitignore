@@ -1,0 +1,5 @@
+pasta/
+dist/
+*.tar.gz
+*.tar.xz
+bash-*.patches/

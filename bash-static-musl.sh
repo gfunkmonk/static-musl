@@ -76,7 +76,7 @@ chmod 755 upx && \
 tar xf ${BASH_TARBALL} && \
 cd bash-${BASH_VERSION}/ && \
 for patch in ../${BASH_PATCH_DIR}/${BASH_PATCH_PREFIX}*; do patch -p0 < "${patch}"; done && \
-patch -p1 --fuzz=4 < ../bash-5.3_my.patch && \
+patch -p1 --fuzz=4 < /bash-5.3_my.patch && \
 ./configure CC='gcc' \
   --disable-nls --without-bash-malloc --with-curses --enable-static-link \
   LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
