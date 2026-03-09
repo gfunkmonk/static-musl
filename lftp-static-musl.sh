@@ -59,6 +59,6 @@ autoreconf -i -f && \
   CFLAGS='-std=c17 -Os -fomit-frame-pointer -ffunction-sections -fdata-sections -Wno-unterminated-string-initialization -Wno-deprecated-declarations -Wno-error=template-id-cdtor' && \
 CC=gcc LDFLAGS='-static -Wl,--gc-sections' make -j\$(nproc) && \
 strip src/lftp && \
-../upx --best src/lftp"
+../upx --lzma src/lftp"
 
 package_output "lftp" "./pasta/lftp-${LFTP_VERSION}/src/lftp"
