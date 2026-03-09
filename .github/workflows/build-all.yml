@@ -72,7 +72,6 @@ jobs:
             CCACHE_COMPRESS=1
             CCACHE_COMPRESSLEVEL=7
             CCACHE_INODECACHE=true
-            CCACHE_RECACHE=false
             CCACHE_SLOPINESS=file_macro,locale,time_macros
             CCACHE_NOFILECLONE=true
             CCACHE_DIRECT=true
