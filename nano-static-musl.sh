@@ -32,7 +32,8 @@ ncurses-dev \
 ncurses-static \
 python3-dev \
 perl-dev \
-perl && \
+perl \
+linux-headers && \
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR:-/ccache} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH && \
 chmod 755 upx && \
 tar xf ${NANO_TARBALL} && \
