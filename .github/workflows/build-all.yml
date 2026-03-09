@@ -6,6 +6,24 @@ on:
     - cron: "0 0 */6 * *"
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
+    inputs:
+      tool:
+        description: "Tool to build and release (choose 'all' to build every tool)"
+        required: true
+        default: all
+        type: choice
+        options:
+          - all
+          - aria2c
+          - axel
+          - bsdtar
+          - curl
+          - dash
+          - oksh
+          - tar
+          - vim
+          - wget
+          - xz
 
 env:
   ALPINE_VERSION: "3.23.3"
@@ -14,22 +32,41 @@ permissions:
   contents: read
 
 jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Determine tool matrix
+        id: set-matrix
+        run: |
+          if [[ "${{ github.event_name }}" == "schedule" || "${{ inputs.tool }}" == "all" || "${{ inputs.tool }}" == "" ]]; then
+            echo 'matrix=["aria2c","axel","bsdtar","curl","dash","oksh","tar","vim","wget","xz"]' >> "$GITHUB_OUTPUT"
+          else
+            echo 'matrix=["${{ inputs.tool }}"]' >> "$GITHUB_OUTPUT"
+          fi
+
   build:
+    needs: setup
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        tool: [aria2c, axel, bsdtar, curl, dash, oksh, tar, vim, wget, xz]
+        tool: ${{ fromJson(needs.setup.outputs.matrix) }}
         arch: [x86_64, x86, aarch64, armv7]
 
     steps:
     - uses: actions/checkout@v4
 
-    - name: Cache Alpine rootfs
+    - name: Cache tarballs
       uses: actions/cache@v4
       with:
-        path: alpine-minirootfs-${{ env.ALPINE_VERSION }}-${{ matrix.arch }}.tar.gz
-        key: alpine-rootfs-${{ env.ALPINE_VERSION }}-${{ matrix.arch }}
+        path: |
+          *.tar.gz
+          *.tar.xz
+        key: build-${{ env.ALPINE_VERSION }}-${{ matrix.arch }}-${{ matrix.tool }}-${{ hashFiles(format('{0}-static-musl.sh', matrix.tool)) }}
+        restore-keys: |
+          build-${{ env.ALPINE_VERSION }}-${{ matrix.arch }}-${{ matrix.tool }}-
 
     - name: Build ${{ matrix.tool }} for ${{ matrix.arch }}
       run: |
@@ -45,22 +82,27 @@ jobs:
         path: dist/${{ matrix.tool }}-${{ matrix.arch }}.tar.xz
 
   release:
-    needs: build
+    needs: [setup, build]
     runs-on: ubuntu-latest
     if: ${{ !cancelled() && github.event_name != 'pull_request' }}
     permissions:
       contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        tool: ${{ fromJson(needs.setup.outputs.matrix) }}
 
     steps:
-    - name: Download all artifacts
+    - name: Download artifacts for ${{ matrix.tool }}
       uses: actions/download-artifact@v4
       with:
         path: dist/
+        pattern: ${{ matrix.tool }}-*
         merge-multiple: true
 
     - name: Delete Previous Release
       run: |
-        gh release delete "continuous-universal" --repo "${GITHUB_REPOSITORY}" --cleanup-tag -y || echo "No release to delete"
+        gh release delete "${{ matrix.tool }}-latest" --repo "${GITHUB_REPOSITORY}" --cleanup-tag -y || echo "No release to delete"
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       continue-on-error: true
@@ -68,12 +110,12 @@ jobs:
     - name: Create Release
       uses: softprops/action-gh-release@v2
       with:
-        name: "Continuous universal"
-        tag_name: continuous-universal
+        name: "${{ matrix.tool }} latest"
+        tag_name: ${{ matrix.tool }}-latest
         prerelease: false
         draft: false
         generate_release_notes: false
-        make_latest: true
+        make_latest: false
         files: |
           dist/*.tar.xz
       env:

@@ -57,9 +57,14 @@ install_host_deps() {
 
 # download_source LABEL VERSION TARBALL mirror1 [mirror2 ...]
 # Downloads TARBALL from the first mirror that succeeds.
+# Skips the download if TARBALL already exists (e.g. restored from cache).
 download_source() {
   local label="$1" version="$2" tarball="$3"
   shift 3
+  if [ -f "${tarball}" ]; then
+    echo -e "${MINT}= ${label}-${version}: ${tarball} already cached, skipping download${NC}"
+    return 0
+  fi
   echo -e "${AQUA}= downloading ${label}-${version} tarball${NC}"
   local downloaded=false
   for mirror in "$@"; do
