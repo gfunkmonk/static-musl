@@ -51,7 +51,9 @@ mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR:-/ccache} CCACHE_BASED
 chmod 755 upx && \
 tar xf lftp-${LFTP_VERSION}.tar.xz && \
 cd lftp-${LFTP_VERSION}/ && \
-./configure CC=gcc LIBS='-l:libreadline.a -l:libncursesw.a' \ 
+patch -p1 --fuzz=4 < ../lftp-4.9.3.patch && \
+autoreconf -i -f && \
+./configure CC=gcc LIBS='-l:libreadline.a -l:libncursesw.a' \
   --with-openssl --without-gnutls --enable-static --enable-threads=posix --disable-nls --disable-shared
   LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
   CFLAGS='-Os -ffunction-sections -fdata-sections -Wno-unterminated-string-initialization' && \
