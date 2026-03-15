@@ -37,7 +37,9 @@ zstd-static \
 lz4-dev \
 lz4-static \
 libbz2 \
-bzip2-static && \
+bzip2-static \
+gettext-dev \
+gettext-static && \
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR:-/ccache} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH && \
 chmod 755 upx && \
 tar xf tar-${TAR_VERSION}.tar.xz && \
