@@ -59,7 +59,7 @@ jobs:
       fail-fast: false
       matrix:
         tool: ${{ fromJson(needs.setup.outputs.matrix) }}
-        arch: [x86_64, x86, aarch64, armv7]
+        arch: [x86_64, x86, aarch64, armv7, loongarch64]
 
     steps:
     - uses: actions/checkout@v4
