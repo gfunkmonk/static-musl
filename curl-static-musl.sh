@@ -60,7 +60,8 @@ nghttp2-dev \
 nghttp2-static \
 libidn2-dev \
 libidn2-static \
-clang && \
+clang \
+lld && \
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR:-/ccache} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH && \
 chmod 755 upx && \
 tar xf curl-${CURL_VERSION}.tar.xz && \
@@ -71,9 +72,9 @@ cd curl-${CURL_VERSION}/ && \
   --with-ssl --with-libssh2 \
   --disable-docs --disable-manual --without-libpsl \
   --with-brotli --with-nghttp2 --with-libidn2 \
-  CC=clang LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
+  CC=clang LDFLAGS='-static -fuse-ld=lld -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
   CFLAGS='-Os -static -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie -Wno-unterminated-string-initialization' && \
-make -j\$(nproc) V=1 LDFLAGS='-static -all-static' && \
+make -j\$(nproc) V=1 LDFLAGS='-static -fuse-ld=lld -all-static' && \
 strip src/curl && \
 ../upx --lzma src/curl"
 
