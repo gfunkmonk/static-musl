@@ -37,8 +37,6 @@ python3 \
 lm-sensors-dev \
 libnl3-dev \
 libnl3-static \
-libunwind-dev \
-libunwind-static \
 linux-headers && \
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR:-/ccache} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH && \
 chmod 755 upx && \
@@ -46,11 +44,11 @@ tar xf ${HTOP_TARBALL} && \
 cd htop-${HTOP_VERSION}/ && \
 patch -p1 --fuzz=4 < ../htop-3.4.1.patch && \
 ./configure CC='gcc' \
-  --enable-unicode --enable-static --enable-affinity \
+  --enable-unicode --enable-static --enable-affinity --enable-delayacct \
   LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
   CFLAGS='-Os -static -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie' && \
 CC='gcc' make -j\$(nproc) && \
 strip htop && \
-../upx --ultra-brute htop"
+../upx --lzma htop"
 
 package_output "htop" "./pasta/htop-${HTOP_VERSION}/htop"
