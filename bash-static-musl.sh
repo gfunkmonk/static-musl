@@ -88,7 +88,7 @@ patch -p1 --fuzz=4 < ../bash-5.3_my.patch
 ./configure CC='gcc' \
   --disable-nls --without-bash-malloc --with-curses --enable-static-link \
   LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
-  CFLAGS='-Os -static -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie'
+  CFLAGS='-Os -static -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie -Wno-discarded-qualifiers'
 CC='gcc' make -j\$(nproc)
 strip bash
 ../upx --ultra-brute bash
