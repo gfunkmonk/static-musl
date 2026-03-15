@@ -14,7 +14,7 @@ PIGZ_MIRRORS=(
 setup_arch
 setup_cleanup
 install_host_deps
-download_source "tar" "${PIGZ_VERSION}" "${PIGZ_TARBALL}" "${PIGZ_MIRRORS[@]}"
+download_source "pigz" "${PIGZ_VERSION}" "${PIGZ_TARBALL}" "${PIGZ_MIRRORS[@]}"
 setup_alpine_chroot "${PIGZ_TARBALL}"
 setup_qemu
 mount_chroot
@@ -37,4 +37,4 @@ make -j\$(nproc) && \
 strip pigz && \
 ../upx --lzma pigz"
 
-package_output "tar" "./pasta/pigz-${PIGZ_VERSION}/pigz"
+package_output "pigz" "./pasta/pigz-${PIGZ_VERSION}/pigz"
