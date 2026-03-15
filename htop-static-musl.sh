@@ -1,0 +1,56 @@
+#!/bin/bash
+set -euo pipefail
+. "$(dirname "$0")/common.sh"
+
+echo -e "${VIOLET}= fetching latest htop version${NC}"
+HTOP_VERSION=$(curl -fsSL "https://api.github.com/repos/htop-dev/htop/releases/latest" \
+  | grep '"tag_name"' | sed 's/.*"release-\([^"]*\)".*/\1/' | sed 's/  "tag_name": "//g' \
+  | sed 's/",//g') || true
+if [ -z "${HTOP_VERSION}" ]; then
+  echo -e "${TAWNY}= GitHub API unavailable, falling back to htop 3.4.1${NC}"
+  HTOP_VERSION="3.4.1"
+fi
+
+PACKAGE_VERSION="${HTOP_VERSION}"
+HTOP_TARBALL="htop-${HTOP_VERSION}.tar.xz"
+HTOP_MIRRORS=(
+  "https://github.com/htop-dev/htop/releases/download/${HTOP_VERSION}/htop-${HTOP_VERSION}.tar.xz"
+  "https://fossies.org/linux/misc/htop-${HTOP_VERSION}.tar.xz"
+)
+
+setup_arch
+setup_cleanup
+install_host_deps
+download_source "nano" "${HTOP_VERSION}" "${HTOP_TARBALL}" "${HTOP_MIRRORS[@]}"
+setup_alpine_chroot "${HTOP_TARBALL}"
+copy_patches "htop-3.4.1.patch"
+setup_qemu
+mount_chroot
+
+sudo chroot ./pasta/ /bin/sh -c "set -e && apk update && apk add build-base \
+musl-dev \
+ccache \
+pkgconfig \
+ncurses-dev \
+ncurses-static \
+python3 \
+lm-sensors-dev \
+libnl3-dev \
+libnl3-static \
+libunwind-dev \
+libunwind-static \
+linux-headers && \
+mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR:-/ccache} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH && \
+chmod 755 upx && \
+tar xf ${HTOP_TARBALL} && \
+cd htop-${HTOP_VERSION}/ && \
+patch -p1 --fuzz=4 < ../htop-3.4.1.patch && \
+./configure CC='gcc' \
+  --enable-unicode --enable-static --enable-affinity \
+  LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
+  CFLAGS='-Os -static -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie' && \
+CC='gcc' make -j\$(nproc) && \
+strip htop && \
+../upx --ultra-brute htop"
+
+package_output "htop" "./pasta/htop-${HTOP_VERSION}/htop"
