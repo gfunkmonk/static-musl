@@ -63,8 +63,8 @@ patch -p1 --fuzz=4 < ../aria2-1.37.0.patch && \
   --without-gnutls --with-openssl --with-libcares \
   --disable-bittorrent --with-sqlite3 \
   --enable-shared=no --enable-static --disable-shared \
-  LDFLAGS='-static' PKG_CONFIG='pkg-config --static' \
-  CFLAGS='-Os -Wno-unterminated-string-initialization' && \
+  LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
+  CFLAGS='-Os -static -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie -Wno-unterminated-string-initialization' && \
 make -j\$(nproc) && \
 strip src/aria2c && \
 ../upx --lzma src/aria2c"

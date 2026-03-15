@@ -53,8 +53,8 @@ cd curl-${CURL_VERSION}/ && \
   --disable-ldap --enable-ipv6 --enable-unix-sockets \
   --with-ssl --with-libssh2 \
   --disable-docs --disable-manual --without-libpsl \
-  CC=clang LDFLAGS='-static' PKG_CONFIG='pkg-config --static' \
-  CFLAGS='-Os -Wno-unterminated-string-initialization' && \
+  CC=clang LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
+  CFLAGS='-Os -static -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie -Wno-unterminated-string-initialization' && \
 make -j\$(nproc) V=1 LDFLAGS='-static -all-static' && \
 strip src/curl && \
 ../upx --lzma src/curl"

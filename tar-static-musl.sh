@@ -49,7 +49,7 @@ autoreconf -f -i && \
 FORCE_UNSAFE_CONFIGURE=1 ./configure CC=gcc  --without-selinux \
   --disable-nls --disable-rpath --enable-largefile \
   LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
-  CFLAGS='-Os -ffunction-sections -fdata-sections -no-pie' && \
+  CFLAGS='-Os -static -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie' && \
 make -j\$(nproc) && \
 strip src/tar && \
 ../upx --lzma src/tar"

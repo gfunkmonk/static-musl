@@ -48,9 +48,9 @@ cd wget-${WGET_VERSION}/ && \
 patch -p1 --fuzz=4 < ../wget-1.25.0-passive-ftp.patch && \
 ./configure CC=gcc --with-ssl=openssl --with-libidn --disable-nls \
   --disable-rpath --sysconfdir=/etc \
-  LDFLAGS='-static -lidn2 -lunistring' \
+  LDFLAGS='-static -lidn2 -lunistring -Wl,--gc-sections' \
   PKG_CONFIG='pkg-config --static' \
-  CFLAGS='-Os -Wno-unterminated-string-initialization' \
+  CFLAGS='-Os -static -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie -Wno-unterminated-string-initialization' \
   PERL=/usr/bin/perl && \
 make -j\$(nproc) && \
 strip src/wget && \

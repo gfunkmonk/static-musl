@@ -46,9 +46,9 @@ cd dash-${DASH_VERSION}/ && \
 patch -p1 --fuzz=4 < ../dash-0.5.13.1.patch && \
 autoreconf -f -i && \
 ./configure --enable-static \
-  LDFLAGS='-static' \
+  LDFLAGS='-static -Wl,--gc-sections' \
   PKG_CONFIG='pkg-config --static' \
-  CFLAGS='-Os -no-pie -fomit-frame-pointer -fstack-clash-protection' \
+  CFLAGS='-Os -static -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie -fstack-clash-protection' \
   CXXFLAGS='-fno-delete-null-pointer-checks -fno-schedule-insns2' && \
 make -j\$(nproc) && \
 strip src/dash && \
