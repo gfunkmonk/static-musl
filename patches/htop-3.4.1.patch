@@ -82,32 +82,6 @@ index 465e4c2f1..1a3bf80d3 100644
           line[len] = '\0';
           InfoScreen_addLine(this, line);
  
-Description: <short summary of the patch>
- TODO: Put a short summary on the line above and replace this paragraph
- with a longer explanation of this change. Complete the meta-information
- with other relevant fields (see below for details). To make it easier, the
- information below has been extracted from the changelog. Adjust it or drop
- it.
- .
- htop (3.4.1-5) unstable; urgency=medium
- .
-   * Fix stack buffer overflow in CommandScreen
-Author: Daniel Lange <DLange@debian.org>
-
----
-The information above should follow the Patch Tagging Guidelines, please
-checkout https://dep.debian.net/deps/dep3/ to learn about the format. Here
-are templates for supplementary fields that you might want to add:
-
-Origin: (upstream|backport|vendor|other), (<patch-url>|commit:<commit-id>)
-Bug: <upstream-bugtracker-url>
-Bug-Debian: https://bugs.debian.org/<bugnumber>
-Bug-Ubuntu: https://launchpad.net/bugs/<bugnumber>
-Forwarded: (no|not-needed|<patch-forwarded-url>)
-Applied-Upstream: <version>, (<commit-url>|commit:<commid-id>)
-Reviewed-By: <name and email of someone who approved/reviewed the patch>
-Last-Update: 2025-12-11
-
 --- htop-3.4.1.orig/CRT.c
 +++ htop-3.4.1/CRT.c
 @@ -820,7 +820,121 @@ static int CRT_colorSchemes[LAST_COLORSC
@@ -253,32 +227,6 @@ Last-Update: 2025-12-11
     NULL
  };
  
-Description: <short summary of the patch>
- TODO: Put a short summary on the line above and replace this paragraph
- with a longer explanation of this change. Complete the meta-information
- with other relevant fields (see below for details). To make it easier, the
- information below has been extracted from the changelog. Adjust it or drop
- it.
- .
- htop (3.4.1-5) unstable; urgency=medium
- .
-   * Fix stack buffer overflow in CommandScreen
-Author: Daniel Lange <DLange@debian.org>
-
----
-The information above should follow the Patch Tagging Guidelines, please
-checkout https://dep.debian.net/deps/dep3/ to learn about the format. Here
-are templates for supplementary fields that you might want to add:
-
-Origin: (upstream|backport|vendor|other), (<patch-url>|commit:<commit-id>)
-Bug: <upstream-bugtracker-url>
-Bug-Debian: https://bugs.debian.org/<bugnumber>
-Bug-Ubuntu: https://launchpad.net/bugs/<bugnumber>
-Forwarded: (no|not-needed|<patch-forwarded-url>)
-Applied-Upstream: <version>, (<commit-url>|commit:<commid-id>)
-Reviewed-By: <name and email of someone who approved/reviewed the patch>
-Last-Update: 2025-12-11
-
 --- htop-3.4.1.orig/CRT.c
 +++ htop-3.4.1/CRT.c
 @@ -935,6 +935,124 @@ static int CRT_colorSchemes[LAST_COLORSC
@@ -288,17 +236,17 @@ Last-Update: 2025-12-11
 +   [COLORSCHEME_TESTE] = {
 +      [RESET_COLOR] = ColorPair(White, Black),
 +      [DEFAULT_COLOR] = ColorPair(White, Black),
-+      [FUNCTION_BAR] = ColorPair(Black, Cyan),
-+      [FUNCTION_KEY] = ColorPair(White, Black),
-+      [PANEL_HEADER_FOCUS] = ColorPair(Black, Cyan),
-+      [PANEL_HEADER_UNFOCUS] = ColorPair(Black, Cyan),
-+      [PANEL_SELECTION_FOCUS] = ColorPair(Black, Magenta),
++      [FUNCTION_BAR] = A_BOLD | ColorPair(Blue, Black),
++      [FUNCTION_KEY] = ColorPair(Cyan, Black),
++      [PANEL_HEADER_FOCUS] = A_BOLD | ColorPair(White, Blue),
++      [PANEL_HEADER_UNFOCUS] = ColorPair(Black, Blue),
++      [PANEL_SELECTION_FOCUS] = A_BOLD | ColorPair(White, Green),
 +      [PANEL_SELECTION_FOLLOW] = ColorPair(Black, Yellow),
 +      [PANEL_SELECTION_UNFOCUS] = ColorPair(Black, White),
 +      [FAILED_SEARCH] = ColorPair(Red, Cyan),
 +      [FAILED_READ] = A_BOLD | ColorPair(Red, Black),
 +      [PAUSED] = A_BOLD | ColorPair(Yellow, Cyan),
-+      [UPTIME] = A_BOLD | ColorPair(Cyan, Black),
++      [UPTIME] = A_BOLD | ColorPair(Yellow, Black),
 +      [BATTERY] = A_BOLD | ColorPair(Cyan, Black),
 +      [LARGE_NUMBER] = A_BOLD | ColorPair(Red, Black),
 +      [METER_SHADOW] = A_BOLD | ColorPairGrayBlack,
@@ -426,31 +374,6 @@ Last-Update: 2025-12-11
     NULL
  };
  
-Description: <short summary of the patch>
- TODO: Put a short summary on the line above and replace this paragraph
- with a longer explanation of this change. Complete the meta-information
- with other relevant fields (see below for details). To make it easier, the
- information below has been extracted from the changelog. Adjust it or drop
- it.
- .
- htop (3.4.1-5) unstable; urgency=medium
- .
-   * Fix stack buffer overflow in CommandScreen
-Author: Daniel Lange <DLange@debian.org>
-
----
-The information above should follow the Patch Tagging Guidelines, please
-checkout http://dep.debian.net/deps/dep3/ to learn about the format. Here
-are templates for supplementary fields that you might want to add:
-
-Origin: <vendor|upstream|other>, <url of original patch>
-Bug: <url in upstream bugtracker>
-Bug-Debian: https://bugs.debian.org/<bugnumber>
-Bug-Ubuntu: https://launchpad.net/bugs/<bugnumber>
-Forwarded: <no|not-needed|url proving that it has been forwarded>
-Reviewed-By: <name and email of someone who approved the patch>
-Last-Update: 2026-03-15
-
 --- htop-3.4.1.orig/CRT.c
 +++ htop-3.4.1/CRT.c
 @@ -1053,6 +1053,124 @@ static int CRT_colorSchemes[LAST_COLORSC
@@ -464,13 +387,13 @@ Last-Update: 2026-03-15
 +      [FUNCTION_KEY] = ColorPair(White, Black),
 +      [PANEL_HEADER_FOCUS] = A_BOLD | ColorPair(White, Magenta),
 +      [PANEL_HEADER_UNFOCUS] = ColorPair(White, Magenta),
-+      [PANEL_SELECTION_FOCUS] = A_BOLD | ColorPair(Black, Yellow),
++      [PANEL_SELECTION_FOCUS] = ColorPair(Black, Yellow),
 +      [PANEL_SELECTION_FOLLOW] = ColorPair(Black, Yellow),
 +      [PANEL_SELECTION_UNFOCUS] = A_BOLD | ColorPair(Magenta, Black),
 +      [FAILED_SEARCH] = A_BOLD | ColorPair(Red, Black),
 +      [FAILED_READ] = A_BOLD | ColorPair(Red, Black),
 +      [PAUSED] = A_BOLD | ColorPair(Yellow, Black),
-+      [UPTIME] = A_BOLD | ColorPair(Cyan, Black),
++      [UPTIME] = A_BOLD | ColorPair(Magenta, Black),
 +      [BATTERY] = A_BOLD | ColorPair(Cyan, Black),
 +      [LARGE_NUMBER] = A_BOLD | ColorPair(Red, Black),
 +      [METER_SHADOW] = A_BOLD | ColorPairGrayBlack,
@@ -598,32 +521,6 @@ Last-Update: 2026-03-15
     NULL
  };
  
-Description: <short summary of the patch>
- TODO: Put a short summary on the line above and replace this paragraph
- with a longer explanation of this change. Complete the meta-information
- with other relevant fields (see below for details). To make it easier, the
- information below has been extracted from the changelog. Adjust it or drop
- it.
- .
- htop (3.4.1-5build1) questing; urgency=medium
- .
-   * Rebuild to include updated RISC-V base ISA RVA23
-Author: Heinrich Schuchardt <heinrich.schuchardt@canonical.com>
-
----
-The information above should follow the Patch Tagging Guidelines, please
-checkout https://dep.debian.net/deps/dep3/ to learn about the format. Here
-are templates for supplementary fields that you might want to add:
-
-Origin: (upstream|backport|vendor|other), (<patch-url>|commit:<commit-id>)
-Bug: <upstream-bugtracker-url>
-Bug-Debian: https://bugs.debian.org/<bugnumber>
-Bug-Ubuntu: https://launchpad.net/bugs/<bugnumber>
-Forwarded: (no|not-needed|<patch-forwarded-url>)
-Applied-Upstream: <version>, (<commit-url>|commit:<commid-id>)
-Reviewed-By: <name and email of someone who approved/reviewed the patch>
-Last-Update: 2026-03-15
-
 --- htop-3.4.1.orig/CRT.c
 +++ htop-3.4.1/CRT.c
 @@ -1171,6 +1171,124 @@ static int CRT_colorSchemes[LAST_COLORSC
@@ -637,7 +534,7 @@ Last-Update: 2026-03-15
 +      [FUNCTION_KEY] = A_BOLD | ColorPair(Yellow, Black),
 +      [PANEL_HEADER_FOCUS] = ColorPair(Black, Green),
 +      [PANEL_HEADER_UNFOCUS] = ColorPair(Black, Green),
-+      [PANEL_SELECTION_FOCUS] = A_BOLD | ColorPair(White, Yellow),
++      [PANEL_SELECTION_FOCUS] = A_BOLD | ColorPair(White, Blue),
 +      [PANEL_SELECTION_FOLLOW] = ColorPair(Black, Cyan),
 +      [PANEL_SELECTION_UNFOCUS] = ColorPair(Black, White),
 +      [FAILED_SEARCH] = ColorPair(Red, Cyan),
@@ -768,6 +665,153 @@ Last-Update: 2026-03-15
     "Teste",
     "Funky",
 +   "Black Sheep",
+    NULL
+ };
+ 
+--- htop-3.4.1.orig/CRT.c
++++ htop-3.4.1/CRT.c
+@@ -1289,6 +1289,124 @@ static int CRT_colorSchemes[LAST_COLORSC
+       [DYNAMIC_YELLOW] = ColorPair(Yellow, Black),
+       [DYNAMIC_WHITE] = ColorPair(White, Black),
+    },
++   [COLORSCHEME_SUNSET] = {
++      [RESET_COLOR] = ColorPair(White, Black),
++      [DEFAULT_COLOR] = ColorPair(White, Black),
++      [FUNCTION_BAR] = ColorPair(Black, Red),
++      [FUNCTION_KEY] = A_BOLD | ColorPair(Yellow, Black),
++      [PANEL_HEADER_FOCUS] = ColorPair(Black, Yellow),
++      [PANEL_HEADER_UNFOCUS] = ColorPair(Black, Red),
++      [PANEL_SELECTION_FOCUS] = ColorPair(Black, Yellow),
++      [PANEL_SELECTION_FOLLOW] = ColorPair(Black, Magenta),
++      [PANEL_SELECTION_UNFOCUS] = A_BOLD | ColorPair(White, Black),
++      [FAILED_SEARCH] = A_BOLD | ColorPair(Red, Black),
++      [FAILED_READ] = A_BOLD | ColorPair(Red, Black),
++      [PAUSED] = A_BOLD | ColorPair(Yellow, Black),
++      [UPTIME] = A_BOLD | ColorPair(Yellow, Black),
++      [BATTERY] = A_BOLD | ColorPair(Yellow, Black),
++      [LARGE_NUMBER] = A_BOLD | ColorPair(Red, Black),
++      [METER_SHADOW] = A_BOLD | ColorPairGrayBlack,
++      [METER_TEXT] = ColorPair(Yellow, Black),
++      [METER_VALUE] = A_BOLD | ColorPair(Yellow, Black),
++      [METER_VALUE_ERROR] = A_BOLD | ColorPair(Red, Black),
++      [METER_VALUE_IOREAD] = A_BOLD | ColorPair(Yellow, Black),
++      [METER_VALUE_IOWRITE] = ColorPair(Magenta, Black),
++      [METER_VALUE_NOTICE] = A_BOLD | ColorPair(White, Black),
++      [METER_VALUE_OK] = ColorPair(Yellow, Black),
++      [METER_VALUE_WARN] = A_BOLD | ColorPair(Red, Black),
++      [LED_COLOR] = A_BOLD | ColorPair(Yellow, Black),
++      [TASKS_RUNNING] = A_BOLD | ColorPair(Yellow, Black),
++      [PROCESS] = ColorPair(White, Black),
++      [PROCESS_SHADOW] = ColorPairGrayBlack,
++      [PROCESS_TAG] = A_BOLD | ColorPair(Red, Black),
++      [PROCESS_MEGABYTES] = ColorPair(Yellow, Black),
++      [PROCESS_GIGABYTES] = A_BOLD | ColorPair(Red, Black),
++      [PROCESS_BASENAME] = A_BOLD | ColorPair(Yellow, Black),
++      [PROCESS_TREE] = ColorPair(Yellow, Black),
++      [PROCESS_RUN_STATE] = A_BOLD | ColorPair(Yellow, Black),
++      [PROCESS_D_STATE] = A_BOLD | ColorPair(Red, Black),
++      [PROCESS_HIGH_PRIORITY] = A_BOLD | ColorPair(Red, Black),
++      [PROCESS_LOW_PRIORITY] = ColorPair(Magenta, Black),
++      [PROCESS_NEW] = ColorPair(Black, Yellow),
++      [PROCESS_TOMB] = ColorPair(Black, Red),
++      [PROCESS_THREAD] = ColorPair(Magenta, Black),
++      [PROCESS_THREAD_BASENAME] = A_BOLD | ColorPair(Magenta, Black),
++      [PROCESS_COMM] = A_BOLD | ColorPair(Red, Black),
++      [PROCESS_THREAD_COMM] = ColorPair(Red, Black),
++      [PROCESS_PRIV] = A_BOLD | ColorPair(Red, Black),
++      [BAR_BORDER] = A_BOLD | ColorPair(Yellow, Black),
++      [BAR_SHADOW] = ColorPairGrayBlack,
++      [SWAP] = A_BOLD | ColorPair(Red, Black),
++      [SWAP_CACHE] = ColorPair(Magenta, Black),
++      [SWAP_FRONTSWAP] = A_BOLD | ColorPairGrayBlack,
++      [GRAPH_1] = A_BOLD | ColorPair(Red, Black),
++      [GRAPH_2] = ColorPair(Red, Black),
++      [MEMORY_USED] = ColorPair(Yellow, Black),
++      [MEMORY_BUFFERS] = ColorPair(Magenta, Black),
++      [MEMORY_BUFFERS_TEXT] = A_BOLD | ColorPair(Magenta, Black),
++      [MEMORY_CACHE] = ColorPair(Red, Black),
++      [MEMORY_SHARED] = A_BOLD | ColorPair(Red, Black),
++      [MEMORY_COMPRESSED] = A_BOLD | ColorPairGrayBlack,
++      [HUGEPAGE_1] = ColorPair(Yellow, Black),
++      [HUGEPAGE_2] = A_BOLD | ColorPair(Yellow, Black),
++      [HUGEPAGE_3] = ColorPair(Red, Black),
++      [HUGEPAGE_4] = ColorPair(Magenta, Black),
++      [LOAD_AVERAGE_FIFTEEN] = ColorPair(Yellow, Black),
++      [LOAD_AVERAGE_FIVE] = A_BOLD | ColorPair(Yellow, Black),
++      [LOAD_AVERAGE_ONE] = A_BOLD | ColorPair(White, Black),
++      [LOAD] = A_BOLD | ColorPair(White, Black),
++      [HELP_BOLD] = A_BOLD | ColorPair(Yellow, Black),
++      [HELP_SHADOW] = A_BOLD | ColorPairGrayBlack,
++      [CLOCK] = A_BOLD | ColorPair(Yellow, Black),
++      [DATE] = A_BOLD | ColorPair(Yellow, Black),
++      [DATETIME] = A_BOLD | ColorPair(Yellow, Black),
++      [CHECK_BOX] = A_BOLD | ColorPair(Yellow, Black),
++      [CHECK_MARK] = A_BOLD | ColorPair(White, Black),
++      [CHECK_TEXT] = ColorPair(White, Black),
++      [HOSTNAME] = A_BOLD | ColorPair(Yellow, Black),
++      [CPU_NICE] = ColorPair(Magenta, Black),
++      [CPU_NICE_TEXT] = ColorPair(Magenta, Black),
++      [CPU_NORMAL] = ColorPair(Yellow, Black),
++      [CPU_SYSTEM] = A_BOLD | ColorPair(Red, Black),
++      [CPU_IOWAIT] = A_BOLD | ColorPairGrayBlack,
++      [CPU_IRQ] = A_BOLD | ColorPair(Red, Black),
++      [CPU_SOFTIRQ] = ColorPair(Magenta, Black),
++      [CPU_STEAL] = A_BOLD | ColorPair(Magenta, Black),
++      [CPU_GUEST] = ColorPair(Yellow, Black),
++      [GPU_ENGINE_1] = ColorPair(Yellow, Black),
++      [GPU_ENGINE_2] = A_BOLD | ColorPair(Yellow, Black),
++      [GPU_ENGINE_3] = ColorPair(Red, Black),
++      [GPU_ENGINE_4] = ColorPair(Magenta, Black),
++      [GPU_RESIDUE] = A_BOLD | ColorPair(Red, Black),
++      [PANEL_EDIT] = ColorPair(Black, Yellow),
++      [SCREENS_OTH_BORDER] = ColorPair(Red, Red),
++      [SCREENS_OTH_TEXT] = ColorPair(White, Red),
++      [SCREENS_CUR_BORDER] = ColorPair(Yellow, Yellow),
++      [SCREENS_CUR_TEXT] = ColorPair(Black, Yellow),
++      [PRESSURE_STALL_THREEHUNDRED] = ColorPair(Yellow, Black),
++      [PRESSURE_STALL_SIXTY] = A_BOLD | ColorPair(Yellow, Black),
++      [PRESSURE_STALL_TEN] = A_BOLD | ColorPair(White, Black),
++      [FILE_DESCRIPTOR_USED] = ColorPair(Yellow, Black),
++      [FILE_DESCRIPTOR_MAX] = A_BOLD | ColorPair(Red, Black),
++      [ZFS_MFU] = ColorPair(Yellow, Black),
++      [ZFS_MRU] = A_BOLD | ColorPair(Yellow, Black),
++      [ZFS_ANON] = ColorPair(Red, Black),
++      [ZFS_HEADER] = A_BOLD | ColorPair(Yellow, Black),
++      [ZFS_OTHER] = ColorPair(Magenta, Black),
++      [ZFS_COMPRESSED] = A_BOLD | ColorPair(Red, Black),
++      [ZFS_RATIO] = ColorPair(Magenta, Black),
++      [ZRAM_COMPRESSED] = ColorPair(Magenta, Black),
++      [ZRAM_UNCOMPRESSED] = ColorPair(Yellow, Black),
++      [DYNAMIC_GRAY] = ColorPairGrayBlack,
++      [DYNAMIC_DARKGRAY] = A_BOLD | ColorPairGrayBlack,
++      [DYNAMIC_RED] = A_BOLD | ColorPair(Red, Black),
++      [DYNAMIC_GREEN] = ColorPair(Yellow, Black),
++      [DYNAMIC_BLUE] = ColorPair(Magenta, Black),
++      [DYNAMIC_CYAN] = ColorPair(Yellow, Black),
++      [DYNAMIC_MAGENTA] = A_BOLD | ColorPair(Magenta, Black),
++      [DYNAMIC_YELLOW] = A_BOLD | ColorPair(Yellow, Black),
++      [DYNAMIC_WHITE] = ColorPair(White, Black),
++   },
+ };
+ 
+ static bool CRT_retainScreenOnExit = false;
+--- htop-3.4.1.orig/CRT.h
++++ htop-3.4.1/CRT.h
+@@ -41,6 +41,7 @@ typedef enum ColorScheme_ {
+    COLORSCHEME_TESTE,
+    COLORSCHEME_FUNKY,
+    COLORSCHEME_BLACKSHEEP,
++   COLORSCHEME_SUNSET,
+    LAST_COLORSCHEME
+ } ColorScheme;
+ 
+--- htop-3.4.1.orig/ColorsPanel.c
++++ htop-3.4.1/ColorsPanel.c
+@@ -41,6 +41,7 @@ static const char* const ColorSchemeName
+    "Teste",
+    "Funky",
+    "Black Sheep",
++   "Sunset",
     NULL
  };
  
