@@ -2,7 +2,7 @@
 set -euo pipefail
 . "$(dirname "$0")/common.sh"
 
-echo -e "${VIOLET}= fetching latest vim version${NC}"
+echo -e "${VIOLET}= fetching latest xz version${NC}"
 XZ_VERSION=$(curl -fsSL "https://api.github.com/repos/tukaani-project/xz/releases/latest"  \
   | grep '"tag_name"' | sed 's/.*"release-\([^"]*\)".*/\1/' \
   | sed 's/",//g' | sed 's/  "tag_name": "v//g') || true
