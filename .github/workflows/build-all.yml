@@ -64,7 +64,7 @@ jobs:
         arch: [x86_64, x86, aarch64, armv7]
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Determine tool version
       id: tool-version
@@ -106,7 +106,7 @@ jobs:
             echo "CCACHE Environment set!"
             
     - name: Set up ccache
-      uses: hendrikmuhs/ccache-action@v1.2
+      uses: hendrikmuhs/ccache-action@main
       with:
         create-symlink: true
         key: ccache-${{ env.ALPINE_VERSION }}-${{ matrix.arch }}-${{ matrix.tool }}-${{ hashFiles(format('{0}-static-musl.sh', matrix.tool)) }}
@@ -116,7 +116,7 @@ jobs:
         max-size: 3G
 
     - name: Cache tarballs
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: |
           *.tar.gz
@@ -154,7 +154,7 @@ jobs:
         echo "TOOL_VERSION=${version}" >> "$GITHUB_ENV"
 
     - name: Upload artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: ${{ steps.artifact-info.outputs.name }}
         path: ${{ steps.artifact-info.outputs.file }}
