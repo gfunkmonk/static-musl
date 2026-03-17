@@ -23,7 +23,7 @@ setup_cleanup
 install_host_deps
 download_source "nano" "${HTOP_VERSION}" "${HTOP_TARBALL}" "${HTOP_MIRRORS[@]}"
 setup_alpine_chroot "${HTOP_TARBALL}"
-copy_patches "htop-3.4.1.patch"
+copy_patches "htop.patch"
 setup_qemu
 mount_chroot
 
@@ -42,7 +42,7 @@ mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR:-/ccache} CCACHE_BASED
 chmod 755 upx && \
 tar xf ${HTOP_TARBALL} && \
 cd htop-${HTOP_VERSION}/ && \
-patch -p1 --fuzz=4 < ../htop-3.4.1.patch && \
+patch -p1 --fuzz=4 < ../htop.patch && \
 ./configure CC='gcc' \
   --enable-unicode --enable-static --enable-affinity --enable-delayacct \
   LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \

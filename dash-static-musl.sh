@@ -19,7 +19,7 @@ setup_cleanup
 install_host_deps
 download_source "dash" "${DASH_VERSION}" "${DASH_TARBALL}" "${DASH_MIRRORS[@]}"
 setup_alpine_chroot "${DASH_TARBALL}"
-copy_patches "dash-0.5.13.1.patch"
+copy_patches "dash.patch"
 setup_qemu
 mount_chroot
 
@@ -43,7 +43,7 @@ mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR:-/ccache} CCACHE_BASED
 chmod 755 upx && \
 tar xf dash-${DASH_VERSION}.tar.gz && \
 cd dash-${DASH_VERSION}/ && \
-patch -p1 --fuzz=4 < ../dash-0.5.13.1.patch && \
+patch -p1 --fuzz=4 < ../dash.patch && \
 autoreconf -f -i && \
 ./configure --enable-static \
   LDFLAGS='-static -Wl,--gc-sections' \

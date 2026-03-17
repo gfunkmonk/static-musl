@@ -1,7 +1,3 @@
-Description: Fix flaky vim test
-Author: Spyros Seimenis <spyros.seimenis@canonical.com>
-Last-Update: 2021-11-05
-
 --- a/src/testdir/test_terminal.vim
 +++ b/src/testdir/test_terminal.vim
 @@ -529,6 +529,7 @@ func Test_terminal_postponed_scrollback(
@@ -23,12 +19,6 @@ Last-Update: 2021-11-05
    set spc=
  endfunc
  
-Description: Disable a test that checked allocated terminal name which was
-failing due to a string comparison error unrelated to changes in vim.
-Author: Ural Tunaboyu <ural.tunaboyu@canonical.com>
-Last-Update: 2026-02-18
-
-Bug-Ubuntu: https://launchpad.net/bugs/2142681
 --- a/src/testdir/test_terminal2.vim
 +++ b/src/testdir/test_terminal2.vim
 @@ -699,6 +699,7 @@

@@ -16,7 +16,7 @@ setup_cleanup
 install_host_deps
 download_source "lftp" "${LFTP_VERSION}" "${LFTP_TARBALL}" "${LFTP_MIRRORS[@]}"
 setup_alpine_chroot "${LFTP_TARBALL}"
-copy_patches "lftp-4.9.3.patch"
+copy_patches "lftp.patch"
 setup_qemu
 mount_chroot
 
@@ -48,7 +48,7 @@ mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR:-/ccache} CCACHE_BASED
 chmod 755 upx && \
 tar xf lftp-${LFTP_VERSION}.tar.xz && \
 cd lftp-${LFTP_VERSION}/ && \
-patch -p1 --fuzz=4 < ../lftp-4.9.3.patch && \
+patch -p1 --fuzz=4 < ../lftp.patch && \
 autoreconf -i -f && \
 ./configure CC=gcc CXX=g++ LIBS='-l:libreadline.a -l:libncursesw.a' \
   --with-openssl --without-gnutls --enable-static --enable-threads=posix --disable-nls --disable-shared \
