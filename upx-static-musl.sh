@@ -18,13 +18,52 @@ UPX_MIRRORS=(
   "https://github.com/gfunkmonk/upx/archive/refs/tags/${UPX_VERSION}.tar.gz"
 )
 
-setup_arch
-setup_cleanup
-install_host_deps
-download_source "upx" "${UPX_VERSION}" "${UPX_TARBALL}" "${UPX_MIRRORS[@]}"
-setup_alpine_chroot "${UPX_TARBALL}"
-setup_qemu
-mount_chroot
+case "${ARCH}" in
+  x86_64)  QEMU_ARCH="" ;;
+  x86)     QEMU_ARCH="i386" ;;
+  aarch64) QEMU_ARCH="aarch64" ;;
+  armhf)   QEMU_ARCH="arm" ;;
+  armv7)   QEMU_ARCH="arm" ;;
+  *)
+    echo -e "${LAGOON}Unknown architecture: ${HOTPINK}${ARCH}${NC}"
+    exit 1
+    ;;
+esac
+
+ALPINE_URL="https://dl-cdn.alpinelinux.org/alpine/v${ALPINE_MAJOR_MINOR}/releases/${ARCH}/alpine-minirootfs-${ALPINE_VERSION}-${ARCH}.tar.gz"
+TARBALL="${ALPINE_URL##*/}"
+
+cleanup() {
+  sudo umount -lf "./pasta/proc" 2>/dev/null || true
+  sudo umount -lf "./pasta/dev"  2>/dev/null || true
+  sudo umount -lf "./pasta/sys"  2>/dev/null || true
+}
+trap cleanup EXIT
+
+echo -e "${AQUA}= install dependencies${NC}"
+DEBIAN_DEPS=(wget curl binutils)
+[ -n "${QEMU_ARCH}" ] && DEBIAN_DEPS+=(qemu-user-static)
+sudo apt-get update -qy && sudo apt-get install -y "${DEBIAN_DEPS[@]}"
+
+echo -e "${HELIOTROPE}= download alpine rootfs${NC}"
+wget -c "${ALPINE_URL}"
+
+echo -e "${MINT}= extract rootfs${NC}"
+mkdir -p pasta
+tar xf "${TARBALL}" -C pasta/
+echo -e "${PEACH}= copy resolv.conf and curl tarball into chroot${NC}"
+cp /etc/resolv.conf ./pasta/etc/
+
+if [ -n "${QEMU_ARCH}" ]; then
+  echo -e "${TAWNY}= setup QEMU for cross-arch builds${NC}"
+  sudo mkdir -p "./pasta/usr/bin/"
+  sudo cp "/usr/bin/qemu-${QEMU_ARCH}-static" "./pasta/usr/bin/"
+fi
+
+echo -e "${VIOLET}= mount, bind and chroot into dir${NC}"
+sudo mount -t proc none "./pasta/proc/"
+sudo mount --rbind /dev "./pasta/dev/"
+sudo mount --rbind /sys "./pasta/sys/"
 
 sudo chroot ./pasta/ /bin/sh -c "set -e && apk update && apk add build-base \
 musl-dev \
@@ -52,7 +91,7 @@ cmake \
 clang && \
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR:-/ccache} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH && \
 chmod 755 upx && \
-tar xf upx-${UPX_VERSION}.tar.gz && \
+git clone http://github.com/gfunkmonk/upx --depth=1 ${UPX_VERSION} \
 cd upx-${UPX_VERSION}/ && \
 git submodule init && git submodule update \
 mkdir build && cd build/ \
