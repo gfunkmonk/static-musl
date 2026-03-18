@@ -39,7 +39,7 @@ cd openssh-${OPENSSH_VERSION}/ && \
 ./configure --with-privsep-user=nobody \
   LIBS='-pthread' LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
   CFLAGS='-Os -static -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie -Wno-unterminated-string-initialization' && \
-make -j\$(nproc) LDFLAGS='-static -all-static' && \
+make -j\$(nproc) && \
 strip ssh && \
 ../upx --lzma ssh"
 
