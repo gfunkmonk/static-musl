@@ -51,7 +51,7 @@ wget -c "${ALPINE_URL}"
 echo -e "${MINT}= extract rootfs${NC}"
 mkdir -p pasta
 tar xf "${TARBALL}" -C pasta/
-echo -e "${PEACH}= copy resolv.conf and curl tarball into chroot${NC}"
+echo -e "${PEACH}= copy resolv.conf and tools into chroot${NC}"
 cp /etc/resolv.conf ./pasta/etc/
 cp tools/upx/upx-${ARCH} pasta/upx
 
@@ -94,7 +94,7 @@ mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR:-/ccache} CCACHE_BASED
 chmod 755 upx && \
 git clone http://github.com/gfunkmonk/upx upx-${UPX_VERSION} --depth=1 && \
 cd upx-${UPX_VERSION}/ && \
-git submodule init && git submodule update \
+git submodule init && git submodule update && \
 mkdir build && cd build/ && \
 cmake -DUPX_CONFIG_DISABLE_WSTRICT=ON -DUPX_CONFIG_DISABLE_WERROR=ON -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_EXE_LINKER_FLAGS="-Wl,--gc-sections -static" \
   -DCMAKE_C_FLAGS="-Os -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector" -DCMAKE_CXX_FLAGS="-Os -ffunction-sections \
