@@ -92,7 +92,7 @@ cmake \
 clang && \
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR:-/ccache} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH && \
 chmod 755 upx && \
-git clone http://github.com/gfunkmonk/upx ${UPX_VERSION} --depth=1 && \
+git clone http://github.com/gfunkmonk/upx upx-${UPX_VERSION} --depth=1 && \
 cd upx-${UPX_VERSION}/ && \
 git submodule init && git submodule update \
 mkdir build && cd build/ \
