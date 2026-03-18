@@ -53,6 +53,7 @@ mkdir -p pasta
 tar xf "${TARBALL}" -C pasta/
 echo -e "${PEACH}= copy resolv.conf and curl tarball into chroot${NC}"
 cp /etc/resolv.conf ./pasta/etc/
+cp tools/upx/upx-${ARCH} pasta/upx
 
 if [ -n "${QEMU_ARCH}" ]; then
   echo -e "${TAWNY}= setup QEMU for cross-arch builds${NC}"
