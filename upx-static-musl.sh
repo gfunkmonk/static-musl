@@ -12,7 +12,7 @@ if [ -z "${UPX_VERSION}" ]; then
 fi
 
 PACKAGE_VERSION="${UPX_VERSION}"
-UPX_TARBALL="curl-${UPX_VERSION}.tar.xz"
+UPX_TARBALL="curl-${UPX_VERSION}.tar.gz"
 UPX_MIRRORS=(
   "https://github.com/gfunkmonk/upx/archive/refs/tags/${UPX_VERSION}.tar.gz"
   "https://github.com/gfunkmonk/upx/archive/refs/tags/${UPX_VERSION}.tar.gz"
@@ -52,7 +52,7 @@ cmake \
 clang && \
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR:-/ccache} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH && \
 chmod 755 upx && \
-tar xf upx-${UPX_VERSION}.tar.xz && \
+tar xf upx-${UPX_VERSION}.tar.gz && \
 cd upx-${UPX_VERSION}/ && \
 git submodule init && git submodule update \
 mkdir build && cd build/ \
