@@ -16,6 +16,7 @@ setup_cleanup
 install_host_deps
 download_source "pigz" "${PIGZ_VERSION}" "${PIGZ_TARBALL}" "${PIGZ_MIRRORS[@]}"
 setup_alpine_chroot "${PIGZ_TARBALL}"
+copy_patches "pigz.patch"
 setup_qemu
 mount_chroot
 
@@ -31,6 +32,7 @@ mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR:-/ccache} CCACHE_BASED
 chmod 755 upx && \
 tar xf pigz-${PIGZ_VERSION}.tar.gz && \
 cd pigz-${PIGZ_VERSION}/ && \
+patch -p1 --fuzz=4 < ../pigz.patch && \
 sed -i 's/-O3 -Wall -Wextra -Wno-unknown-pragmas -Wcast-qual/-Os -static -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie/g' Makefile
 sed -i 's/LDFLAGS=/LDFLAGS=-static -Wl,--gc-sections/g' Makefile
 make -j\$(nproc) && \

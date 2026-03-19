@@ -28,6 +28,9 @@ ccache \
 pkgconfig \
 ncurses-dev \
 ncurses-static \
+libmagic-static \
+libmagic \
+file-dev \
 linux-headers && \
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR:-/ccache} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH && \
 chmod 755 upx && \

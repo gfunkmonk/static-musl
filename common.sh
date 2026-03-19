@@ -102,7 +102,13 @@ setup_alpine_chroot() {
   echo -e "${PEACH}= copy resolv.conf and ${tarball} into chroot${NC}"
   cp /etc/resolv.conf ./pasta/etc/
   cp "${tarball}" "./pasta/${tarball}"
-  cp "tools/upx/upx-${ARCH}" "./pasta/upx"
+  if [[ ! -f "tools/upx/upx-${ARCH}" ]]; then
+      echo -e "${TOMATO}= ERROR: tools/upx/upx-${ARCH} not found${NC}"
+      exit 1
+  else
+      cp "tools/upx/upx-${ARCH}" "./pasta/upx"
+  fi
+
 }
 
 # copy_patches patch1 [patch2 ...]

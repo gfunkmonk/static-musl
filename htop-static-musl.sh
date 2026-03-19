@@ -4,8 +4,7 @@ set -euo pipefail
 
 echo -e "${VIOLET}= fetching latest htop version${NC}"
 HTOP_VERSION=$(curl -fsSL "https://api.github.com/repos/htop-dev/htop/releases/latest" \
-  | grep '"tag_name"' | sed 's/.*"release-\([^"]*\)".*/\1/' | sed 's/  "tag_name": "//g' \
-  | sed 's/",//g') || true
+  | grep '"tag_name"' | sed 's/  "tag_name": "//g' | sed 's/",//g') || true
 if [ -z "${HTOP_VERSION}" ]; then
   echo -e "${TAWNY}= GitHub API unavailable, falling back to htop 3.4.1${NC}"
   HTOP_VERSION="3.4.1"
@@ -21,7 +20,7 @@ HTOP_MIRRORS=(
 setup_arch
 setup_cleanup
 install_host_deps
-download_source "nano" "${HTOP_VERSION}" "${HTOP_TARBALL}" "${HTOP_MIRRORS[@]}"
+download_source "htop" "${HTOP_VERSION}" "${HTOP_TARBALL}" "${HTOP_MIRRORS[@]}"
 setup_alpine_chroot "${HTOP_TARBALL}"
 copy_patches "htop.patch"
 setup_qemu

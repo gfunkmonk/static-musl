@@ -24,12 +24,8 @@ musl-dev \
 ccache \
 openssl-dev \
 openssl-libs-static \
-libssh2-dev \
-libssh2-static \
 zlib-dev \
 zlib-static \
-zstd-dev \
-zstd-static \
 autoconf \
 automake && \
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR:-/ccache} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH && \
