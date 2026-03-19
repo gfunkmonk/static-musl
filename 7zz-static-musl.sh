@@ -78,7 +78,7 @@ patch -p1 --fuzz=4 < ../7z-0003-Disable-local-echo-display-when-in-input-passwor
 patch -p1 --fuzz=4 < ../7z-0004-Use-system-locale-to-select-codepage-for-legacy-zip-.patch && \
 patch -p1 --fuzz=4 < ../7z-0005-Fix-BROTLI_MODEL-attribute-for-loongarch64.patch && \
 sed -i 's/CFLAGS_BASE = -O2/CFLAGS_BASE = -Os -static -ffunction-sections -fdata-sections/g' CPP/7zip/7zip_gcc.mak && \
-sed -i 's/LDFLAGS = -Wall/LDFLAGS = -Wl,--gc-sections -static/g' CPP/7zip/7zip_gcc.mak & \
+sed -i 's/LDFLAGS = -Wall/LDFLAGS = -Wl,--gc-sections -static/g' CPP/7zip/7zip_gcc.mak && \
 cd CPP/7zip/Bundles/Alone2 && \
 mkdir -p b/g && \
 make -j\$(nproc) \
