@@ -69,6 +69,7 @@ make && \
 apk add uasm --repository=https://dl-cdn.alpinelinux.org/alpine/edge/testing && \
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR:-/ccache} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH && \
 chmod 755 upx && \
+cp upx /usr/local/bin && \
 export MAKE_OPTS=\$(cat make_opts) && \
 export PLATFORM=\$(cat platform) && \
 export EXTRA_FLAGS=\$(cat extra_flags) && \
@@ -89,6 +90,6 @@ make -j\$(nproc) \
 find . -type f -name '7zzs' -exec cp -va {} 7zz \; ; [ -f 7zz ] || find . -mindepth 2 -type f -name '7zz' | head -n 1 | xargs -I{} cp -va {} 7zz ; [ -f 7zz ] || { echo \"Error: 7zzs or 7zz binary not found after build\" >&2; exit 1; } && \
 strip b/g/7zz && \
 cp b/g/7zz /7-Zip-zstd-${SEVENZIP_SHORT}/7zz && \
-../upx --lzma /7-Zip-zstd-${SEVENZIP_SHORT}/7zz"
+/usr/local/bin/upx --lzma /7-Zip-zstd-${SEVENZIP_SHORT}/7zz"
 
 package_output "7zz" "./pasta/7-Zip-zstd-${SEVENZIP_SHORT}/7zz"
