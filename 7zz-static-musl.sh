@@ -53,7 +53,7 @@ case "${ARCH}" in
 esac
 
 echo $MAKE_OPTS >> ./pasta/make_opts
-echo $PLATFORM >> ./pasta/patform
+echo $PLATFORM >> ./pasta/platform
 echo $EXTRA_FLAGS >> ./pasta/extra_flags
 
 sudo chroot ./pasta/ /bin/sh -c "set -e && apk update && apk add build-base \
@@ -69,9 +69,9 @@ make && \
 apk add uasm --repository=https://dl-cdn.alpinelinux.org/alpine/edge/testing && \
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR:-/ccache} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH && \
 chmod 755 upx && \
-export MAKE_OPTS=$(cat make_opts) && \
-export PLATFORM=$(cat platform) && \
-export EXTRA_FLAGS=$(cat extra_flags) && \
+export MAKE_OPTS=\$(cat make_opts) && \
+export PLATFORM=\$(cat platform) && \
+export EXTRA_FLAGS=\$(cat extra_flags) && \
 tar xf ${SEVENZIP_TARBALL} && \
 cd 7-Zip-zstd-${SEVENZIP_SHORT}/ && \
 patch -p1 --fuzz=4 < ../7z-0003-Disable-local-echo-display-when-in-input-passwords-C.patch && \
@@ -83,7 +83,7 @@ cd CPP/7zip/Bundles/Alone2 && \
 mkdir -p b/g && \
 make -j\$(nproc) \
   CFLAGS_BASE_LIST='-c -D_7ZIP_AFFINITY_DISABLE=1 -DZ7_AFFINITY_DISABLE=1 -D_GNU_SOURCE=1' \
-  CFLAGS_WARN_WALL='-Wall -Wextra' '$MAKE_OPTS' PLATFOM='$PLATFORM' '$EXTRA_FLAGS' \
+  CFLAGS_WARN_WALL='-Wall -Wextra' \$MAKE_OPTS PLATFORM=\$PLATFORM \$EXTRA_FLAGS \
   CC='gcc -Os -static -ffunction-sections -fdata-sections' \
   CXX='g++ -Os -static -ffunction-sections -fdata-sections' && \
 find . -type f -name '7zzs' -exec cp -va {} 7zz \; ; [ -f 7zz ] || find . -mindepth 2 -type f -name '7zz' | head -n 1 | xargs -I{} cp -va {} 7zz ; [ -f 7zz ] || { echo "Error: 7zzs or 7zz binary not found after build" >&2; exit 1; } && \
