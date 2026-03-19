@@ -46,6 +46,7 @@ setup_arch() {
 setup_cleanup() {
   cleanup() {
     sudo umount -lf "./pasta/proc" 2>/dev/null || true
+    sudo umount -lf "./pasta/dev/pts"  2>/dev/null || true
     sudo umount -lf "./pasta/dev"  2>/dev/null || true
     sudo umount -lf "./pasta/sys"  2>/dev/null || true
   }
@@ -137,6 +138,9 @@ mount_chroot() {
   echo -e "${VIOLET}= mount, bind and chroot into dir${NC}"
   sudo mount -t proc none "./pasta/proc/"
   sudo mount --rbind /dev "./pasta/dev/"
+  sudo mount -t devpts devpts "./pasta/dev/pts" -o nosuid,noexec
+  #sudo mount --rbind /dev/pts "./pasta/dev/pts"
+  #sudo mount -t sysfs sys "./pasta/sys/"
   sudo mount --rbind /sys "./pasta/sys/"
 }
 
