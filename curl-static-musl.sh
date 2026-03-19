@@ -4,7 +4,7 @@ set -euo pipefail
 
 echo -e "${VIOLET}= fetching latest curl version${NC}"
 CURL_VERSION=$(curl -fsSL "https://api.github.com/repos/curl/curl/releases/latest" | grep '"tag_name"' \
-  | sed 's/.*"release-\([^"]*\)".*/\1/' | sed 's/_/./g' | grep '":' | sed 's/"tag.name": "curl-//g' \
+  | sed 's/_/./g' | grep '":' | sed 's/"tag.name": "curl-//g' \
   | sed 's/",//g' | sed 's/  //g') || true
 if [ -z "${CURL_VERSION}" ]; then
   echo -e "${TAWNY}= GitHub API unavailable, falling back to curl 8.19.0${NC}"
@@ -12,7 +12,7 @@ if [ -z "${CURL_VERSION}" ]; then
 fi
 
 PACKAGE_VERSION="${CURL_VERSION}"
-CURL_GIT_VER="$(echo $CURL_VERSION | sed 's/\./_/g')"
+CURL_GIT_VER="$(echo ${CURL_VERSION} | sed 's/\./_/g')"
 CURL_TARBALL="curl-${CURL_VERSION}.tar.xz"
 CURL_MIRRORS=(
   "https://curl.se/download/curl-${CURL_VERSION}.tar.xz"

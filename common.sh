@@ -46,9 +46,11 @@ setup_arch() {
 setup_cleanup() {
   cleanup() {
     sudo umount -lf "./pasta/proc" 2>/dev/null || true
+    sudo umount -lf "./pasta/dev/pts"  2>/dev/null || true
     sudo umount -lf "./pasta/dev"  2>/dev/null || true
     sudo umount -lf "./pasta/sys"  2>/dev/null || true
-  }
+    sudo umount -lf "./pasta/sys"  2>/dev/null || true
+	  }
   trap cleanup EXIT
 }
 
@@ -102,7 +104,13 @@ setup_alpine_chroot() {
   echo -e "${PEACH}= copy resolv.conf and ${tarball} into chroot${NC}"
   cp /etc/resolv.conf ./pasta/etc/
   cp "${tarball}" "./pasta/${tarball}"
-  cp "tools/upx/upx-${ARCH}" "./pasta/upx"
+  if [[ ! -f "tools/upx/upx-${ARCH}" ]]; then
+      echo -e "${TOMATO}= ERROR: tools/upx/upx-${ARCH} not found${NC}"
+      exit 1
+  else
+      cp "tools/upx/upx-${ARCH}" "./pasta/upx"
+  fi
+
 }
 
 # copy_patches patch1 [patch2 ...]
@@ -131,6 +139,9 @@ mount_chroot() {
   echo -e "${VIOLET}= mount, bind and chroot into dir${NC}"
   sudo mount -t proc none "./pasta/proc/"
   sudo mount --rbind /dev "./pasta/dev/"
+  sudo mount -t devpts devpts "./pasta/dev/pts" -o nosuid,noexec
+  #sudo mount --rbind /dev/pts "./pasta/dev/pts"
+  #sudo mount -t sysfs sys "./pasta/sys/"
   sudo mount --rbind /sys "./pasta/sys/"
 }
 
