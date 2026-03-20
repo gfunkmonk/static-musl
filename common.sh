@@ -2,6 +2,7 @@
 # common.sh - Shared functions and variables for all *-static-musl.sh scripts.
 # Source this file at the top of each build script: . "$(dirname "$0")/common.sh"
 
+##### Colors ################
 ORANGE="\033[38;2;255;165;0m"
 LEMON="\033[38;2;255;244;79m"
 TAWNY="\033[38;2;204;78;0m"
@@ -20,13 +21,14 @@ SKY="\033[38;2;135;206;250m"
 JUNEBUD="\033[38;2;189;218;87m"
 NAVAJO="\033[38;2;255;222;173m"
 BOYSENBERRY="\033[38;2;135;50;96m"
+CORAL="\033[38;2;240;128;128m"
 NC="\033[0m"
 
+######### Variables ###########
+CHROOTDIR="pasta"
 ARCH=${ARCH:-x86_64}
-
 ALPINE_VERSION="3.23.3"
 ALPINE_MAJOR_MINOR="${ALPINE_VERSION%.*}"
-
 JQ="tools/jq/jq-${ARCH}"
 CURL="tools/curl/curl-${ARCH}"
 
@@ -67,10 +69,9 @@ gh_latest_release() {
 # setup_cleanup: register unmount trap for chroot bind mounts
 setup_cleanup() {
   cleanup() {
-    sudo umount -lf "./pasta/proc" 2>/dev/null || true
-    sudo umount -lfR "./pasta/dev/pts" 2>/dev/null || true
-    sudo umount -lf "./pasta/dev"  2>/dev/null || true
-    sudo umount -lfR "./pasta/sys"  2>/dev/null || true
+    sudo umount -lfR "./${CHROOTDIR}/sys"  2>/dev/null || true
+    sudo umount -lfR "./${CHROOTDIR}/proc" 2>/dev/null || true
+    sudo umount -lfR "./${CHROOTDIR}/dev"  2>/dev/null || true
 	  }
   trap cleanup EXIT
 }
@@ -89,6 +90,10 @@ install_host_deps() {
 download_source() {
   local label="$1" version="$2" tarball="$3"
   shift 3
+  if [ ! -d distfiles/ ]; then
+    echo -e "$HOTPINKdistfiles dir does not exist. Creating it now."
+    mkdir -p distfiles/
+  fi
   if [ -f "${tarball}" ]; then
     echo -e "${SLATE}= ${label}-${version}: ${tarball} already cached, skipping download${NC}"
     return 0
@@ -98,13 +103,13 @@ download_source() {
   for mirror in "$@"; do
     echo -e "${TAWNY}= trying mirror: ${mirror}${NC}"
     if "${CURL}" -fsSL --retry 3 --retry-delay 2 --connect-timeout 10 --max-time 120 \
-        -o "${tarball}" "${mirror}"; then
+        -o distfiles/"${tarball}" "${mirror}"; then
       echo -e "${MINT}= downloaded from: ${mirror}${NC}"
       downloaded=true
       break
     else
       echo -e "${LEMON}= failed: ${mirror}${NC}"
-      rm -f "${tarball}"
+      rm -f distfiles/"${tarball}"
     fi
   done
   if [ "${downloaded}" = false ]; then
@@ -116,26 +121,34 @@ download_source() {
 # setup_alpine_chroot TARBALL
 # Downloads Alpine rootfs, extracts it, and copies resolv.conf + source tarball inside.
 setup_alpine_chroot() {
+  if [ -d ./${CHROOTDIR}/ ]; then
+    echo -e "${CORAL}chroot dir exist! Removing it now.${NC}"
+    rm -fr ./${CHROOTDIR}/
+  fi
   local tarball="$1"
-  if [ -f "${TARBALL}" ]; then
+  if [ ! -d distfiles/ ]; then
+    echo -e "$HOTPINKdistfiles dir does not exist. Creating it now."
+    mkdir -p distfiles/
+  fi
+  if [ -f distfiles/"${TARBALL}" ]; then
     echo -e "${SLATE}= Alpine rootfs ${TARBALL} already cached, skipping download${NC}"
   else
     echo -e "${HELIOTROPE}= download alpine rootfs${NC}"
     "${CURL}" -fsSL --retry 3 --retry-delay 2 --connect-timeout 10 --max-time 120 \
-      -o "${TARBALL}" "${ALPINE_URL}" \
+      -o distfiles/"${TARBALL}" "${ALPINE_URL}" \
       || { echo -e "${TOMATO}= ERROR: failed to download Alpine rootfs${NC}" >&2; exit 1; }
   fi
   echo -e "${SKY}= extract rootfs${NC}"
-  mkdir -p pasta
-  tar xf "${TARBALL}" -C pasta/
+  mkdir -p ${CHROOTDIR}
+  tar xf distfiles/"${TARBALL}" -C ${CHROOTDIR}/
   echo -e "${PEACH}= copy resolv.conf and ${tarball} into chroot${NC}"
-  cp /etc/resolv.conf ./pasta/etc/
-  cp "${tarball}" "./pasta/${tarball}"
+  cp /etc/resolv.conf ./${CHROOTDIR}/etc/
+  cp distfiles/"${tarball}" "./${CHROOTDIR}/${tarball}"
   if [[ ! -f "tools/upx/upx-${ARCH}" ]]; then
     echo -e "${TOMATO}= ERROR: tools/upx/upx-${ARCH} not found${NC}"
     exit 1
   else
-    cp "tools/upx/upx-${ARCH}" "./pasta/upx"
+    cp "tools/upx/upx-${ARCH}" "./${CHROOTDIR}/upx"
   fi
 }
 
@@ -147,7 +160,7 @@ copy_patches() {
       echo -e "${TOMATO}= ERROR: patch file not found: patches/${patch}${NC}"
       exit 1
     fi
-    cp "patches/${patch}" "./pasta/${patch}"
+    cp "patches/${patch}" "./${CHROOTDIR}/${patch}"
   done
 }
 
@@ -155,18 +168,17 @@ copy_patches() {
 setup_qemu() {
   if [ -n "${QEMU_ARCH}" ]; then
     echo -e "${OCHRE}= setup QEMU for cross-arch builds${NC}"
-    sudo mkdir -p "./pasta/usr/bin/"
-    sudo cp "/usr/bin/qemu-${QEMU_ARCH}-static" "./pasta/usr/bin/"
+    sudo mkdir -p "./${CHROOTDIR}/usr/bin/"
+    sudo cp "/usr/bin/qemu-${QEMU_ARCH}-static" "./${CHROOTDIR}/usr/bin/"
   fi
 }
 
 # mount_chroot: bind-mount proc/dev/sys into the chroot directory
 mount_chroot() {
   echo -e "${VIOLET}= mount, bind and chroot into dir${NC}"
-  sudo mount -t proc none "./pasta/proc/"
-  sudo mount --rbind /dev "./pasta/dev/"
-  sudo mount --rbind /sys "./pasta/sys/"
-  sudo mount -t devpts devpts "./pasta/dev/pts" -o nosuid,noexec
+  sudo mount -t proc none "./${CHROOTDIR}/proc/"
+  sudo mount --rbind --make-rslave /dev "./${CHROOTDIR}/dev/"
+  sudo mount --rbind --make-rslave /sys "./${CHROOTDIR}/sys/"
 }
 
 # package_output TOOL BINARY

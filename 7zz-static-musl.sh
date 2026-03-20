@@ -47,10 +47,10 @@ case "${ARCH}" in
      MAKE_OPTS="-f ../../cmpl_gcc.mak"
 esac
 
-echo "$MAKE_OPTS" > ./pasta/make_opts
-echo "$PLATFORM" > ./pasta/platform
+echo "$MAKE_OPTS" > ./"${CHROOTDIR}"/make_opts
+echo "$PLATFORM" > ./"${CHROOTDIR}"/platform
 
-sudo chroot ./pasta/ /bin/sh -c "set -e && apk update && apk add build-base \
+sudo chroot ./"${CHROOTDIR}"/ /bin/sh -c "set -e && apk update && apk add build-base \
 musl-dev \
 ccache \
 gcc \
@@ -85,5 +85,5 @@ strip 7zz && \
 cp 7zz /7-Zip-zstd-${SEVENZIP_SHORT}/7zz && \
 /usr/local/bin/upx --lzma /7-Zip-zstd-${SEVENZIP_SHORT}/7zz"
 
-package_output "7zz" "./pasta/7-Zip-zstd-${SEVENZIP_SHORT}/7zz"
+package_output "7zz" "./"${CHROOTDIR}"/7-Zip-zstd-${SEVENZIP_SHORT}/7zz"
 

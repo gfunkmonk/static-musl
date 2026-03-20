@@ -1,52 +1,45 @@
 #!/bin/bash
 set -euo pipefail
+
 . "$(dirname "$0")/common.sh"
 
-UPX_VERSION="5.1.3"
+echo -e "${VIOLET}= fetching latest upx version${NC}"
+UPX_VERSION=$(gh_latest_release "upx/upx" '.tag_name | ltrimstr("v")'	) || true
+if [ -z "${UPX_VERSION}" ]; then
+  echo -e "${TAWNY}= GitHub API unavailable, falling back to oksh 5.1.1${NC}"
+  UPX_VERSION="5.1.1"
+fi
+
 PACKAGE_VERSION="${UPX_VERSION}"
+UPX_TARBALL="upx-${UPX_VERSION}-src.tar.xz"
+UPX_MIRRORS=(
+  "https://github.com/upx/upx/releases/download/v${UPX_VERSION}/upx-${UPX_VERSION}-src.tar.xz"
+  "https://fossies.org/linux/misc/upx-${UPX_VERSION}-src.tar.xz"
+)
 
 setup_arch
 setup_cleanup
-install_host_deps
-
-################################################################################
-# setup_alpine_chroot is not used here: there is no source tarball to copy in, #
-# and no pre-built upx binary is needed (we are building upx itself).          #
-################################################################################
-
-echo -e "${HELIOTROPE}= download alpine rootfs${NC}"
-if [ -f "${TARBALL}" ]; then
-  echo -e "${SLATE}= Alpine rootfs ${TARBALL} already cached, skipping download${NC}"
-else
-  echo -e "${HELIOTROPE}= download alpine rootfs${NC}"
-  "${CURL}" -fsSL --retry 3 --retry-delay 2 --connect-timeout 10 --max-time 120 \
-    -o "${TARBALL}" "${ALPINE_URL}" \
-    || { echo -e "${TOMATO}= ERROR: failed to download Alpine rootfs${NC}" >&2; exit 1; }
-fi
-echo -e "${SKY}= extract rootfs${NC}"
-mkdir -p pasta
-tar xf "${TARBALL}" -C pasta/
-echo -e "${PEACH}= copy resolv.conf into chroot${NC}"
-cp /etc/resolv.conf ./pasta/etc/
-
+#install_host_deps
+download_source "upx" "${UPX_VERSION}" "${UPX_TARBALL}" "${UPX_MIRRORS[@]}"
+setup_alpine_chroot "${UPX_TARBALL}"
+copy_patches "upx-mod.patch"
 setup_qemu
 mount_chroot
 
-sudo chroot ./pasta/ /bin/sh -c "set -e && apk update && apk add build-base \
+sudo chroot ./"${CHROOTDIR}"/ /bin/sh -c "set -e && apk update && apk add build-base \
 musl-dev \
 ccache \
 zlib-dev \
 zlib-static \
 zstd-dev \
 zstd-static \
-git \
 cmake \
-clang \
 samurai && \
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR:-/ccache} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH && \
-git clone https://github.com/gfunkmonk/upx upx-${UPX_VERSION} --depth=1 --branch devel && \
-cd upx-${UPX_VERSION}/ && \
-git submodule init && git submodule update && \
+chmod 755 upx && \
+tar xf upx-${UPX_VERSION}-src.tar.xz && \
+cd upx-${UPX_VERSION}-src/ && \
+patch -p1 --fuzz=4 < ../upx-mod.patch && \
 mkdir build && cd build/ && \
 cmake -G Ninja \
   -DCMAKE_EXE_LINKER_FLAGS='-Wl,--gc-sections -static' \
@@ -63,4 +56,4 @@ strip upx && \
 cp upx upx1 && \
 ./upx1 --lzma upx"
 
-package_output "upx" "./pasta/upx-${UPX_VERSION}/build/upx"
+package_output "upx" "./"${CHROOTDIR}"/upx-${UPX_VERSION}-src/build/upx"

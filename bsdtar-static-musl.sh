@@ -28,7 +28,7 @@ setup_qemu
 mount_chroot
 
 # Note: --with-zlib, --without-bz2lib; lzma/zstd/xml2/openssl linked via pkg-config --static
-sudo chroot ./pasta/ /bin/sh -c "set -e && apk update && apk add build-base \
+sudo chroot ./"${CHROOTDIR}"/ /bin/sh -c "set -e && apk update && apk add build-base \
 musl-dev \
 ccache \
 make \
@@ -43,6 +43,8 @@ lz4-dev \
 lz4-static \
 openssl-dev \
 openssl-libs-static \
+libbz2 \
+bzip2-static \
 libxml2-dev \
 libxml2-static && \
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR:-/ccache} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH && \
@@ -50,11 +52,9 @@ chmod 755 upx && \
 tar xf libarchive-${BSDTAR_VERSION}.tar.xz && \
 cd libarchive-${BSDTAR_VERSION}/ && \
 ./configure CC=gcc \
-  --disable-shared --enable-static \
-  --enable-bsdtar=static \
-  --disable-bsdcat --disable-bsdcpio \
-  --with-zlib --without-bz2lib \
-  --disable-maintainer-mode --disable-dependency-tracking \
+  --disable-shared --enable-static --enable-bsdtar=static \
+  --disable-bsdcat --disable-bsdcpio --with-zlib \
+  --disable-maintainer-mode --with-bz2lib --disable-dependency-tracking \
   LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
   CFLAGS='-Os -static -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie' && \
 make -j\$(nproc) && \
@@ -66,4 +66,4 @@ gcc -static -o bsdtar tar/bsdtar-bsdtar.o \
 strip bsdtar && \
 ../upx --lzma bsdtar"
 
-package_output "bsdtar" "./pasta/libarchive-${BSDTAR_VERSION}/bsdtar"
+package_output "bsdtar" "./"${CHROOTDIR}"/libarchive-${BSDTAR_VERSION}/bsdtar"
