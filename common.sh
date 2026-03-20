@@ -112,9 +112,14 @@ download_source() {
 # Downloads Alpine rootfs, extracts it, and copies resolv.conf + source tarball inside.
 setup_alpine_chroot() {
   local tarball="$1"
-  echo -e "${HELIOTROPE}= download alpine rootfs${NC}"
-  wget -c --tries=3 --retry-connrefused --timeout=30 "${ALPINE_URL}" \
-  || { echo -e "${TOMATO}= ERROR: failed to download Alpine rootfs${NC}"; exit 1; }
+  if [ -f "${TARBALL}" ]; then
+    echo -e "${SLATE}= Alpine rootfs ${TARBALL} already cached, skipping download${NC}"
+  else
+    echo -e "${HELIOTROPE}= download alpine rootfs${NC}"
+    curl -fsSL --retry 3 --retry-delay 2 --connect-timeout 10 --max-time 120 \
+      -o "${TARBALL}" "${ALPINE_URL}" \
+      || { echo -e "${TOMATO}= ERROR: failed to download Alpine rootfs${NC}" >&2; exit 1; }
+  fi
   echo -e "${SKY}= extract rootfs${NC}"
   mkdir -p pasta
   tar xf "${TARBALL}" -C pasta/
@@ -122,12 +127,11 @@ setup_alpine_chroot() {
   cp /etc/resolv.conf ./pasta/etc/
   cp "${tarball}" "./pasta/${tarball}"
   if [[ ! -f "tools/upx/upx-${ARCH}" ]]; then
-      echo -e "${TOMATO}= ERROR: tools/upx/upx-${ARCH} not found${NC}"
-      exit 1
+    echo -e "${TOMATO}= ERROR: tools/upx/upx-${ARCH} not found${NC}"
+    exit 1
   else
-      cp "tools/upx/upx-${ARCH}" "./pasta/upx"
+    cp "tools/upx/upx-${ARCH}" "./pasta/upx"
   fi
-
 }
 
 # copy_patches patch1 [patch2 ...]

@@ -90,6 +90,10 @@ jobs:
         echo "version=${version}" >> "$GITHUB_OUTPUT"
         echo "PACKAGE_VERSION=${version}" >> "$GITHUB_ENV"
 
+    - name: read Alpine version
+      run: |
+        echo "ALPINE_VERSION=$(grep '^ALPINE_VERSION=' common.sh | cut -d= -f2 | tr -d '"')" >> "$GITHUB_ENV"
+
     - name: Prepare ccache directory
       run: |
             mkdir -p "${CCACHE_DIR}"
@@ -107,7 +111,7 @@ jobs:
             CCACHE_DEPEND=true
             EOF
             echo "CCACHE Environment set!"
-            
+
     - name: Set up ccache
       uses: hendrikmuhs/ccache-action@main
       with:
@@ -127,6 +131,12 @@ jobs:
         key: build-${{ env.ALPINE_VERSION }}-${{ matrix.arch }}-${{ matrix.tool }}-${{ hashFiles(format('{0}-static-musl.sh', matrix.tool)) }}
         restore-keys: |
           build-${{ env.ALPINE_VERSION }}-${{ matrix.arch }}-${{ matrix.tool }}-
+
+    - name: cache Alpine rootfs
+      uses: actions/cache@v5
+      with:
+        path: alpine-minirootfs-*.tar.gz
+        key: alpine-rootfs-${{ env.ALPINE_VERSION }}-${{ matrix.arch }}
 
     - name: Build ${{ matrix.tool }} for ${{ matrix.arch }}
       run: |
