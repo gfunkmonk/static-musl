@@ -3,8 +3,7 @@ set -euo pipefail
 . "$(dirname "$0")/common.sh"
 
 echo -e "${VIOLET}= fetching latest htop version${NC}"
-HTOP_VERSION=$(curl -fsSL "https://api.github.com/repos/htop-dev/htop/releases/latest" \
-  | grep '"tag_name"' | sed 's/  "tag_name": "//g' | sed 's/",//g') || true
+HTOP_VERSION=$(gh_latest_release "htop-dev/htop") || true
 if [ -z "${HTOP_VERSION}" ]; then
   echo -e "${TAWNY}= GitHub API unavailable, falling back to htop 3.4.1${NC}"
   HTOP_VERSION="3.4.1"

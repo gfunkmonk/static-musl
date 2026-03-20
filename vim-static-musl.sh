@@ -4,7 +4,7 @@ set -euo pipefail
 
 echo -e "${VIOLET}= fetching latest vim version${NC}"
 VIM_VERSION=$(curl -fsSL "https://api.github.com/repos/vim/vim/tags" \
-  | tools/jq/jq-"$ARCH" -r '.[0].name' | sed 's/v//g') || true
+  | "${JQ}" -r '.[0].name | ltrimstr("v")') || true
 if [ -z "${VIM_VERSION}" ]; then
   echo -e "${TAWNY}= GitHub API unavailable, falling back to vim 9.2.0119${NC}"
   VIM_VERSION="9.2.0119"

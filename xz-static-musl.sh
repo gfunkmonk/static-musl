@@ -3,8 +3,7 @@ set -euo pipefail
 . "$(dirname "$0")/common.sh"
 
 echo -e "${VIOLET}= fetching latest xz version${NC}"
-XZ_VERSION=$(curl -fsSL "https://api.github.com/repos/tukaani-project/xz/releases/latest"  \
-  | grep '"tag_name"' | sed 's/",//g' | sed 's/  "tag_name": "v//g') || true
+XZ_VERSION=$(gh_latest_release "tukaani-project/xz" '.tag_name | ltrimstr("v")') || true
 if [ -z "${XZ_VERSION}" ]; then
   echo -e "${TAWNY}= GitHub API unavailable, falling back to xz 5.8.2${NC}"
   XZ_VERSION="5.8.2"

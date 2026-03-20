@@ -37,7 +37,7 @@ cmake \
 clang \
 samurai && \
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR:-/ccache} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH && \
-git clone https://github.com/gfunkmonk/upx upx-${UPX_VERSION} --depth=1 && \
+git clone https://github.com/gfunkmonk/upx upx-${UPX_VERSION} --depth=1 --branch devel && \
 cd upx-${UPX_VERSION}/ && \
 git submodule init && git submodule update && \
 mkdir build && cd build/ && \

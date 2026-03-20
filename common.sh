@@ -23,11 +23,18 @@ BOYSENBERRY="\033[38;2;135;50;96m"
 NC="\033[0m"
 
 ARCH=${ARCH:-x86_64}
+
 ALPINE_VERSION="3.23.3"
 ALPINE_MAJOR_MINOR="${ALPINE_VERSION%.*}"
 
+JQ="tools/jq/jq-${ARCH}"
+
 # setup_arch: resolve QEMU_ARCH, ALPINE_URL, and TARBALL from ARCH
 setup_arch() {
+  if [[ ! -x "${JQ}" ]]; then
+    echo -e "${TOMATO}= ERROR: jq binary not found: ${JQ}${NC}" >&2
+    exit 1
+  fi
   case "${ARCH}" in
     x86_64)  QEMU_ARCH="" ;;
     x86)     QEMU_ARCH="i386" ;;
@@ -42,14 +49,22 @@ setup_arch() {
   TARBALL="${ALPINE_URL##*/}"
 }
 
+# gh_latest_release REPO [JQ_FILTER]
+# Fetches .tag_name from the GitHub releases/latest API, applies optional jq filter.
+# Defaults to returning .tag_name as-is.
+gh_latest_release() {
+    local repo="$1" filter="${2:-.tag_name}"
+    curl -fsSL --connect-timeout 10 --max-time 30 \
+        "https://api.github.com/repos/${repo}/releases/latest" \
+        | "${JQ}" -r "${filter}"
+}
+
 # setup_cleanup: register unmount trap for chroot bind mounts
 setup_cleanup() {
   cleanup() {
     sudo umount -lf "./pasta/proc" 2>/dev/null || true
-    sudo umount -lf "./pasta/dev/pts"  2>/dev/null || true
-    sudo umount -lf "./pasta/dev"  2>/dev/null || true
-    sudo umount -lf "./pasta/sys"  2>/dev/null || true
-    sudo umount -lf "./pasta/sys"  2>/dev/null || true
+    sudo umount -R "./pasta/dev"  2>/dev/null || true
+    sudo umount -R "./pasta/sys"  2>/dev/null || true
 	  }
   trap cleanup EXIT
 }
@@ -97,7 +112,8 @@ download_source() {
 setup_alpine_chroot() {
   local tarball="$1"
   echo -e "${HELIOTROPE}= download alpine rootfs${NC}"
-  wget -c "${ALPINE_URL}"
+  wget -c --tries=3 --retry-connrefused --timeout=30 "${ALPINE_URL}" \
+  || { echo -e "${TOMATO}= ERROR: failed to download Alpine rootfs${NC}"; exit 1; }
   echo -e "${SKY}= extract rootfs${NC}"
   mkdir -p pasta
   tar xf "${TARBALL}" -C pasta/

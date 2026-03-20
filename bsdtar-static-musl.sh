@@ -3,8 +3,7 @@ set -euo pipefail
 . "$(dirname "$0")/common.sh"
 
 echo -e "${VIOLET}= fetching latest bsdtar version${NC}"
-BSDTAR_VERSION=$(curl -fsSL "https://api.github.com/repos/libarchive/libarchive/releases/latest" \
-  | grep '"v' | sed 's/"tag_name": "v//g' | sed 's/",//g' | sed 's/  //g') || true
+BSDTAR_VERSION=$(gh_latest_release "libarchive/libarchive" '.tag_name | ltrimstr("v")') || true
 if [ -z "${BSDTAR_VERSION}" ]; then
   echo -e "${TAWNY}= GitHub API unavailable, falling back to bsdtar 3.8.6${NC}"
   BSDTAR_VERSION="3.8.6"

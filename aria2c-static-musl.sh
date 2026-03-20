@@ -3,13 +3,12 @@ set -euo pipefail
 . "$(dirname "$0")/common.sh"
 
 echo -e "${AQUA}= fetching latest aria2 version${NC}"
-ARIA2_VERSION=$(curl -fsSL --connect-timeout 10 --max-time 30 \
-  "https://api.github.com/repos/aria2/aria2/releases/latest" \
-  | grep '"tag_name"' | sed 's/.*"release-\([^"]*\)".*/\1/') || true
+ARIA2_VERSION=$(gh_latest_release "aria2/aria2" '.tag_name | ltrimstr("release-")') || true
 if [ -z "${ARIA2_VERSION}" ]; then
   echo -e "${TAWNY}= GitHub API unavailable, falling back to aria2 1.37.0${NC}"
   ARIA2_VERSION="1.37.0"
 fi
+
 echo -e "${MINT}= building aria2 version: ${ARIA2_VERSION}${NC}"
 PACKAGE_VERSION="${ARIA2_VERSION}"
 
