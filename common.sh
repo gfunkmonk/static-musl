@@ -28,11 +28,16 @@ ALPINE_VERSION="3.23.3"
 ALPINE_MAJOR_MINOR="${ALPINE_VERSION%.*}"
 
 JQ="tools/jq/jq-${ARCH}"
+CURL="tools/curl/curl-${ARCH}"
 
 # setup_arch: resolve QEMU_ARCH, ALPINE_URL, and TARBALL from ARCH
 setup_arch() {
   if [[ ! -x "${JQ}" ]]; then
     echo -e "${TOMATO}= ERROR: jq binary not found: ${JQ}${NC}" >&2
+    exit 1
+  fi
+  if [[ ! -x "${CURL}" ]]; then
+    echo -e "${TOMATO}= ERROR: curl binary not found: ${CURL}${NC}" >&2
     exit 1
   fi
   case "${ARCH}" in
@@ -54,7 +59,7 @@ setup_arch() {
 # Defaults to returning .tag_name as-is.
 gh_latest_release() {
     local repo="$1" filter="${2:-.tag_name}"
-    curl -fsSL --connect-timeout 10 --max-time 30 \
+    "${CURL}" -fsSL --connect-timeout 10 --max-time 30 \
         "https://api.github.com/repos/${repo}/releases/latest" \
         | "${JQ}" -r "${filter}"
 }
@@ -62,9 +67,9 @@ gh_latest_release() {
 # setup_cleanup: register unmount trap for chroot bind mounts
 setup_cleanup() {
   cleanup() {
-    sudo umount -lfR "./pasta/proc" 2>/dev/null || true
+    sudo umount -lf "./pasta/proc" 2>/dev/null || true
     sudo umount -lfR "./pasta/dev/pts" 2>/dev/null || true
-    sudo umount -lfR "./pasta/dev"  2>/dev/null || true
+    sudo umount -lf "./pasta/dev"  2>/dev/null || true
     sudo umount -lfR "./pasta/sys"  2>/dev/null || true
 	  }
   trap cleanup EXIT
@@ -73,7 +78,7 @@ setup_cleanup() {
 # install_host_deps: install required packages on the Ubuntu runner
 install_host_deps() {
   echo -e "${AQUA}= install dependencies${NC}"
-  local DEBIAN_DEPS=(wget curl binutils)
+  local DEBIAN_DEPS=(binutils)
   [ -n "${QEMU_ARCH}" ] && DEBIAN_DEPS+=(qemu-user-static)
   sudo apt-get update -qy && sudo apt-get install -y "${DEBIAN_DEPS[@]}"
 }
@@ -92,7 +97,7 @@ download_source() {
   local downloaded=false
   for mirror in "$@"; do
     echo -e "${TAWNY}= trying mirror: ${mirror}${NC}"
-    if curl -fsSL --retry 3 --retry-delay 2 --connect-timeout 10 --max-time 120 \
+    if "${CURL}" -fsSL --retry 3 --retry-delay 2 --connect-timeout 10 --max-time 120 \
         -o "${tarball}" "${mirror}"; then
       echo -e "${MINT}= downloaded from: ${mirror}${NC}"
       downloaded=true
@@ -116,7 +121,7 @@ setup_alpine_chroot() {
     echo -e "${SLATE}= Alpine rootfs ${TARBALL} already cached, skipping download${NC}"
   else
     echo -e "${HELIOTROPE}= download alpine rootfs${NC}"
-    curl -fsSL --retry 3 --retry-delay 2 --connect-timeout 10 --max-time 120 \
+    "${CURL}" -fsSL --retry 3 --retry-delay 2 --connect-timeout 10 --max-time 120 \
       -o "${TARBALL}" "${ALPINE_URL}" \
       || { echo -e "${TOMATO}= ERROR: failed to download Alpine rootfs${NC}" >&2; exit 1; }
   fi
@@ -160,10 +165,8 @@ mount_chroot() {
   echo -e "${VIOLET}= mount, bind and chroot into dir${NC}"
   sudo mount -t proc none "./pasta/proc/"
   sudo mount --rbind /dev "./pasta/dev/"
-  sudo mount -t devpts devpts "./pasta/dev/pts" -o nosuid,noexec
-  #sudo mount --rbind /dev/pts "./pasta/dev/pts"
-  #sudo mount -t sysfs sys "./pasta/sys/"
   sudo mount --rbind /sys "./pasta/sys/"
+  sudo mount -t devpts devpts "./pasta/dev/pts" -o nosuid,noexec
 }
 
 # package_output TOOL BINARY

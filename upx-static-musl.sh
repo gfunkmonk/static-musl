@@ -15,7 +15,14 @@ install_host_deps
 ################################################################################
 
 echo -e "${HELIOTROPE}= download alpine rootfs${NC}"
-wget -c "${ALPINE_URL}"
+if [ -f "${TARBALL}" ]; then
+  echo -e "${SLATE}= Alpine rootfs ${TARBALL} already cached, skipping download${NC}"
+else
+  echo -e "${HELIOTROPE}= download alpine rootfs${NC}"
+  "${CURL}" -fsSL --retry 3 --retry-delay 2 --connect-timeout 10 --max-time 120 \
+    -o "${TARBALL}" "${ALPINE_URL}" \
+    || { echo -e "${TOMATO}= ERROR: failed to download Alpine rootfs${NC}" >&2; exit 1; }
+fi
 echo -e "${SKY}= extract rootfs${NC}"
 mkdir -p pasta
 tar xf "${TARBALL}" -C pasta/

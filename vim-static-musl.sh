@@ -3,7 +3,7 @@ set -euo pipefail
 . "$(dirname "$0")/common.sh"
 
 echo -e "${VIOLET}= fetching latest vim version${NC}"
-VIM_VERSION=$(curl -fsSL "https://api.github.com/repos/vim/vim/tags" \
+VIM_VERSION=$("${CURL}" -fsSL "https://api.github.com/repos/vim/vim/tags" \
   | "${JQ}" -r '.[0].name | ltrimstr("v")') || true
 if [ -z "${VIM_VERSION}" ]; then
   echo -e "${TAWNY}= GitHub API unavailable, falling back to vim 9.2.0119${NC}"

@@ -24,7 +24,7 @@ download_bash_upstream_patches() {
   echo -e "${AQUA}= download bash ${BASH_VERSION} upstream patches${NC}"
   mkdir -p "${BASH_PATCH_DIR}"
   local patch_index
-  if ! patch_index=$(curl -fsSL "${BASH_PATCH_URL}"); then
+  if ! patch_index=$("${CURL}" -fsSL "${BASH_PATCH_URL}"); then
     echo -e "${TOMATO}= ERROR: failed to fetch patch index from ${BASH_PATCH_URL}${NC}"
     exit 1
   fi
@@ -44,7 +44,7 @@ download_bash_upstream_patches() {
       echo -e "${SLATE}= ${patch} already downloaded${NC}"
       continue
     fi
-    if ! curl -fsSL --retry 3 --retry-delay 2 --connect-timeout 10 --max-time 120 \
+    if ! "${CURL}" -fsSL --retry 3 --retry-delay 2 --connect-timeout 10 --max-time 120 \
       -o "${dest}" "${BASH_PATCH_URL}${patch}"; then
       echo -e "${TOMATO}= ERROR: failed to download ${patch} from ${BASH_PATCH_URL}${NC}"
       exit 1
