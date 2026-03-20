@@ -81,7 +81,6 @@ make -j\$(nproc) \
   CC='gcc -Os -static -ffunction-sections -fdata-sections' \
   CXX='g++ -Os -static -ffunction-sections -fdata-sections' && \
 find . -type f -name '7zzs' -exec cp -va {} 7zz \; ; [ -f 7zz ] || find . -mindepth 2 -type f -name '7zz' | head -n 1 | xargs -I{} cp -va {} 7zz ; [ -f 7zz ] || { echo \"Error: 7zzs or 7zz binary not found after build\" >&2; exit 1; } && \
-cp -va "$binary" 7zz
 strip 7zz && \
 cp 7zz /7-Zip-zstd-${SEVENZIP_SHORT}/7zz && \
 /usr/local/bin/upx --lzma /7-Zip-zstd-${SEVENZIP_SHORT}/7zz"
