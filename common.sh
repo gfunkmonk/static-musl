@@ -15,6 +15,9 @@ CURL="tools/curl/curl-${ARCH}"
 # Defaults to /ccache (ephemeral, inside the chroot).
 CCACHE_CHROOT_DIR="${CCACHE_CHROOT_DIR:-/ccache}"
 
+# Common build dependencies installed in every chroot
+COMMON_BUILD_DEPS="build-base musl-dev ccache"
+
 ##### Colors ################
 ORANGE="\033[38;2;255;165;0m"
 LEMON="\033[38;2;255;244;79m"
@@ -68,7 +71,7 @@ setup_arch() {
     aarch64) QEMU_ARCH="aarch64" ;;
     armv7)   QEMU_ARCH="arm" ;;
     *)
-      echo -e "${LAGOON}Unknown architecture: ${HOTPINK}${ARCH}${NC}"
+      echo -e "${LAGOON}Unknown architecture: ${HOTPINK}${ARCH}${NC}" >&2
       exit 1
       ;;
   esac
@@ -79,22 +82,60 @@ setup_arch() {
 # gh_latest_release REPO [JQ_FILTER]
 # Fetches .tag_name from the GitHub releases/latest API, applies optional jq filter.
 # Defaults to returning .tag_name as-is.
+# Results are cached for 1 hour to reduce API rate limit hits.
 gh_latest_release() {
     local repo="$1" filter="${2:-.tag_name}"
-    "${CURL}" -fsSL --connect-timeout 10 --max-time 30 \
+    local cache_file="distfiles/.gh-cache-${repo//\//-}-latest"
+    
+    # Use cached result if less than 1 hour old
+    if [ -f "${cache_file}" ]; then
+        local cache_age=$(($(date +%s) - $(stat -c %Y "${cache_file}" 2>/dev/null || echo 0)))
+        if [ "${cache_age}" -lt 3600 ]; then
+            cat "${cache_file}"
+            return 0
+        fi
+    fi
+    
+    local result
+    result=$("${CURL}" -fsSL --connect-timeout 10 --max-time 30 \
         ${GITHUB_TOKEN:+-H "Authorization: Bearer ${GITHUB_TOKEN}"} \
         "https://api.github.com/repos/${repo}/releases/latest" \
-        | "${JQ}" -r "${filter} // empty"
+        | "${JQ}" -r "${filter} // empty")
+    
+    if [ -n "${result}" ]; then
+        mkdir -p distfiles
+        echo "${result}" > "${cache_file}"
+        echo "${result}"
+    fi
 }
 
 # gh_latest_tag REPO [JQ_FILTER]
 # Fetches the first entry from the GitHub tags API, applies optional jq filter.
+# Results are cached for 1 hour to reduce API rate limit hits.
 gh_latest_tag() {
     local repo="$1" filter="${2:-.[0].name}"
-    "${CURL}" -fsSL --connect-timeout 10 --max-time 30 \
+    local cache_file="distfiles/.gh-cache-${repo//\//-}-tag"
+    
+    # Use cached result if less than 1 hour old
+    if [ -f "${cache_file}" ]; then
+        local cache_age=$(($(date +%s) - $(stat -c %Y "${cache_file}" 2>/dev/null || echo 0)))
+        if [ "${cache_age}" -lt 3600 ]; then
+            cat "${cache_file}"
+            return 0
+        fi
+    fi
+    
+    local result
+    result=$("${CURL}" -fsSL --connect-timeout 10 --max-time 30 \
         ${GITHUB_TOKEN:+-H "Authorization: Bearer ${GITHUB_TOKEN}"} \
         "https://api.github.com/repos/${repo}/tags" \
-        | "${JQ}" -r "${filter} // empty"
+        | "${JQ}" -r "${filter} // empty")
+    
+    if [ -n "${result}" ]; then
+        mkdir -p distfiles
+        echo "${result}" > "${cache_file}"
+        echo "${result}"
+    fi
 }
 
 # setup_cleanup: register unmount trap for chroot bind mounts
@@ -117,6 +158,7 @@ install_host_deps() {
 # download_source LABEL VERSION TARBALL mirror1 [mirror2 ...]
 # Downloads TARBALL from the first mirror that succeeds.
 # Skips the download if TARBALL already exists (e.g. restored from cache).
+# Validates downloaded file is not empty.
 download_source() {
   local label="$1" version="$2" tarball="$3"
   shift 3
@@ -126,6 +168,11 @@ download_source() {
   fi
   if [ -f "distfiles/${tarball}" ]; then
     echo -e "${SLATE}= ${label}-${version}: distfiles/${tarball} already cached, skipping download${NC}"
+    # Verify cached file is not empty
+    if [ ! -s "distfiles/${tarball}" ]; then
+      echo -e "${TOMATO}= ERROR: Cached file is empty: distfiles/${tarball}${NC}" >&2
+      exit 1
+    fi
     return 0
   fi
   echo -e "${AQUA}= downloading ${label}-${version} tarball${NC}"
@@ -134,6 +181,12 @@ download_source() {
     echo -e "${TAWNY}= trying mirror: ${mirror}${NC}"
     if "${CURL}" -fsSL --retry 3 --retry-delay 2 --connect-timeout 10 --max-time 120 \
         -o distfiles/"${tarball}" "${mirror}"; then
+      # Verify downloaded file is not empty
+      if [ ! -s distfiles/"${tarball}" ]; then
+        echo -e "${LEMON}= downloaded file is empty, trying next mirror${NC}"
+        rm -f distfiles/"${tarball}"
+        continue
+      fi
       echo -e "${MINT}= downloaded from: ${mirror}${NC}"
       downloaded=true
       break
@@ -143,7 +196,7 @@ download_source() {
     fi
   done
   if [ "${downloaded}" = false ]; then
-    echo -e "${TOMATO}= ERROR: all mirrors failed for ${tarball}${NC}"
+    echo -e "${TOMATO}= ERROR: all mirrors failed for ${tarball}${NC}" >&2
     exit 1
   fi
 }
@@ -167,6 +220,11 @@ setup_alpine_chroot() {
     "${CURL}" -fsSL --retry 3 --retry-delay 2 --connect-timeout 10 --max-time 120 \
       -o chrootfiles/"${TARBALL}" "${ALPINE_URL}" \
       || { echo -e "${TOMATO}= ERROR: failed to download Alpine rootfs${NC}" >&2; exit 1; }
+    # Verify downloaded rootfs is not empty
+    if [ ! -s chrootfiles/"${TARBALL}" ]; then
+      echo -e "${TOMATO}= ERROR: Downloaded Alpine rootfs is empty${NC}" >&2
+      exit 1
+    fi
   fi
   echo -e "${SKY}= extract rootfs${NC}"
   mkdir -p "${CHROOTDIR}"
@@ -175,11 +233,13 @@ setup_alpine_chroot() {
   cp /etc/resolv.conf ./${CHROOTDIR}/etc/
   cp distfiles/"${tarball}" "./${CHROOTDIR}/${tarball}"
   if [[ ! -f "tools/upx/upx-${ARCH}" ]]; then
-    echo -e "${TOMATO}= ERROR: tools/upx/upx-${ARCH} not found${NC}"
+    echo -e "${TOMATO}= ERROR: tools/upx/upx-${ARCH} not found${NC}" >&2
     exit 1
   else
     cp "tools/upx/upx-${ARCH}" "./${CHROOTDIR}/upx"
   fi
+  # Mark rootfs as fresh to potentially skip apk update
+  touch "./${CHROOTDIR}/.rootfs-fresh"
 }
 
 # copy_patches patch1 [patch2 ...]
@@ -187,7 +247,7 @@ setup_alpine_chroot() {
 copy_patches() {
   for patch in "$@"; do
     if [ ! -f "patches/${patch}" ]; then
-      echo -e "${TOMATO}= ERROR: patch file not found: patches/${patch}${NC}"
+      echo -e "${TOMATO}= ERROR: patch file not found: patches/${patch}${NC}" >&2
       exit 1
     fi
     cp "patches/${patch}" "./${CHROOTDIR}/${patch}"
@@ -195,25 +255,37 @@ copy_patches() {
 }
 
 # setup_qemu: copy qemu static binary into chroot for cross-arch builds
+# Validates QEMU binary exists before copying.
 setup_qemu() {
   if [ -n "${QEMU_ARCH}" ]; then
     echo -e "${OCHRE}= setup QEMU for cross-arch builds${NC}"
+    local qemu_bin="/usr/bin/qemu-${QEMU_ARCH}-static"
+    if [ ! -f "${qemu_bin}" ]; then
+      echo -e "${TOMATO}= ERROR: QEMU binary not found: ${qemu_bin}${NC}" >&2
+      echo -e "${HELIOTROPE}= Install it with: sudo apt-get install qemu-user-static${NC}" >&2
+      exit 1
+    fi
     sudo mkdir -p "./${CHROOTDIR}/usr/bin/"
-    sudo cp "/usr/bin/qemu-${QEMU_ARCH}-static" "./${CHROOTDIR}/usr/bin/"
+    sudo cp "${qemu_bin}" "./${CHROOTDIR}/usr/bin/"
   fi
 }
 
 # mount_chroot: bind-mount proc/dev/sys into the chroot directory
+# Validates CCACHE_DIR exists before mounting.
 mount_chroot() {
   echo -e "${VIOLET}= mount, bind and chroot into dir${NC}"
   local ccachelogdir
-  ccachelogdir=$(ccache -p 2>/dev/null | grep log_file | cut -d "=" -f2 | rev | cut -d'/' -f2- | rev) || true  
+  ccachelogdir=$(ccache -p 2>/dev/null | grep log_file | cut -d "=" -f2 | rev | cut -d'/' -f2- | rev) || true
   sudo mount --rbind /dev "./${CHROOTDIR}/dev/"
   sudo mount --make-rslave "./${CHROOTDIR}/dev/"
   sudo mount -t proc none "./${CHROOTDIR}/proc/"
   sudo mount --rbind /sys "./${CHROOTDIR}/sys/"
   sudo mount --make-rslave "./${CHROOTDIR}/sys/"
-  if [ -n "${CCACHE_DIR:-}" ] && [ -d "${CCACHE_DIR}" ]; then
+  if [ -n "${CCACHE_DIR:-}" ]; then
+    if [ ! -d "${CCACHE_DIR}" ]; then
+      echo -e "${TOMATO}= ERROR: CCACHE_DIR is set but directory does not exist: ${CCACHE_DIR}${NC}" >&2
+      exit 1
+    fi
     sudo mkdir -p "./${CHROOTDIR}/${CCACHE_CHROOT_DIR}"
     sudo mount --bind "${CCACHE_DIR}" "./${CHROOTDIR}/${CCACHE_CHROOT_DIR}"
     [ -n "$ccachelogdir" ] && sudo mkdir -p "./${CHROOTDIR}/$ccachelogdir"

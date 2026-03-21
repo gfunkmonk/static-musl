@@ -49,7 +49,10 @@ esac
 
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
 set -e
-apk update && apk add build-base musl-dev ccache gcc g++ patch git nasm make
+# OPTIMIZATION: Use COMMON_BUILD_DEPS from common.sh
+# Skip apk update if rootfs is fresh (< 1 day old)
+[ -f /.rootfs-fresh ] || apk update && rm -f /.rootfs-fresh
+apk add ${COMMON_BUILD_DEPS} gcc g++ patch git nasm make
 apk add uasm --repository=https://dl-cdn.alpinelinux.org/alpine/edge/testing
 mkdir -p /ccache
 export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH

@@ -20,9 +20,12 @@ run_build_setup "dash" "${DASH_VERSION}" "${DASH_TARBALL}" \
   "dash.patch" \
   -- "${DASH_MIRRORS[@]}"
 
-sudo chroot "./${CHROOTDIR}/" /bin/sh -c "set -e && apk update && apk add build-base \
-musl-dev \
-ccache \
+# OPTIMIZATION: Use COMMON_BUILD_DEPS from common.sh
+# Skip apk update if rootfs is fresh (< 1 day old)
+sudo chroot "./${CHROOTDIR}/" /bin/sh -c "set -e && \
+[ -f /.rootfs-fresh ] || apk update && \
+rm -f /.rootfs-fresh && \
+apk add ${COMMON_BUILD_DEPS} \
 automake \
 libtool \
 bison \
