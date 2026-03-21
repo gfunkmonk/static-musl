@@ -101,7 +101,7 @@ gh_latest_tag() {
 setup_cleanup() {
   cleanup() {
     echo -e "${CAMEL}Unmounting filesystems from chroot -- $CHROOTDIR${NC}"
-    grep "$(pwd)/${CHROOTDIR}" /proc/mounts | cut -f2 -d" " | sort -r | xargs -r sudo umount -nl || true
+    grep "$(pwd)/${CHROOTDIR}" /proc/mounts | cut -f2 -d" " | sort -r | xargs -r sudo umount -n || true
   }
   trap cleanup EXIT
 }

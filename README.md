@@ -17,6 +17,7 @@ Build scripts that produce fully static, multi-architecture binaries using musl 
 | less | 692 | pager program similar to more |
 | lftp | 4.9.3 | Command line ftp client |
 | nano | 8.7.1 | Small command-line text editor |
+| nmap | 7.98 | Network scanning & discovery tool |
 | oksh | latest | OpenBSD ksh shell |
 | openssh | 10.2p1 | OpenSSH ssh client |
 | pigz | 2.8 | Parallel implementation of GZip |
