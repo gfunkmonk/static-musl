@@ -33,8 +33,9 @@ ALPINE_MAJOR_MINOR="${ALPINE_VERSION%.*}"
 JQ="tools/jq/jq-${ARCH}"
 CURL="tools/curl/curl-${ARCH}"
 
-# Override by setting CCACHE_CHROOT_DIR in the environment before running a build script.
-# CI can point this at a host-mounted cache directory to persist ccache across runs.
+# CCACHE_CHROOT_DIR: path inside the chroot where ccache stores its cache.
+# Set this to a host-mounted path (e.g. via CI cache) to persist ccache across builds.
+# Defaults to /ccache (ephemeral, inside the chroot).
 CCACHE_CHROOT_DIR="${CCACHE_CHROOT_DIR:-/ccache}"
 
 setup_tools() {
@@ -98,7 +99,7 @@ gh_latest_tag() {
 setup_cleanup() {
   cleanup() {
     echo -e "${CAMEL}Umounting filesystems from chroot -- $CHROOTDIR${NC}"
-    grep "$(pwd)/${CHROOTDIR}" /proc/mounts | cut -f2 -d" " | sort -r | xargs -r sudo umount -n || true
+    grep "$(pwd)/${CHROOTDIR}" /proc/mounts | cut -f2 -d" " | sort -r | xargs -r sudo umount -nl || true
 	  }
   trap cleanup EXIT
 }
@@ -170,7 +171,7 @@ setup_alpine_chroot() {
   tar xf chrootfiles/"${TARBALL}" -C "${CHROOTDIR}"/
   echo -e "${PEACH}= copy resolv.conf and ${tarball} into chroot${NC}"
   cp /etc/resolv.conf ./${CHROOTDIR}/etc/
-  cp chrootfiles/"${tarball}" "./${CHROOTDIR}/${tarball}"
+  cp distfiles/"${tarball}" "./${CHROOTDIR}/${tarball}"
   if [[ ! -f "tools/upx/upx-${ARCH}" ]]; then
     echo -e "${TOMATO}= ERROR: tools/upx/upx-${ARCH} not found${NC}"
     exit 1
@@ -211,6 +212,7 @@ mount_chroot() {
   if [ -n "${CCACHE_DIR:-}" ] && [ -d "${CCACHE_DIR}" ]; then
     sudo mkdir -p "./${CHROOTDIR}/${CCACHE_CHROOT_DIR}"
     sudo mount --bind "${CCACHE_DIR}" "./${CHROOTDIR}/${CCACHE_CHROOT_DIR}"
+    sudo mkdir -p "./${CHROOTDIR}/var/log/ccache/"
   fi
 }
 
