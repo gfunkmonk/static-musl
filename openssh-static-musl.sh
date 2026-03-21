@@ -16,12 +16,9 @@ OPENSSH_MIRRORS=(
 run_build_setup "openssh" "${OPENSSH_VERSION}" "${OPENSSH_TARBALL}" \
   -- "${OPENSSH_MIRRORS[@]}"
 
-# OPTIMIZATION: Use COMMON_BUILD_DEPS from common.sh
-# Skip apk update if rootfs is fresh (< 1 day old)
-sudo chroot "./${CHROOTDIR}/" /bin/sh -c "set -e && \
-[ -f /.rootfs-fresh ] || apk update && \
-rm -f /.rootfs-fresh && \
-apk add ${COMMON_BUILD_DEPS} \
+sudo chroot "./${CHROOTDIR}/" /bin/sh -c "set -e && apk update && apk add build-base \
+musl-dev \
+ccache \
 openssl-dev \
 openssl-libs-static \
 zlib-dev \

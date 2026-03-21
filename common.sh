@@ -15,9 +15,6 @@ CURL="tools/curl/curl-${ARCH}"
 # Defaults to /ccache (ephemeral, inside the chroot).
 CCACHE_CHROOT_DIR="${CCACHE_CHROOT_DIR:-/ccache}"
 
-# Common build dependencies installed in every chroot
-COMMON_BUILD_DEPS="build-base musl-dev ccache"
-
 ##### Colors ################
 ORANGE="\033[38;2;255;165;0m"
 LEMON="\033[38;2;255;244;79m"
@@ -82,60 +79,22 @@ setup_arch() {
 # gh_latest_release REPO [JQ_FILTER]
 # Fetches .tag_name from the GitHub releases/latest API, applies optional jq filter.
 # Defaults to returning .tag_name as-is.
-# Results are cached for 1 hour to reduce API rate limit hits.
 gh_latest_release() {
     local repo="$1" filter="${2:-.tag_name}"
-    local cache_file="distfiles/.gh-cache-${repo//\//-}-latest"
-
-    # Use cached result if less than 1 hour old
-    if [ -f "${cache_file}" ]; then
-        local cache_age=$(($(date +%s) - $(stat -c %Y "${cache_file}" 2>/dev/null || echo 0)))
-        if [ "${cache_age}" -lt 3600 ]; then
-            cat "${cache_file}"
-            return 0
-        fi
-    fi
-
-    local result
-    result=$("${CURL}" -fsSL --connect-timeout 10 --max-time 30 \
+    "${CURL}" -fsSL --connect-timeout 10 --max-time 30 \
         ${GITHUB_TOKEN:+-H "Authorization: Bearer ${GITHUB_TOKEN}"} \
         "https://api.github.com/repos/${repo}/releases/latest" \
-        | "${JQ}" -r "${filter} // empty")
-
-    if [ -n "${result}" ]; then
-        mkdir -p distfiles
-        echo "${result}" > "${cache_file}"
-        echo "${result}"
-    fi
+        | "${JQ}" -r "${filter} // empty"
 }
 
 # gh_latest_tag REPO [JQ_FILTER]
 # Fetches the first entry from the GitHub tags API, applies optional jq filter.
-# Results are cached for 1 hour to reduce API rate limit hits.
 gh_latest_tag() {
     local repo="$1" filter="${2:-.[0].name}"
-    local cache_file="distfiles/.gh-cache-${repo//\//-}-tag"
-
-    # Use cached result if less than 1 hour old
-    if [ -f "${cache_file}" ]; then
-        local cache_age=$(($(date +%s) - $(stat -c %Y "${cache_file}" 2>/dev/null || echo 0)))
-        if [ "${cache_age}" -lt 3600 ]; then
-            cat "${cache_file}"
-            return 0
-        fi
-    fi
-
-    local result
-    result=$("${CURL}" -fsSL --connect-timeout 10 --max-time 30 \
+    "${CURL}" -fsSL --connect-timeout 10 --max-time 30 \
         ${GITHUB_TOKEN:+-H "Authorization: Bearer ${GITHUB_TOKEN}"} \
         "https://api.github.com/repos/${repo}/tags" \
-        | "${JQ}" -r "${filter} // empty")
-
-    if [ -n "${result}" ]; then
-        mkdir -p distfiles
-        echo "${result}" > "${cache_file}"
-        echo "${result}"
-    fi
+        | "${JQ}" -r "${filter} // empty"
 }
 
 # setup_cleanup: register unmount trap for chroot bind mounts
@@ -238,8 +197,6 @@ setup_alpine_chroot() {
   else
     cp "tools/upx/upx-${ARCH}" "./${CHROOTDIR}/upx"
   fi
-  # Mark rootfs as fresh to potentially skip apk update
-  touch "./${CHROOTDIR}/.rootfs-fresh"
 }
 
 # copy_patches patch1 [patch2 ...]
@@ -281,15 +238,16 @@ mount_chroot() {
   sudo mount -t proc none "./${CHROOTDIR}/proc/"
   sudo mount --rbind /sys "./${CHROOTDIR}/sys/"
   sudo mount --make-rslave "./${CHROOTDIR}/sys/"
+  if [ -n "${CCACHE_DIR:-}" ] && [ -d "${CCACHE_DIR}" ]; then
+    sudo mkdir -p "./${CHROOTDIR}/${CCACHE_CHROOT_DIR}"
+    sudo mount --bind "${CCACHE_DIR}" "./${CHROOTDIR}/${CCACHE_CHROOT_DIR}"
+    [ -n "${ccachelogdir}" ] && sudo mkdir -p "./${CHROOTDIR}/${ccachelogdir}"
+  fi
   if [ -n "${CCACHE_DIR:-}" ]; then
     if [ ! -d "${CCACHE_DIR}" ]; then
       echo -e "${TOMATO}= ERROR: CCACHE_DIR is set but directory does not exist: ${CCACHE_DIR}${NC}" >&2
       exit 1
     fi
-    sudo mkdir -p "./${CHROOTDIR}/${CCACHE_CHROOT_DIR}"
-    sudo mount --bind "${CCACHE_DIR}" "./${CHROOTDIR}/${CCACHE_CHROOT_DIR}"
-    [ -n "$ccachelogdir" ] && sudo mkdir -p "./${CHROOTDIR}/$ccachelogdir"
-  fi
 }
 
 # run_build_setup TOOL VERSION TARBALL [PATCH...] -- MIRROR [MIRROR...]
