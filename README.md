@@ -14,6 +14,7 @@ Build scripts that produce fully static, multi-architecture binaries using musl 
 | curl | latest | Data transfer tool |
 | dash | 0.5.13.1 | POSIX shell |
 | htop | latest | Interactive process viewer |
+| less | 692 | pager program similar to more |
 | lftp | 4.9.3 | Command line ftp client |
 | nano | 8.7.1 | Small command-line text editor |
 | oksh | latest | OpenBSD ksh shell |
