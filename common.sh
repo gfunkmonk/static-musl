@@ -86,7 +86,7 @@ setup_arch() {
 gh_latest_release() {
     local repo="$1" filter="${2:-.tag_name}"
     local cache_file="distfiles/.gh-cache-${repo//\//-}-latest"
-    
+
     # Use cached result if less than 1 hour old
     if [ -f "${cache_file}" ]; then
         local cache_age=$(($(date +%s) - $(stat -c %Y "${cache_file}" 2>/dev/null || echo 0)))
@@ -95,13 +95,13 @@ gh_latest_release() {
             return 0
         fi
     fi
-    
+
     local result
     result=$("${CURL}" -fsSL --connect-timeout 10 --max-time 30 \
         ${GITHUB_TOKEN:+-H "Authorization: Bearer ${GITHUB_TOKEN}"} \
         "https://api.github.com/repos/${repo}/releases/latest" \
         | "${JQ}" -r "${filter} // empty")
-    
+
     if [ -n "${result}" ]; then
         mkdir -p distfiles
         echo "${result}" > "${cache_file}"
@@ -115,7 +115,7 @@ gh_latest_release() {
 gh_latest_tag() {
     local repo="$1" filter="${2:-.[0].name}"
     local cache_file="distfiles/.gh-cache-${repo//\//-}-tag"
-    
+
     # Use cached result if less than 1 hour old
     if [ -f "${cache_file}" ]; then
         local cache_age=$(($(date +%s) - $(stat -c %Y "${cache_file}" 2>/dev/null || echo 0)))
@@ -124,13 +124,13 @@ gh_latest_tag() {
             return 0
         fi
     fi
-    
+
     local result
     result=$("${CURL}" -fsSL --connect-timeout 10 --max-time 30 \
         ${GITHUB_TOKEN:+-H "Authorization: Bearer ${GITHUB_TOKEN}"} \
         "https://api.github.com/repos/${repo}/tags" \
         | "${JQ}" -r "${filter} // empty")
-    
+
     if [ -n "${result}" ]; then
         mkdir -p distfiles
         echo "${result}" > "${cache_file}"
