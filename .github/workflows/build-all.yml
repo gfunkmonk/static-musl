@@ -110,6 +110,12 @@ jobs:
         restore-keys: |
           distfiles-${{ env.ALPINE_VERSION }}-${{ matrix.arch }}-${{ matrix.tool }}-
 
+    - name: Cache Alpine rootfs
+      uses: actions/cache@v5
+      with:
+        path: chrootfiles/alpine-minirootfs-*.tar.gz
+        key: alpine-rootfs-${{ env.ALPINE_VERSION }}-${{ matrix.arch }}
+
     - name: Build ${{ matrix.tool }} for ${{ matrix.arch }}
       run: |
         chmod +x ${{ matrix.tool }}-static-musl.sh

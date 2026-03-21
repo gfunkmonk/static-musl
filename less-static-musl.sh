@@ -33,7 +33,8 @@ chmod 755 upx && \
 tar xf ${LESS_TARBALL} && \
 cd less-${LESS_VERSION}/ && \
 ./configure --with-regex=pcre2 --enable-year2038 --sysconfdir=/etc \
-  LDFLAGS='-static -Wl,--gc-sections' CFLAGS='-Os -static -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector' && \
+  LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
+  CFLAGS='-Os -static -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector'
 make -j\$(nproc) && \
 strip less && \
 ../upx --brute less"
