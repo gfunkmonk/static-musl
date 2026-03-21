@@ -89,25 +89,21 @@ jobs:
 
     - name: Prepare ccache directory and config
       run: |
-        mkdir -p "${CCACHE_DIR}"
-        # Write ccache config to a file for better organization
-        cat > "${CCACHE_DIR}/ccache.conf" << 'EOF'
-        max_size = 3G
-        hash_dir = false
-        hard_link = false
-        sloppiness = file_macro,locale,time_macros
-        file_clone = false
-        direct_mode = true
-        depend_mode = true
-        compression = true
-        compression_level = 7
-        inode_cache = true
-        compiler_check = content
-        EOF
-        # Export minimal env vars
-        cat >> "$GITHUB_ENV" << 'EOF'
-        CCACHE_CONFIGPATH=${{ github.workspace }}/.ccache/ccache.conf
-        EOF
+            mkdir -p "${CCACHE_DIR}"
+            cat >> "$GITHUB_ENV" << 'EOF'
+            CCACHE_NOHASHDIR=true
+            CCACHE_NOHARDLINK=true
+            CCACHE_NLEVELS=4
+            CCACHE_COMPILERCHECK=content
+            CCACHE_COMPRESS=1
+            CCACHE_COMPRESSLEVEL=7
+            CCACHE_INODECACHE=true
+            CCACHE_SLOPINESS=file_macro,locale,time_macros
+            CCACHE_NOFILECLONE=true
+            CCACHE_DIRECT=true
+            CCACHE_DEPEND=true
+            EOF
+            echo "CCACHE Environment set!"
 
     - name: Set up ccache
       uses: hendrikmuhs/ccache-action@v1.2
