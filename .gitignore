@@ -1,0 +1,7 @@
+*.o
+*.tar.*
+*.zip
+distfiles/
+dist/
+pasta/
+chrootfiles/
