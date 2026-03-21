@@ -206,7 +206,8 @@ setup_qemu() {
 # mount_chroot: bind-mount proc/dev/sys into the chroot directory
 mount_chroot() {
   echo -e "${VIOLET}= mount, bind and chroot into dir${NC}"
-  ccachelogdir=$(ccache -p | grep log_file | cut -d "=" -f2 | rev | cut -d'/' -f2- | rev)
+  local ccachelogdir
+  ccachelogdir=$(ccache -p 2>/dev/null | grep log_file | cut -d "=" -f2 | rev | cut -d'/' -f2- | rev) || true  
   sudo mount --rbind /dev "./${CHROOTDIR}/dev/"
   sudo mount --make-rslave "./${CHROOTDIR}/dev/"
   sudo mount -t proc none "./${CHROOTDIR}/proc/"
@@ -215,9 +216,7 @@ mount_chroot() {
   if [ -n "${CCACHE_DIR:-}" ] && [ -d "${CCACHE_DIR}" ]; then
     sudo mkdir -p "./${CHROOTDIR}/${CCACHE_CHROOT_DIR}"
     sudo mount --bind "${CCACHE_DIR}" "./${CHROOTDIR}/${CCACHE_CHROOT_DIR}"
-    if [ -n "$ccachelogdir" ]; then
-      sudo mkdir -p "./${CHROOTDIR}/var/log/ccache/"
-    fi
+    [ -n "$ccachelogdir" ] && sudo mkdir -p "./${CHROOTDIR}/var/log/ccache/"
   fi
 }
 
@@ -250,9 +249,7 @@ run_build_setup() {
 package_output() {
   local tool="$1" binary="$2"
   local version_suffix=""
-  if [ -n "${PACKAGE_VERSION:-}" ]; then
-    version_suffix="-${PACKAGE_VERSION}"
-  fi
+  [ -n "${PACKAGE_VERSION:-}" ] && version_suffix="-${PACKAGE_VERSION}"  
   local filename="${tool}${version_suffix}-${ARCH}"
   mkdir -p dist
   cp "${binary}" "dist/${filename}"
