@@ -216,7 +216,7 @@ mount_chroot() {
   if [ -n "${CCACHE_DIR:-}" ] && [ -d "${CCACHE_DIR}" ]; then
     sudo mkdir -p "./${CHROOTDIR}/${CCACHE_CHROOT_DIR}"
     sudo mount --bind "${CCACHE_DIR}" "./${CHROOTDIR}/${CCACHE_CHROOT_DIR}"
-    [ -n "$ccachelogdir" ] && sudo mkdir -p "./${CHROOTDIR}/var/log/ccache/"
+    [ -n "$ccachelogdir" ] && sudo mkdir -p "./${CHROOTDIR}/$ccachelogdir"
   fi
 }
 
