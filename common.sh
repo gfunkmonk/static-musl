@@ -23,6 +23,7 @@ NAVAJO="\033[38;2;255;222;173m"
 BOYSENBERRY="\033[38;2;135;50;96m"
 CORAL="\033[38;2;240;128;128m"
 CAMEL="\033[38;2;193;154;107m"
+INDIGO="\033[38;2;111;0;255m"
 NC="\033[0m"
 
 ######### Variables ###########
@@ -120,7 +121,7 @@ download_source() {
   local label="$1" version="$2" tarball="$3"
   shift 3
   if [ ! -d distfiles/ ]; then
-    echo -e "${HOTPINK}distfiles dir does not exist. Creating it now.${NC}"
+    echo -e "${INDIGO}distfiles dir does not exist. Creating it now.${NC}"
     mkdir -p distfiles/
   fi
   if [ -f "distfiles/${tarball}" ]; then
@@ -154,6 +155,10 @@ setup_alpine_chroot() {
   if [ -d "./${CHROOTDIR}/" ]; then
     echo -e "${CORAL}chroot dir exist! Removing it now.${NC}"
     rm -fr "./${CHROOTDIR}/"
+  fi
+  if [ ! -d chrootfiles/ ]; then
+    echo -e "${INDIGO}chrootfiles dir does not exist. Creating it now.${NC}"
+    mkdir -p chrootfiles/
   fi
   if [ -f chrootfiles/"${TARBALL}" ]; then
     echo -e "${SLATE}= Alpine rootfs ${TARBALL} already cached, skipping download${NC}"
