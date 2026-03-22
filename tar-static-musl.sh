@@ -37,6 +37,7 @@ bzip2-static \
 gettext-dev \
 gettext-static && \
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH && \
+mkdir -p ${CCACHE_LOG_DIR} && \
 chmod 755 upx && \
 tar xf tar-${TAR_VERSION}.tar.xz && \
 cd tar-${TAR_VERSION}/ && \

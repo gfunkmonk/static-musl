@@ -1,5 +1,5 @@
 #!/bin/bash
-set -euo pipefail
+set -euox pipefail
 . "$(dirname "$0")/common.sh"
 
 setup_tools
@@ -44,6 +44,7 @@ bzip2-static \
 libxml2-dev \
 libxml2-static && \
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH && \
+mkdir -p ${CCACHE_LOG_DIR} && \
 chmod 755 upx && \
 tar xf libarchive-${BSDTAR_VERSION}.tar.xz && \
 cd libarchive-${BSDTAR_VERSION}/ && \

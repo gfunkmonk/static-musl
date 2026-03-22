@@ -29,6 +29,7 @@ on:
           - oksh
           - openssh
           - pigz
+          - screen
           - tar
           - upx
           - vim
@@ -51,7 +52,7 @@ jobs:
         id: set-matrix
         run: |
           if [[ "${{ github.event_name }}" == "schedule" || "${{ inputs.tool }}" == "all" || "${{ inputs.tool }}" == "" ]]; then
-            echo 'matrix=["7zz","aria2c","axel","bash","bsdtar","curl","dash","htop","less","lftp","nano","nmap","oksh","openssh","pigz","tar","upx","vim","wget","xz"]' >> "$GITHUB_OUTPUT"
+            echo 'matrix=["7zz","aria2c","axel","bash","bsdtar","curl","dash","htop","less","lftp","nano","nmap","oksh","openssh","pigz","screen","tar","upx","vim","wget","xz"]' >> "$GITHUB_OUTPUT"
           else
             echo 'matrix=["${{ inputs.tool }}"]' >> "$GITHUB_OUTPUT"
           fi
@@ -128,7 +129,7 @@ jobs:
     - name: Cache Alpine rootfs
       uses: actions/cache@v5
       with:
-        path: chrootfiles/alpine-minirootfs-*.tar.gz
+        path: minirootfs/alpine-minirootfs-*.tar.gz
         key: alpine-rootfs-${{ steps.alpine-version.outputs.version }}-${{ matrix.arch }}
 
     - name: Build ${{ matrix.tool }} for ${{ matrix.arch }}

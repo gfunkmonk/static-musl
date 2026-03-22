@@ -21,6 +21,7 @@ Build scripts that produce fully static, multi-architecture binaries using musl 
 | oksh | latest | OpenBSD ksh shell |
 | openssh | 10.2p1 | OpenSSH ssh client |
 | pigz | 2.8 | Parallel implementation of GZip |
+| screen | 5.0.1 | Screen is a mature terminal multiplexer |
 | tar | 1.35 | GNU tar archive utility |
 | upx | latest | UPX w/ custom patch & zstd support |
 | vim | latest | Text editor |

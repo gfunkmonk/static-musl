@@ -39,6 +39,7 @@ pcre2-dev \
 pcre2-static \
 perl && \
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH && \
+mkdir -p ${CCACHE_LOG_DIR} && \
 chmod 755 upx && \
 tar xf wget-${WGET_VERSION}.tar.gz && \
 cd wget-${WGET_VERSION}/ && \

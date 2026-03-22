@@ -24,6 +24,7 @@ CURL_MIRRORS=(
 )
 
 run_build_setup "curl" "${CURL_VERSION}" "${CURL_TARBALL}" \
+  "curl.patch" \
   -- "${CURL_MIRRORS[@]}"
 
 sudo chroot "./${CHROOTDIR}/" /bin/sh -c "set -e && apk update && apk add build-base \
@@ -49,9 +50,11 @@ libpsl-static \
 libpsl-dev \
 clang && \
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH && \
+mkdir -p ${CCACHE_LOG_DIR} && \
 chmod 755 upx && \
 tar xf curl-${CURL_VERSION}.tar.xz && \
 cd curl-${CURL_VERSION}/ && \
+patch -p1 --fuzz=4 < ../curl.patch && \
 ./configure \
   --disable-shared --enable-static \
   --disable-ldap --enable-ipv6 --enable-unix-sockets \

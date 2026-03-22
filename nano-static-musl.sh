@@ -30,6 +30,7 @@ libmagic \
 file-dev \
 linux-headers && \
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH && \
+mkdir -p ${CCACHE_LOG_DIR} && \
 chmod 755 upx && \
 tar xf ${NANO_TARBALL} && \
 cd nano-${NANO_VERSION}/ && \

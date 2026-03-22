@@ -7,6 +7,7 @@ CHROOTDIR=${CHROOTDIR:-pasta}
 ARCH=${ARCH:-x86_64}
 ALPINE_VERSION="3.23.3"
 ALPINE_MAJOR_MINOR="${ALPINE_VERSION%.*}"
+# Bundled tools
 JQ="tools/jq/jq-${ARCH}"
 CURL="tools/curl/curl-${ARCH}"
 
@@ -14,6 +15,15 @@ CURL="tools/curl/curl-${ARCH}"
 # Set this to a host-mounted path (e.g. via CI cache) to persist ccache across builds.
 # Defaults to /ccache (ephemeral, inside the chroot).
 CCACHE_CHROOT_DIR="${CCACHE_CHROOT_DIR:-/ccache}"
+
+# CCACHE gets it's panties in a knot if the host has log_file defined and
+# it doesn't exist in the chroot when the CCACHE directories are bind mounted
+# This was the best way I could fine to get that string to make the directory.
+CCACHE_LOG_DIR=$(ccache -p 2>/dev/null | grep log_file | cut -d "=" -f2 | rev | cut -d'/' -f2- | rev) || true
+
+# Cause sometimes for whatever reason you need to look at or get files after unsuccessful
+# chroot build attempts
+KEEP_CHROOT=false
 
 ##### Colors ################
 ORANGE="\033[38;2;255;165;0m"
@@ -109,7 +119,7 @@ setup_cleanup() {
 # install_host_deps: install required packages on the Ubuntu runner
 install_host_deps() {
   echo -e "${AQUA}= install dependencies${NC}"
-  local DEBIAN_DEPS=(binutils)
+  local DEBIAN_DEPS=(binutils ccache)
   [ -n "${QEMU_ARCH}" ] && DEBIAN_DEPS+=(qemu-user-static)
   sudo apt-get update -qy && sudo apt-get install -y "${DEBIAN_DEPS[@]}"
 }
@@ -164,30 +174,30 @@ download_source() {
 # Downloads Alpine rootfs, extracts it, and copies resolv.conf + source tarball inside.
 setup_alpine_chroot() {
   local tarball="$1"
-  if [ -d "./${CHROOTDIR}/" ]; then
+  if [ -d "./${CHROOTDIR}/" ] && [ ${KEEP_CHROOT} == false ]; then
     echo -e "${CORAL}chroot dir exist! Removing it now.${NC}"
     rm -fr "./${CHROOTDIR}/"
   fi
-  if [ ! -d chrootfiles/ ]; then
-    echo -e "${INDIGO}chrootfiles dir does not exist. Creating it now.${NC}"
-    mkdir -p chrootfiles/
+  if [ ! -d minirootfs/ ]; then
+    echo -e "${INDIGO}minirootfs dir does not exist. Creating it now.${NC}"
+    mkdir -p minirootfs/
   fi
-  if [ -f chrootfiles/"${TARBALL}" ]; then
+  if [ -f minirootfs/"${TARBALL}" ]; then
     echo -e "${SLATE}= Alpine rootfs ${TARBALL} already cached, skipping download${NC}"
   else
     echo -e "${HELIOTROPE}= download alpine rootfs${NC}"
     "${CURL}" -fsSL --retry 3 --retry-delay 2 --connect-timeout 10 --max-time 120 \
-      -o chrootfiles/"${TARBALL}" "${ALPINE_URL}" \
+      -o minirootfs/"${TARBALL}" "${ALPINE_URL}" \
       || { echo -e "${TOMATO}= ERROR: failed to download Alpine rootfs${NC}" >&2; exit 1; }
     # Verify downloaded rootfs is not empty
-    if [ ! -s chrootfiles/"${TARBALL}" ]; then
+    if [ ! -s minirootfs/"${TARBALL}" ]; then
       echo -e "${TOMATO}= ERROR: Downloaded Alpine rootfs is empty${NC}" >&2
       exit 1
     fi
   fi
   echo -e "${SKY}= extract rootfs${NC}"
   mkdir -p "${CHROOTDIR}"
-  tar xf chrootfiles/"${TARBALL}" -C "${CHROOTDIR}"/
+  tar xf minirootfs/"${TARBALL}" -C "${CHROOTDIR}"/
   echo -e "${PEACH}= copy resolv.conf and ${tarball} into chroot${NC}"
   cp /etc/resolv.conf ./${CHROOTDIR}/etc/
   cp distfiles/"${tarball}" "./${CHROOTDIR}/${tarball}"
@@ -230,20 +240,21 @@ setup_qemu() {
 # mount_chroot: bind-mount proc/dev/sys into the chroot directory
 # Validates CCACHE_DIR exists before mounting.
 mount_chroot() {
-  echo -e "${VIOLET}= mount, bind and chroot into dir${NC}"
-  export CCACHELOGDIR=$(ccache -p 2>/dev/null | grep log_file | cut -d "=" -f2 | rev | cut -d'/' -f2- | rev) || true
-  sudo mount --rbind /dev "./${CHROOTDIR}/dev/"
-  sudo mount --make-rslave "./${CHROOTDIR}/dev/"
-  sudo mount -t proc none "./${CHROOTDIR}/proc/"
-  sudo mount --rbind /sys "./${CHROOTDIR}/sys/"
-  sudo mount --make-rslave "./${CHROOTDIR}/sys/"
-  if [ -n "${CCACHE_DIR:-}" ] && [ -d "${CCACHE_DIR}" ]; then
-    sudo mkdir -p "./${CHROOTDIR}/${CCACHE_CHROOT_DIR}"
-    sudo mount --bind "${CCACHE_DIR}" "./${CHROOTDIR}/${CCACHE_CHROOT_DIR}"
-  fi
-  if [ ! -d "${CCACHELOGDIR}" ]; then
-    sudo mkdir -p "./${CHROOTDIR}/var/log/ccache/"
-  fi
+echo -e "${VIOLET}= mount, bind and chroot into dir${NC}"
+sudo mount --rbind /dev "./${CHROOTDIR}/dev/"
+sudo mount --make-rslave "./${CHROOTDIR}/dev/"
+sudo mount -t proc none "./${CHROOTDIR}/proc/"
+sudo mount --rbind /sys "./${CHROOTDIR}/sys/"
+sudo mount --make-rslave "./${CHROOTDIR}/sys/"
+if [ -d "${CCACHE_DIR:-}" ] && [ -n "${CCACHE_DIR}" ]; then
+   echo -e "${JUNEBUD}= bind mounting ccache directories${NC}"
+   sudo mkdir -p "./${CHROOTDIR}/${CCACHE_CHROOT_DIR}"
+   sudo mount --bind "${CCACHE_DIR}" "./${CHROOTDIR}/${CCACHE_CHROOT_DIR}"
+   sudo mount --make-slave "./${CHROOTDIR}/${CCACHE_CHROOT_DIR}"
+else
+   echo -e "${TOMATO}= ERROR: CCACHE_DIR is set but directory does not exist: ${CCACHE_DIR}${NC}" >&2
+   exit 1
+fi
 }
 
 # run_build_setup TOOL VERSION TARBALL [PATCH...] -- MIRROR [MIRROR...]

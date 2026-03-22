@@ -26,6 +26,7 @@ gcc \
 zlib-dev \
 zlib-static && \
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH && \
+mkdir -p ${CCACHE_LOG_DIR} && \
 chmod 755 upx && \
 tar xf pigz-${PIGZ_VERSION}.tar.gz && \
 cd pigz-${PIGZ_VERSION}/ && \
