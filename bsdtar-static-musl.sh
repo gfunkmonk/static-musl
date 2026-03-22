@@ -1,5 +1,5 @@
 #!/bin/bash
-set -euox pipefail
+set -euo pipefail
 . "$(dirname "$0")/common.sh"
 
 setup_tools
