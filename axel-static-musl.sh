@@ -38,7 +38,7 @@ libpsl-static \
 libunistring-dev \
 libunistring-static && \
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH && \
-mkdir -p ${CCACHE_LOG_DIR} && \
+mkdir -p ${CCACHE_LOG_DIR:-/var/log/ccache} && \
 chmod 755 upx && \
 tar xf axel-${AXEL_VERSION}.tar.xz && \
 cd axel-${AXEL_VERSION}/ && \
