@@ -1,5 +1,5 @@
 #!/bin/bash
-set -euox pipefail
+set -euo pipefail
 . "$(dirname "$0")/common.sh"
 
 setup_tools
@@ -37,7 +37,6 @@ patch \
 libedit-dev \
 libedit-static && \
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH && \
-mkdir -p ${CCACHE_LOG_DIR:-/var/log/ccache} && \
 chmod 755 upx && \
 tar xf dash-${DASH_VERSION}.tar.gz && \
 cd dash-${DASH_VERSION}/ && \

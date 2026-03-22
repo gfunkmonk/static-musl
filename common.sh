@@ -19,7 +19,8 @@ CCACHE_CHROOT_DIR="${CCACHE_CHROOT_DIR:-/ccache}"
 # CCACHE gets it's panties in a knot if the host has log_file defined and
 # it doesn't exist in the chroot when the CCACHE directories are bind mounted
 # This was the best way I could fine to get that string to make the directory.
-CCACHE_LOG_DIR=$(ccache -p 2>/dev/null | grep log_file | cut -d "=" -f2 | rev | cut -d'/' -f2- | rev) || true
+CCACHE_LOG_DIR=$(ccache -p 2>/dev/null | grep log_file | cut -d "=" -f2 | rev | cut -d'/' -f2- | rev | sed 's/ //g') || true
+CCACHE_LOG_DIR="${CCACHE_LOG_DIR:-/var/log/ccache}"
 
 # Cause sometimes for whatever reason you need to look at or get files after unsuccessful
 # chroot build attempts
@@ -113,6 +114,16 @@ setup_cleanup() {
     echo -e "${CAMEL}Unmounting filesystems from chroot -- $CHROOTDIR${NC}"
     grep "$(pwd)/${CHROOTDIR}" /proc/mounts | cut -f2 -d" " | sort -r | xargs -r sudo umount -n || true
   }
+  if mount | grep -q "${CHROOTDIR}/dev"; then
+    echo -e "${SKY}/dev is still mounted. Attempting lazy unmount.${NC}"
+    umount -l "${CHROOTDIR}/dev"
+  elif mount | grep -q "${CHROOTDIR}/proc"; then
+    echo -e "${LIME}/proc is still mounted. Attempting lazy unmount.${NC}"
+    umount -l "${CHROOTDIR}/proc"
+  elif mount | grep -q "${CHROOTDIR}/sys"; then
+    echo -e "${MINT}/sys is still mounted. Attempting lazy unmount.${NC}"
+    umount -l "${CHROOTDIR}/sys"
+  fi
   trap cleanup EXIT
 }
 
@@ -251,6 +262,7 @@ if [ -d "${CCACHE_DIR:-}" ] && [ -n "${CCACHE_DIR}" ]; then
    sudo mkdir -p "./${CHROOTDIR}/${CCACHE_CHROOT_DIR}"
    sudo mount --bind "${CCACHE_DIR}" "./${CHROOTDIR}/${CCACHE_CHROOT_DIR}"
    sudo mount --make-slave "./${CHROOTDIR}/${CCACHE_CHROOT_DIR}"
+   sudo mkdir -p "./${CHROOTDIR}/${CCACHE_LOG_DIR}"
 else
    echo -e "${TOMATO}= ERROR: CCACHE_DIR is set but directory does not exist: ${CCACHE_DIR}${NC}" >&2
    exit 1
