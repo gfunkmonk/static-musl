@@ -6,11 +6,11 @@ setup_tools
 
 LFTP_VERSION="4.9.3"
 PACKAGE_VERSION="${LFTP_VERSION}"
-LFTP_TARBALL="lftp-${LFTP_VERSION}.tar.xz"
+LFTP_TARBALL="lftp-${LFTP_VERSION}.tar.gz"
 LFTP_MIRRORS=(
-  "https://lftp.yar.ru/ftp/lftp-${LFTP_VERSION}.tar.xz"
-  "https://distfiles.openadk.org/lftp-${LFTP_VERSION}.tar.xz"
-  "https://fossies.org/linux/misc/lftp-${LFTP_VERSION}.tar.xz"
+  "https://github.com/lavv17/lftp/releases/download/v${LFTP_VERSION}/lftp-${LFTP_VERSION}.tar.gz"
+  "https://fossies.org/linux/misc/lftp-${LFTP_VERSION}.tar.gz"
+  "https://ftp.fau.de/macports/distfiles/lftp/lftp-${LFTP_VERSION}.tar.gz"
 )
 
 run_build_setup "lftp" "${LFTP_VERSION}" "${LFTP_TARBALL}" \
@@ -43,7 +43,7 @@ gettext-dev \
 gettext-static && \
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH && \
 chmod 755 upx && \
-tar xf lftp-${LFTP_VERSION}.tar.xz && \
+tar xf lftp-${LFTP_VERSION}.tar.gz && \
 cd lftp-${LFTP_VERSION}/ && \
 patch -p1 --fuzz=4 < ../lftp.patch && \
 autoreconf -i -f && \
