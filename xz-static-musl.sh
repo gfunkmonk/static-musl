@@ -25,12 +25,7 @@ run_build_setup "xz" "${XZ_VERSION}" "${XZ_TARBALL}" \
 
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
 set -e
-apk update
-apk add build-base \
-musl-dev \
-ccache \
-clang \
-pkgconfig
+apk update && apk add build-base musl-dev ccache clang pkgconfig
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
 chmod 755 upx
 tar xf xz-${XZ_VERSION}.tar.xz
