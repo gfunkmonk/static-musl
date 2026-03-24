@@ -26,26 +26,7 @@ run_build_setup "libarchive" "${BSDTAR_VERSION}" "${BSDTAR_TARBALL}" \
 
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
 set -e
-apk update
-apk add build-base \
-musl-dev \
-ccache \
-make \
-pkgconfig \
-zlib-dev \
-zlib-static \
-xz-dev \
-xz-static \
-zstd-dev \
-zstd-static \
-lz4-dev \
-lz4-static \
-openssl-dev \
-openssl-libs-static \
-libbz2 \
-bzip2-static \
-libxml2-dev \
-libxml2-static
+apk update && apk add build-base musl-dev ccache make pkgconfig zlib-dev zlib-static xz-dev xz-static zstd-dev zstd-static lz4-dev lz4-static openssl-dev openssl-libs-static libbz2 bzip2-static libxml2-dev libxml2-static
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
 chmod 755 upx
 tar xf libarchive-${BSDTAR_VERSION}.tar.xz
