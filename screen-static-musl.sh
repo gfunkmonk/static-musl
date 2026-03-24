@@ -17,17 +17,7 @@ run_build_setup "screen" "${SCREEN_VERSION}" "${SCREEN_TARBALL}" \
 
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
 set -e
-apk update
-apk add build-base \
-musl-dev \
-ccache \
-make \
-sed \
-gcc \
-ncurses-dev \
-ncurses-static \
-openssl-dev \
-openssl-libs-static
+apk update && apk add build-base musl-dev ccache ncurses-dev ncurses-static openssl-dev openssl-libs-static
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
 chmod 755 upx
 tar xf screen-${SCREEN_VERSION}.tar.gz
