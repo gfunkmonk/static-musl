@@ -15,7 +15,10 @@ SCREEN_MIRRORS=(
 run_build_setup "screen" "${SCREEN_VERSION}" "${SCREEN_TARBALL}" \
   -- "${SCREEN_MIRRORS[@]}"
 
-sudo chroot "./${CHROOTDIR}/" /bin/sh -c "set -e && apk update && apk add build-base \
+sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
+set -e
+apk update
+apk add build-base \
 musl-dev \
 ccache \
 make \
@@ -24,17 +27,18 @@ gcc \
 ncurses-dev \
 ncurses-static \
 openssl-dev \
-openssl-libs-static && \
-mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH && \
-chmod 755 upx && \
-tar xf screen-${SCREEN_VERSION}.tar.gz && \
-cd screen-${SCREEN_VERSION}/ && \
+openssl-libs-static
+mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
+chmod 755 upx
+tar xf screen-${SCREEN_VERSION}.tar.gz
+cd screen-${SCREEN_VERSION}/
 ./configure CC=gcc --enable-telnet --with-pty-mode=0600  --enable-colors256 --enable-rxvt_osc --with-pty-group=5 \
   --enable-socket-dir=/run/screen --disable-pam --enable-utmp --enable-socket-dir \
   LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
-  CFLAGS='-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie' && \
-make -j\$(nproc) && \
-strip screen && \
-../upx --brute screen"
+  CFLAGS='-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie'
+make -j\$(nproc)
+strip screen
+../upx --brute screen
+EOF
 
 package_output "screen" "./${CHROOTDIR}/screen-${SCREEN_VERSION}/screen"

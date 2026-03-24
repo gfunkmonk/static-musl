@@ -26,7 +26,10 @@ run_build_setup "axel" "${AXEL_VERSION}" "${AXEL_TARBALL}" \
 
 echo $ARCH_FLAGS > "./${CHROOTDIR}/arch_flags"
 
-sudo chroot "./${CHROOTDIR}/" /bin/sh -c "set -e && apk update && apk add build-base \
+sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
+set -e
+apk update
+apk add build-base \
 musl-dev \
 ccache \
 openssl-dev \
@@ -38,15 +41,16 @@ openssl-libs-static \
 zlib-static \
 libpsl-static \
 libunistring-dev \
-libunistring-static && \
-mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH && \
-chmod 755 upx && \
-tar xf axel-${AXEL_VERSION}.tar.xz && \
-cd axel-${AXEL_VERSION}/ && \
+libunistring-static
+mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
+chmod 755 upx
+tar xf axel-${AXEL_VERSION}.tar.xz
+cd axel-${AXEL_VERSION}/
 ./configure CC=gcc LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
-  CFLAGS='-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie -Wno-unterminated-string-initialization' && \
-make -j\$(nproc) && \
-strip axel && \
-../upx --lzma axel"
+  CFLAGS='-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie -Wno-unterminated-string-initialization'
+make -j\$(nproc)
+strip axel
+../upx --lzma axel
+EOF
 
 package_output "axel" "./${CHROOTDIR}/axel-${AXEL_VERSION}/axel"

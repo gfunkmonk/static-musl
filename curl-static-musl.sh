@@ -27,7 +27,10 @@ run_build_setup "curl" "${CURL_VERSION}" "${CURL_TARBALL}" \
   "curl.patch" \
   -- "${CURL_MIRRORS[@]}"
 
-sudo chroot "./${CHROOTDIR}/" /bin/sh -c "set -e && apk update && apk add build-base \
+sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
+set -e
+apk update
+apk add build-base \
 musl-dev \
 ccache \
 openssl-dev \
@@ -48,21 +51,22 @@ libidn2-static \
 libidn2-dev \
 libpsl-static \
 libpsl-dev \
-clang && \
-mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH && \
-chmod 755 upx && \
-tar xf curl-${CURL_VERSION}.tar.xz && \
-cd curl-${CURL_VERSION}/ && \
-patch -p1 --fuzz=4 < ../curl.patch && \
+clang
+mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
+chmod 755 upx
+tar xf curl-${CURL_VERSION}.tar.xz
+cd curl-${CURL_VERSION}/
+patch -p1 --fuzz=4 < ../curl.patch
 ./configure \
   --disable-shared --enable-static \
   --disable-ldap --enable-ipv6 --enable-unix-sockets \
   --with-ssl --with-libssh2 \
   --disable-docs --disable-manual --without-libpsl \
   CC=clang LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
-  CFLAGS='-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie -Wno-unterminated-string-initialization' && \
-make -j\$(nproc) V=1 LDFLAGS='-static -all-static' && \
-strip src/curl && \
-../upx --lzma src/curl"
+  CFLAGS='-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie -Wno-unterminated-string-initialization'
+make -j\$(nproc) V=1 LDFLAGS='-static -all-static'
+strip src/curl
+../upx --lzma src/curl
+EOF
 
 package_output "curl" "./${CHROOTDIR}/curl-${CURL_VERSION}/src/curl"

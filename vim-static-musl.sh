@@ -22,20 +22,23 @@ run_build_setup "vim" "${VIM_VERSION}" "${VIM_TARBALL}" \
   "vim.patch" \
   -- "${VIM_MIRRORS[@]}"
 
-sudo chroot "./${CHROOTDIR}/" /bin/sh -c "set -e && apk update && apk add build-base \
+sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
+set -e
+apk update
+apk add build-base \
 musl-dev \
 ccache \
 sed \
 patch \
 pkgconfig \
 ncurses-dev \
-ncurses-static && \
-mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH && \
-chmod 755 upx && \
-tar xf ${VIM_TARBALL} && \
-cd vim-${VIM_VERSION}/ && \
-patch -p1 --fuzz=4 < ../vim.patch && \
-sed -i 's#emsg(_(e_failed_to_source_defaults));#(void)0;#g' src/main.c && \
+ncurses-static
+mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
+chmod 755 upx
+tar xf ${VIM_TARBALL}
+cd vim-${VIM_VERSION}/
+patch -p1 --fuzz=4 < ../vim.patch
+sed -i 's#emsg(_(e_failed_to_source_defaults));#(void)0;#g' src/main.c
 ./configure CC='gcc' \
   --disable-channel --disable-gpm --disable-gtktest --disable-gui \
   --disable-netbeans --disable-nls --disable-selinux --disable-smack \
@@ -43,9 +46,10 @@ sed -i 's#emsg(_(e_failed_to_source_defaults));#(void)0;#g' src/main.c && \
   --enable-multibyte \
   --with-features=huge --with-tlib=ncursesw --without-x \
   LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
-  CFLAGS='-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie' && \
-CC='gcc' make -j\$(nproc) && \
-strip src/vim && \
-../upx --ultra-brute src/vim"
+  CFLAGS='-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie'
+CC='gcc' make -j\$(nproc)
+strip src/vim
+../upx --ultra-brute src/vim
+EOF
 
 package_output "vim" "./${CHROOTDIR}/vim-${VIM_VERSION}/src/vim"

@@ -20,7 +20,10 @@ run_build_setup "dash" "${DASH_VERSION}" "${DASH_TARBALL}" \
   "dash.patch" \
   -- "${DASH_MIRRORS[@]}"
 
-sudo chroot "./${CHROOTDIR}/" /bin/sh -c "set -e && apk update && apk add build-base \
+sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
+set -e
+apk update
+apk add build-base \
 musl-dev \
 ccache \
 automake \
@@ -35,19 +38,20 @@ ncurses-static \
 autoconf \
 patch \
 libedit-dev \
-libedit-static && \
-mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH && \
-chmod 755 upx && \
-tar xf dash-${DASH_VERSION}.tar.gz && \
-cd dash-${DASH_VERSION}/ && \
-patch -p1 --fuzz=4 < ../dash.patch && \
-autoreconf -f -i && \
+libedit-static
+mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
+chmod 755 upx
+tar xf dash-${DASH_VERSION}.tar.gz
+cd dash-${DASH_VERSION}/
+patch -p1 --fuzz=4 < ../dash.patch
+autoreconf -f -i
 ./configure --enable-static \
   LDFLAGS='-static -Wl,--gc-sections' \
   PKG_CONFIG='pkg-config --static' \
-  CFLAGS='-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie -fstack-clash-protection' && \
-make -j\$(nproc) && \
-strip src/dash && \
-../upx --lzma src/dash"
+  CFLAGS='-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie -fstack-clash-protection'
+make -j\$(nproc)
+strip src/dash
+../upx --lzma src/dash
+EOF
 
 package_output "dash" "./${CHROOTDIR}/dash-${DASH_VERSION}/src/dash"

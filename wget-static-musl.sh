@@ -20,7 +20,10 @@ run_build_setup "wget" "${WGET_VERSION}" "${WGET_TARBALL}" \
   "wget-passive-ftp.patch" \
   -- "${WGET_MIRRORS[@]}"
 
-sudo chroot "./${CHROOTDIR}/" /bin/sh -c "set -e && apk update && apk add build-base \
+sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
+set -e
+apk update
+apk add build-base \
 musl-dev \
 ccache \
 openssl-dev \
@@ -37,20 +40,21 @@ patch \
 texinfo \
 pcre2-dev \
 pcre2-static \
-perl && \
-mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH && \
-chmod 755 upx && \
-tar xf wget-${WGET_VERSION}.tar.gz && \
-cd wget-${WGET_VERSION}/ && \
-patch -p1 --fuzz=4 < ../wget-passive-ftp.patch && \
+perl
+mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
+chmod 755 upx
+tar xf wget-${WGET_VERSION}.tar.gz
+cd wget-${WGET_VERSION}/
+patch -p1 --fuzz=4 < ../wget-passive-ftp.patch
 ./configure CC=gcc --with-ssl=openssl --with-libidn --disable-nls \
   --disable-rpath --sysconfdir=/etc \
   LDFLAGS='-static -lidn2 -lunistring -Wl,--gc-sections' \
   PKG_CONFIG='pkg-config --static' \
   CFLAGS='-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie -Wno-unterminated-string-initialization' \
-  PERL=/usr/bin/perl && \
-make -j\$(nproc) && \
-strip src/wget && \
-../upx --lzma src/wget"
+  PERL=/usr/bin/perl
+make -j\$(nproc)
+strip src/wget
+../upx --lzma src/wget
+EOF
 
 package_output "wget" "./${CHROOTDIR}/wget-${WGET_VERSION}/src/wget"

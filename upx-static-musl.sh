@@ -23,7 +23,10 @@ run_build_setup "upx" "${UPX_VERSION}" "${UPX_TARBALL}" \
   "upx-mod.patch" \
   -- "${UPX_MIRRORS[@]}"
 
-sudo chroot "./${CHROOTDIR}/" /bin/sh -c "set -e && apk update && apk add build-base \
+sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
+set -e
+apk update
+apk add build-base \
 musl-dev \
 ccache \
 zlib-dev \
@@ -31,13 +34,13 @@ zlib-static \
 zstd-dev \
 zstd-static \
 cmake \
-samurai && \
-mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH && \
-chmod 755 upx && \
-tar xf upx-${UPX_VERSION}-src.tar.xz && \
-cd upx-${UPX_VERSION}-src/ && \
-patch -p1 --fuzz=4 < ../upx-mod.patch && \
-mkdir build && cd build/ && \
+samurai
+mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
+chmod 755 upx
+tar xf upx-${UPX_VERSION}-src.tar.xz
+cd upx-${UPX_VERSION}-src/
+patch -p1 --fuzz=4 < ../upx-mod.patch
+mkdir build && cd build/
 cmake -G Ninja \
   -DCMAKE_EXE_LINKER_FLAGS='-Wl,--gc-sections -static' \
   -DCMAKE_C_FLAGS_RELEASE='-Os  ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector' \
@@ -47,10 +50,11 @@ cmake -G Ninja \
   -DUPX_CONFIG_DISABLE_WSTRICT=ON \
   -DUSE_STRICT_DEFAULTS=OFF \
   -DUPX_CONFIG_REQUIRE_THREADS=ON \
-  -S .. && \
-ninja -j\$(nproc) && \
-strip upx && \
-cp upx upx1 && \
-./upx1 --lzma upx"
+  -S ..
+ninja -j\$(nproc)
+strip upx
+cp upx upx1
+./upx1 --lzma upx
+EOF
 
 package_output "upx" "./${CHROOTDIR}/upx-${UPX_VERSION}-src/build/upx"

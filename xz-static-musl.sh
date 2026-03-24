@@ -23,21 +23,25 @@ XZ_MIRRORS=(
 run_build_setup "xz" "${XZ_VERSION}" "${XZ_TARBALL}" \
   -- "${XZ_MIRRORS[@]}"
 
-sudo chroot "./${CHROOTDIR}/" /bin/sh -c "set -e && apk update && apk add build-base \
+sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
+set -e
+apk update
+apk add build-base \
 musl-dev \
 ccache \
 clang \
-pkgconfig && \
-mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH && \
-chmod 755 upx && \
-tar xf xz-${XZ_VERSION}.tar.xz && \
-cd xz-${XZ_VERSION}/ && \
+pkgconfig
+mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
+chmod 755 upx
+tar xf xz-${XZ_VERSION}.tar.xz
+cd xz-${XZ_VERSION}/
 ./configure CC=clang \
   --enable-static --disable-shared --disable-nls \
   LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
-  CFLAGS='-Os  ${ARCH_FLAGS} -ffunction-sections -fdata-sections -Wno-unterminated-string-initialization' && \
-CC=clang LDFLAGS='-static -Wl,--gc-sections' make -j\$(nproc) && \
-strip src/xz/xz && \
-../upx --lzma src/xz/xz"
+  CFLAGS='-Os  ${ARCH_FLAGS} -ffunction-sections -fdata-sections -Wno-unterminated-string-initialization'
+CC=clang LDFLAGS='-static -Wl,--gc-sections' make -j\$(nproc)
+strip src/xz/xz
+../upx --lzma src/xz/xz
+EOF
 
 package_output "xz" "./${CHROOTDIR}/xz-${XZ_VERSION}/src/xz/xz"

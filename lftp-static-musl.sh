@@ -17,7 +17,10 @@ run_build_setup "lftp" "${LFTP_VERSION}" "${LFTP_TARBALL}" \
   "lftp.patch" \
   -- "${LFTP_MIRRORS[@]}"
 
-sudo chroot "./${CHROOTDIR}/" /bin/sh -c "set -e && apk update && apk add build-base \
+sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
+set -e
+apk update
+apk add build-base \
 musl-dev \
 ccache \
 autoconf \
@@ -40,20 +43,21 @@ zlib-dev \
 zlib-static \
 libstdc++-dev \
 gettext-dev \
-gettext-static && \
-mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH && \
-chmod 755 upx && \
-tar xf lftp-${LFTP_VERSION}.tar.gz && \
-cd lftp-${LFTP_VERSION}/ && \
-patch -p1 --fuzz=4 < ../lftp.patch && \
-autoreconf -i -f && \
+gettext-static
+mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
+chmod 755 upx
+tar xf lftp-${LFTP_VERSION}.tar.gz
+cd lftp-${LFTP_VERSION}/
+patch -p1 --fuzz=4 < ../lftp.patch
+autoreconf -i -f
 ./configure CC=gcc CXX=g++ LIBS='-l:libreadline.a -l:libncursesw.a' \
   --with-openssl --without-gnutls --enable-static --enable-threads=posix --disable-nls --disable-shared \
   LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
   CFLAGS='-Os -static  ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -std=c17 -Wno-unterminated-string-initialization -Wno-deprecated-declarations -no-pie' \
-  CXXFLAGS='-Os -static  ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -std=c++14 -Wno-deprecated-declarations -Wno-error=template-id-cdtor' && \
-make -j\$(nproc) LDFLAGS='-static -all-static -Wl,--gc-sections' && \
-strip src/lftp && \
-../upx --lzma src/lftp"
+  CXXFLAGS='-Os -static  ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -std=c++14 -Wno-deprecated-declarations -Wno-error=template-id-cdtor'
+make -j\$(nproc) LDFLAGS='-static -all-static -Wl,--gc-sections'
+strip src/lftp
+../upx --lzma src/lftp
+EOF
 
 package_output "lftp" "./${CHROOTDIR}/lftp-${LFTP_VERSION}/src/lftp"

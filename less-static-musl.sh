@@ -15,23 +15,27 @@ LESS_MIRRORS=(
 run_build_setup "less" "${LESS_VERSION}" "${LESS_TARBALL}" \
   -- "${LESS_MIRRORS[@]}"
 
-sudo chroot "./${CHROOTDIR}/" /bin/sh -c "set -e && apk update && apk add build-base \
+sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
+set -e
+apk update
+apk add build-base \
 musl-dev \
 ccache \
 pkgconfig \
 pcre2-static \
 pcre2-dev \
 ncurses-dev \
-ncurses-static && \
-mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH && \
-chmod 755 upx && \
-tar xf ${LESS_TARBALL} && \
-cd less-${LESS_VERSION}/ && \
+ncurses-static
+mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
+chmod 755 upx
+tar xf ${LESS_TARBALL}
+cd less-${LESS_VERSION}/
 ./configure --with-regex=pcre2 --enable-year2038 --sysconfdir=/etc \
   LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
-  CFLAGS='-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector' && \
-make -j\$(nproc) && \
-strip less && \
-../upx --brute less"
+  CFLAGS='-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector'
+make -j\$(nproc)
+strip less
+../upx --brute less
+EOF
 
 package_output "less" "./${CHROOTDIR}/less-${LESS_VERSION}/less"

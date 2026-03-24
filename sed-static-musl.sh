@@ -15,22 +15,26 @@ SED_MIRRORS=(
 run_build_setup "tar" "${SED_VERSION}" "${SED_SEDBALL}" \
   -- "${SED_MIRRORS[@]}"
 
-sudo chroot "./${CHROOTDIR}/" /bin/sh -c "set -e && apk update && apk add build-base \
+sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
+set -e
+apk update
+apk add build-base \
 musl-dev \
 ccache \
 pkgconfig \
 perl \
 gettext-dev \
-gettext-static && \
-mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH && \
-chmod 755 upx && \
-tar xf sed-${SED_VERSION}.tar.xz && \
-cd sed-${SED_VERSION}/ && \
+gettext-static
+mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
+chmod 755 upx
+tar xf sed-${SED_VERSION}.tar.xz
+cd sed-${SED_VERSION}/
 ./configure --enable-threads=posix --disable-nls --disable-i18n --disable-rpath \
   LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
-  CFLAGS='-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie' && \
-LDFLAGS='-static -Wl,--gc-sections' CFLAGS='-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie' make -j\$(nproc) && \
-strip sed/sed && \
-../upx --lzma sed/sed"
+  CFLAGS='-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie'
+LDFLAGS='-static -Wl,--gc-sections' CFLAGS='-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie' make -j\$(nproc)
+strip sed/sed
+../upx --lzma sed/sed
+EOF
 
 package_output "sed" "./${CHROOTDIR}/sed-${SED_VERSION}/sed/sed"

@@ -18,7 +18,10 @@ run_build_setup "tar" "${TAR_VERSION}" "${TAR_TARBALL}" \
   "tar.patch" \
   -- "${TAR_MIRRORS[@]}"
 
-sudo chroot "./${CHROOTDIR}/" /bin/sh -c "set -e && apk update && apk add build-base \
+sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
+set -e
+apk update
+apk add build-base \
 musl-dev \
 ccache \
 automake \
@@ -35,19 +38,20 @@ lz4-static \
 libbz2 \
 bzip2-static \
 gettext-dev \
-gettext-static && \
-mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH && \
-chmod 755 upx && \
-tar xf tar-${TAR_VERSION}.tar.xz && \
-cd tar-${TAR_VERSION}/ && \
-patch -p1 --fuzz=4 < ../tar.patch && \
-autoreconf -f -i && \
+gettext-static
+mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
+chmod 755 upx
+tar xf tar-${TAR_VERSION}.tar.xz
+cd tar-${TAR_VERSION}/
+patch -p1 --fuzz=4 < ../tar.patch
+autoreconf -f -i
 FORCE_UNSAFE_CONFIGURE=1 ./configure CC=gcc  --without-selinux \
   --disable-nls --disable-rpath --enable-largefile \
   LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
-  CFLAGS='-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie' && \
-make -j\$(nproc) && \
-strip src/tar && \
-../upx --lzma src/tar"
+  CFLAGS='-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie'
+make -j\$(nproc)
+strip src/tar
+../upx --lzma src/tar
+EOF
 
 package_output "tar" "./${CHROOTDIR}/tar-${TAR_VERSION}/src/tar"

@@ -21,23 +21,27 @@ OKSH_MIRRORS=(
 run_build_setup "oksh" "${OKSH_VERSION}" "${OKSH_TARBALL}" \
   -- "${OKSH_MIRRORS[@]}"
 
-sudo chroot "./${CHROOTDIR}/" /bin/sh -c "set -e && apk update && apk add build-base \
+sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
+set -e
+apk update
+apk add build-base \
 musl-dev \
 ccache \
 pkgconfig \
 ncurses-dev \
 ncurses-static \
 autoconf \
-patch && \
-mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH && \
-chmod 755 upx && \
-tar xf oksh-${OKSH_VERSION}.tar.gz && \
-cd oksh-${OKSH_VERSION}/ && \
-./configure --cc=gcc --cflags=\"-Os ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -Wlto-type-mismatch\" \
+patch
+mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
+chmod 755 upx
+tar xf oksh-${OKSH_VERSION}.tar.gz
+cd oksh-${OKSH_VERSION}/
+./configure --cc=gcc --cflags="-Os ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -Wlto-type-mismatch" \
   --enable-curses --enable-lto --enable-static \
-  LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' && \
-make -j\$(nproc) && \
-strip oksh && \
-../upx --ultra-brute oksh"
+  LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static'
+make -j\$(nproc)
+strip oksh
+../upx --ultra-brute oksh
+EOF
 
 package_output "oksh" "./${CHROOTDIR}/oksh-${OKSH_VERSION}/oksh"

@@ -24,7 +24,10 @@ BSDTAR_MIRRORS=(
 run_build_setup "libarchive" "${BSDTAR_VERSION}" "${BSDTAR_TARBALL}" \
   -- "${BSDTAR_MIRRORS[@]}"
 
-sudo chroot "./${CHROOTDIR}/" /bin/sh -c "set -e && apk update && apk add build-base \
+sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
+set -e
+apk update
+apk add build-base \
 musl-dev \
 ccache \
 make \
@@ -42,24 +45,25 @@ openssl-libs-static \
 libbz2 \
 bzip2-static \
 libxml2-dev \
-libxml2-static && \
-mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH && \
-chmod 755 upx && \
-tar xf libarchive-${BSDTAR_VERSION}.tar.xz && \
-cd libarchive-${BSDTAR_VERSION}/ && \
+libxml2-static
+mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
+chmod 755 upx
+tar xf libarchive-${BSDTAR_VERSION}.tar.xz
+cd libarchive-${BSDTAR_VERSION}/
 ./configure CC=gcc \
   --disable-shared --enable-static --enable-bsdtar=static \
   --disable-bsdcat --disable-bsdcpio --with-zlib \
   --disable-maintainer-mode --with-bz2lib --disable-dependency-tracking \
   LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
-  CFLAGS='-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie' && \
-make -j\$(nproc) && \
+  CFLAGS='-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie'
+make -j\$(nproc)
 gcc -static -o bsdtar tar/bsdtar-bsdtar.o \
   tar/bsdtar-cmdline.o tar/bsdtar-creation_set.o \
   tar/bsdtar-read.o tar/bsdtar-subst.o tar/bsdtar-util.o \
   tar/bsdtar-write.o .libs/libarchive.a .libs/libarchive_fe.a \
-  -lz -lbz2 -llzma -lzstd -llz4 -lxml2 -lcrypto -lssl && \
-strip bsdtar && \
-../upx --lzma bsdtar"
+  -lz -lbz2 -llzma -lzstd -llz4 -lxml2 -lcrypto -lssl
+strip bsdtar
+../upx --lzma bsdtar
+EOF
 
 package_output "bsdtar" "./${CHROOTDIR}/libarchive-${BSDTAR_VERSION}/bsdtar"

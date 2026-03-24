@@ -26,7 +26,10 @@ run_build_setup "aria2" "${ARIA2_VERSION}" "${ARIA2_TARBALL}" \
   "aria2.patch" \
   -- "${ARIA2_MIRRORS[@]}"
 
-sudo chroot "./${CHROOTDIR}/" /bin/sh -c "set -e && apk update && apk add build-base \
+sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
+set -e
+apk update
+apk add build-base \
 musl-dev \
 ccache \
 openssl-dev \
@@ -47,21 +50,22 @@ util-linux-static \
 xz-dev \
 xz-static \
 patch \
-pkgconfig && \
-mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH && \
-chmod 755 upx && \
-tar xf aria2-${ARIA2_VERSION}.tar.gz && \
-cd aria2-${ARIA2_VERSION}/ && \
-patch -p1 --fuzz=4 < ../aria2.patch && \
+pkgconfig
+mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
+chmod 755 upx
+tar xf aria2-${ARIA2_VERSION}.tar.gz
+cd aria2-${ARIA2_VERSION}/
+patch -p1 --fuzz=4 < ../aria2.patch
 ./configure CC=gcc ARIA2_STATIC=yes \
   --with-ca-bundle=/etc/ssl/certs/ca-certificates.crt \
   --without-gnutls --with-openssl --with-libcares \
   --disable-bittorrent --with-sqlite3 \
   --enable-static --disable-shared \
   LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
-  CFLAGS='-Os -static $ARCH_FLAGS -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie -Wno-unterminated-string-initialization' && \
-make -j\$(nproc) && \
-strip src/aria2c && \
-../upx --lzma src/aria2c"
+  CFLAGS='-Os -static $ARCH_FLAGS -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie -Wno-unterminated-string-initialization'
+make -j\$(nproc)
+strip src/aria2c
+../upx --lzma src/aria2c
+EOF
 
 package_output "aria2c" "./${CHROOTDIR}/aria2-${ARIA2_VERSION}/src/aria2c"

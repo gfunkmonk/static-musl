@@ -22,7 +22,10 @@ run_build_setup "htop" "${HTOP_VERSION}" "${HTOP_TARBALL}" \
   "htop.patch" \
   -- "${HTOP_MIRRORS[@]}"
 
-sudo chroot "./${CHROOTDIR}/" /bin/sh -c "set -e && apk update && apk add build-base \
+sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
+set -e
+apk update
+apk add build-base \
 musl-dev \
 ccache \
 pkgconfig \
@@ -32,18 +35,19 @@ python3 \
 lm-sensors-dev \
 libnl3-dev \
 libnl3-static \
-linux-headers && \
-mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH && \
-chmod 755 upx && \
-tar xf ${HTOP_TARBALL} && \
-cd htop-${HTOP_VERSION}/ && \
-patch -p1 --fuzz=4 < ../htop.patch && \
+linux-headers
+mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
+chmod 755 upx
+tar xf ${HTOP_TARBALL}
+cd htop-${HTOP_VERSION}/
+patch -p1 --fuzz=4 < ../htop.patch
 ./configure CC='gcc' \
   --enable-unicode --enable-static --enable-affinity --enable-delayacct \
   LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
-  CFLAGS='-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie' && \
-CC='gcc' make -j\$(nproc) && \
-strip htop && \
-../upx --lzma htop"
+  CFLAGS='-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie'
+CC='gcc' make -j\$(nproc)
+strip htop
+../upx --lzma htop
+EOF
 
 package_output "htop" "./${CHROOTDIR}/htop-${HTOP_VERSION}/htop"
