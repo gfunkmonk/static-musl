@@ -17,14 +17,7 @@ run_build_setup "tar" "${SED_VERSION}" "${SED_SEDBALL}" \
 
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
 set -e
-apk update
-apk add build-base \
-musl-dev \
-ccache \
-pkgconfig \
-perl \
-gettext-dev \
-gettext-static
+apk update && apk add build-base musl-dev ccache pkgconfig perl gettext-dev gettext-static
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
 chmod 755 upx
 tar xf sed-${SED_VERSION}.tar.xz
