@@ -25,16 +25,7 @@ run_build_setup "upx" "${UPX_VERSION}" "${UPX_TARBALL}" \
 
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
 set -e
-apk update
-apk add build-base \
-musl-dev \
-ccache \
-zlib-dev \
-zlib-static \
-zstd-dev \
-zstd-static \
-cmake \
-samurai
+apk update && apk add build-base musl-dev ccache zlib-dev zlib-static zstd-dev zstd-static cmake samurai
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
 chmod 755 upx
 tar xf upx-${UPX_VERSION}-src.tar.xz
@@ -45,12 +36,8 @@ cmake -G Ninja \
   -DCMAKE_EXE_LINKER_FLAGS='-Wl,--gc-sections -static' \
   -DCMAKE_C_FLAGS_RELEASE='-Os  ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector' \
   -DCMAKE_CXX_FLAGS_RELEASE='-Os  ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector' \
-  -DCMAKE_BUILD_TYPE=Release \
-  -DUPX_CONFIG_DISABLE_GITREV=ON \
-  -DUPX_CONFIG_DISABLE_WSTRICT=ON \
-  -DUSE_STRICT_DEFAULTS=OFF \
-  -DUPX_CONFIG_REQUIRE_THREADS=ON \
-  -S ..
+  -DCMAKE_BUILD_TYPE=Release -DUPX_CONFIG_DISABLE_GITREV=ON -DUPX_CONFIG_DISABLE_WSTRICT=ON \
+  -DUSE_STRICT_DEFAULTS=OFF -DUPX_CONFIG_REQUIRE_THREADS=ON -S ..
 ninja -j\$(nproc)
 strip upx
 cp upx upx1
