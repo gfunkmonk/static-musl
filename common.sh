@@ -298,7 +298,7 @@ run_build_setup() {
   local mirrors=("$@")
   setup_arch
   setup_cleanup
-  #install_host_deps
+  install_host_deps
   download_source "${tool}" "${version}" "${tarball}" "${mirrors[@]}"
   setup_alpine_chroot "${tarball}"
   [[ ${#patches[@]} -gt 0 ]] && copy_patches "${patches[@]}"
