@@ -29,29 +29,7 @@ run_build_setup "curl" "${CURL_VERSION}" "${CURL_TARBALL}" \
 
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
 set -e
-apk update
-apk add build-base \
-musl-dev \
-ccache \
-openssl-dev \
-openssl-libs-static \
-nghttp2-dev \
-nghttp2-static \
-libssh2-dev \
-libssh2-static \
-zlib-dev \
-zlib-static \
-zstd-dev \
-zstd-static \
-autoconf \
-automake \
-libunistring-static \
-libunistring-dev \
-libidn2-static \
-libidn2-dev \
-libpsl-static \
-libpsl-dev \
-clang
+apk update && apk add build-base musl-dev ccache openssl-dev openssl-libs-static nghttp2-dev nghttp2-static libssh2-dev libssh2-static zlib-dev zlib-static zstd-dev zstd-static autoconf automake libunistring-static libunistring-dev libidn2-static libidn2-dev libpsl-static libpsl-dev clang
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
 chmod 755 upx
 tar xf curl-${CURL_VERSION}.tar.xz
