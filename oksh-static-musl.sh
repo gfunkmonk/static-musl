@@ -1,4 +1,4 @@
-#!/bin/bash
+O#!/bin/bash
 set -euo pipefail
 . "$(dirname "$0")/common.sh"
 
@@ -33,9 +33,9 @@ mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH
 chmod 755 upx && \
 tar xf oksh-${OKSH_VERSION}.tar.gz && \
 cd oksh-${OKSH_VERSION}/ && \
-./configure --cc=gcc --cflags=\"-Os -fomit-frame-pointer\" \
+./configure --cc=gcc --cflags=\"-Os ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -Wlto-type-mismatch\" \
   --enable-curses --enable-lto --enable-static \
-  LDFLAGS='-static' PKG_CONFIG='pkg-config --static' && \
+  LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' && \
 make -j\$(nproc) && \
 strip oksh && \
 ../upx --ultra-brute oksh"

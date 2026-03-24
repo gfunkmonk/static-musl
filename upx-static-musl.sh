@@ -40,8 +40,8 @@ patch -p1 --fuzz=4 < ../upx-mod.patch && \
 mkdir build && cd build/ && \
 cmake -G Ninja \
   -DCMAKE_EXE_LINKER_FLAGS='-Wl,--gc-sections -static' \
-  -DCMAKE_C_FLAGS_RELEASE='-Os -DNDEBUG -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector' \
-  -DCMAKE_CXX_FLAGS_RELEASE='-Os -DNDEBUG -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector' \
+  -DCMAKE_C_FLAGS_RELEASE='-Os  ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector' \
+  -DCMAKE_CXX_FLAGS_RELEASE='-Os  ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector' \
   -DCMAKE_BUILD_TYPE=Release \
   -DUPX_CONFIG_DISABLE_GITREV=ON \
   -DUPX_CONFIG_DISABLE_WSTRICT=ON \

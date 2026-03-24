@@ -30,7 +30,7 @@ Build scripts that produce fully static, multi-architecture binaries using musl 
 
 ## Architectures
 
-`x86_64` · `x86` · `aarch64` · `armv7`
+`x86_64` · `x86` · `aarch64` · `armv7` · `armhf`
 
 ## Usage
 

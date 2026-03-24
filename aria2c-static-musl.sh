@@ -59,7 +59,7 @@ patch -p1 --fuzz=4 < ../aria2.patch && \
   --disable-bittorrent --with-sqlite3 \
   --enable-static --disable-shared \
   LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
-  CFLAGS='-Os -static -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie -Wno-unterminated-string-initialization' && \
+  CFLAGS='-Os -static $ARCH_FLAGS -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie -Wno-unterminated-string-initialization' && \
 make -j\$(nproc) && \
 strip src/aria2c && \
 ../upx --lzma src/aria2c"

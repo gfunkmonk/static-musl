@@ -29,6 +29,7 @@ on:
           - oksh
           - openssh
           - pigz
+          - sed
           - screen
           - tar
           - upx
@@ -52,7 +53,7 @@ jobs:
         id: set-matrix
         run: |
           if [[ "${{ github.event_name }}" == "schedule" || "${{ inputs.tool }}" == "all" || "${{ inputs.tool }}" == "" ]]; then
-            echo 'matrix=["7zz","aria2c","axel","bash","bsdtar","curl","dash","htop","less","lftp","nano","nmap","oksh","openssh","pigz","screen","tar","upx","vim","wget","xz"]' >> "$GITHUB_OUTPUT"
+            echo 'matrix=["7zz","aria2c","axel","bash","bsdtar","curl","dash","htop","less","lftp","nano","nmap","oksh","openssh","pigz","sed","screen","tar","upx","vim","wget","xz"]' >> "$GITHUB_OUTPUT"
           else
             echo 'matrix=["${{ inputs.tool }}"]' >> "$GITHUB_OUTPUT"
           fi
@@ -67,7 +68,7 @@ jobs:
       fail-fast: false
       matrix:
         tool: ${{ fromJson(needs.setup.outputs.matrix) }}
-        arch: [x86_64, x86, aarch64, armv7]
+        arch: [x86_64, x86, aarch64, armv7, armhf]
         include:
           - arch: x86_64
             runner: ubuntu-latest
@@ -76,6 +77,8 @@ jobs:
           - arch: aarch64
             runner: ubuntu-24.04-arm
           - arch: armv7
+            runner: ubuntu-24.04-arm
+          - arch: armhf
             runner: ubuntu-24.04-arm
 
     steps:

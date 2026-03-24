@@ -24,6 +24,8 @@ AXEL_MIRRORS=(
 run_build_setup "axel" "${AXEL_VERSION}" "${AXEL_TARBALL}" \
   -- "${AXEL_MIRRORS[@]}"
 
+echo $ARCH_FLAGS > "./${CHROOTDIR}/arch_flags"
+
 sudo chroot "./${CHROOTDIR}/" /bin/sh -c "set -e && apk update && apk add build-base \
 musl-dev \
 ccache \
@@ -42,7 +44,7 @@ chmod 755 upx && \
 tar xf axel-${AXEL_VERSION}.tar.xz && \
 cd axel-${AXEL_VERSION}/ && \
 ./configure CC=gcc LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
-  CFLAGS='-Os -static -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie -Wno-unterminated-string-initialization' && \
+  CFLAGS='-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie -Wno-unterminated-string-initialization' && \
 make -j\$(nproc) && \
 strip axel && \
 ../upx --lzma axel"

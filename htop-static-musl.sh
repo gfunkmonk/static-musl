@@ -41,7 +41,7 @@ patch -p1 --fuzz=4 < ../htop.patch && \
 ./configure CC='gcc' \
   --enable-unicode --enable-static --enable-affinity --enable-delayacct \
   LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
-  CFLAGS='-Os -static -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie' && \
+  CFLAGS='-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie' && \
 CC='gcc' make -j\$(nproc) && \
 strip htop && \
 ../upx --lzma htop"

@@ -12,16 +12,15 @@ ALPINE_MAJOR_MINOR="${ALPINE_VERSION%.*}"
 JQ="tools/jq/jq-${ARCH}"
 CURL="tools/curl/curl-${ARCH}"
 
-# CCACHE_CHROOT_DIR: path inside the chroot where ccache stores its
-# cache. Set this to a host-mounted path (e.g. via CI cache) to
-# persist ccache across builds.
+# CCACHE_CHROOT_DIR: path inside the chroot where ccache stores its cache.
+# Set this to a host-mounted path (e.g. via CI cache) to persist ccache across
+# builds.
 # Defaults to /ccache (ephemeral, inside the chroot).
 CCACHE_CHROOT_DIR="${CCACHE_CHROOT_DIR:-/ccache}"
 
-# CCACHE gets it's panties in a knot if the host has log_file defined
-# and it doesn't exist in the chroot when the CCACHE directories are
-# bind mounted. This was the best way I could fine to get that string
-# to make the directory.
+# CCACHE gets it's panties in a knot if the host has log_file defined and it doesn't
+# exist in the chroot when the CCACHE directories are bind mounted. This was the best
+# way I could fine to get that string to make the directory.
 CCACHE_LOG_DIR=$(ccache -p 2>/dev/null | grep log_file | cut -d "=" -f2 | rev | cut -d'/' -f2- | rev | sed 's/ //g') || true
 CCACHE_LOG_DIR="${CCACHE_LOG_DIR:-/var/log/ccache}"
 
@@ -72,15 +71,32 @@ setup_tools() {
     echo -e "${TOMATO}= ERROR: no curl available (checked ${CURL} and PATH)${NC}" >&2
     exit 1
   fi
+  setup_cleanup
 }
 
 # setup_arch: resolve QEMU_ARCH, ALPINE_URL, and TARBALL from ARCH
 setup_arch() {
   case "${ARCH}" in
-    x86_64)  QEMU_ARCH="" ;;
-    x86)     QEMU_ARCH="i386" ;;
-    aarch64) QEMU_ARCH="aarch64" ;;
-    armv7)   QEMU_ARCH="arm" ;;
+    x86_64)
+      QEMU_ARCH=""
+      ARCH_FLAGS="-march=x86-64 -mtune=generic"
+      ;;
+    x86)
+      QEMU_ARCH="i386"
+      ARCH_FLAGS="-march=i586 -mtune=generic"
+      ;;
+    aarch64)
+      QEMU_ARCH="aarch64"
+      ARCH_FLAGS="-march=armv8-a"
+      ;;
+    armv7)
+      QEMU_ARCH="arm"
+      ARCH_FLAGS="-march=armv7-a -mfpu=neon-vfpv4 -mfloat-abi=hard"
+      ;;
+    armhf)
+      QEMU_ARCH="arm"
+      ARCH_FLAGS="-march=armv6kz -mfloat-abi=hard -mfpu=vfp"
+      ;;
     *)
       echo -e "${LAGOON}Unknown architecture: ${HOTPINK}${ARCH}${NC}" >&2
       exit 1
@@ -282,7 +298,7 @@ run_build_setup() {
   local mirrors=("$@")
   setup_arch
   setup_cleanup
-  install_host_deps
+  #install_host_deps
   download_source "${tool}" "${version}" "${tarball}" "${mirrors[@]}"
   setup_alpine_chroot "${tarball}"
   [[ ${#patches[@]} -gt 0 ]] && copy_patches "${patches[@]}"

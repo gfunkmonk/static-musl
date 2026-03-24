@@ -16,24 +16,19 @@ OPENSSH_MIRRORS=(
 run_build_setup "openssh" "${OPENSSH_VERSION}" "${OPENSSH_TARBALL}" \
   -- "${OPENSSH_MIRRORS[@]}"
 
-sudo chroot "./${CHROOTDIR}/" /bin/sh -c "set -e && apk update && apk add build-base \
-musl-dev \
-ccache \
-openssl-dev \
-openssl-libs-static \
-zlib-dev \
-zlib-static \
-autoconf \
-automake && \
-mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH && \
-chmod 755 upx && \
-tar xf openssh-${OPENSSH_VERSION}.tar.gz && \
-cd openssh-${OPENSSH_VERSION}/ && \
+sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
+set -e
+apk update && apk add build-base musl-dev ccache openssl-dev openssl-libs-static zlib-dev zlib-static autoconf automake
+mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
+chmod 755 upx
+tar xf openssh-${OPENSSH_VERSION}.tar.gz
+cd openssh-${OPENSSH_VERSION}/
 ./configure --with-privsep-user=nobody \
   LIBS='-pthread' LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
-  CFLAGS='-Os -static -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie -Wno-unterminated-string-initialization' && \
-make -j\$(nproc) && \
-strip ssh && \
-../upx --lzma ssh"
+  CFLAGS='-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie -Wno-unterminated-string-initialization'
+make -j\$(nproc)
+strip ssh
+../upx --lzma ssh
+EOF
 
 package_output "openssh" "./${CHROOTDIR}/openssh-${OPENSSH_VERSION}/ssh"

@@ -40,7 +40,7 @@ patch -p1 --fuzz=4 < ../nmap.patch && \
   --without-ndiff --without-zenmap --without-nmap-update --with-pcap=linux \
   --with-openssl --without-liblua --without-libssh2 --without-nping --without-ncat \
   LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
-  CFLAGS='-Os -static -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie' && \
+  CFLAGS='-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie' && \
 make -j\$(nproc) && \
 strip nmap && \
 ../upx --brute nmap"

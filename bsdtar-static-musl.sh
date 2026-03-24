@@ -52,7 +52,7 @@ cd libarchive-${BSDTAR_VERSION}/ && \
   --disable-bsdcat --disable-bsdcpio --with-zlib \
   --disable-maintainer-mode --with-bz2lib --disable-dependency-tracking \
   LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
-  CFLAGS='-Os -static -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie' && \
+  CFLAGS='-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie' && \
 make -j\$(nproc) && \
 gcc -static -o bsdtar tar/bsdtar-bsdtar.o \
   tar/bsdtar-cmdline.o tar/bsdtar-creation_set.o \

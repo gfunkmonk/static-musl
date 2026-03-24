@@ -39,7 +39,7 @@ patch -p1 --fuzz=4 < ../nano-colors.patch && \
   --enable-nanorc --enable-color --enable-extra --enable-largefile \
   --enable-libmagic --disable-justify \
   LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
-  CFLAGS='-Os -static -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie' && \
+  CFLAGS='-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie' && \
 CC='gcc' make -j\$(nproc) && \
 strip src/nano && \
 ../upx --ultra-brute src/nano"

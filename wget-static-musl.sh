@@ -47,7 +47,7 @@ patch -p1 --fuzz=4 < ../wget-passive-ftp.patch && \
   --disable-rpath --sysconfdir=/etc \
   LDFLAGS='-static -lidn2 -lunistring -Wl,--gc-sections' \
   PKG_CONFIG='pkg-config --static' \
-  CFLAGS='-Os -static -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie -Wno-unterminated-string-initialization' \
+  CFLAGS='-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie -Wno-unterminated-string-initialization' \
   PERL=/usr/bin/perl && \
 make -j\$(nproc) && \
 strip src/wget && \

@@ -60,7 +60,7 @@ patch -p1 --fuzz=4 < ../curl.patch && \
   --with-ssl --with-libssh2 \
   --disable-docs --disable-manual --without-libpsl \
   CC=clang LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
-  CFLAGS='-Os -static -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie -Wno-unterminated-string-initialization' && \
+  CFLAGS='-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie -Wno-unterminated-string-initialization' && \
 make -j\$(nproc) V=1 LDFLAGS='-static -all-static' && \
 strip src/curl && \
 ../upx --lzma src/curl"

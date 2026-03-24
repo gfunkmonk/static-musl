@@ -43,7 +43,7 @@ sed -i 's#emsg(_(e_failed_to_source_defaults));#(void)0;#g' src/main.c && \
   --enable-multibyte \
   --with-features=huge --with-tlib=ncursesw --without-x \
   LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
-  CFLAGS='-Os -static -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie' && \
+  CFLAGS='-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie' && \
 CC='gcc' make -j\$(nproc) && \
 strip src/vim && \
 ../upx --ultra-brute src/vim"

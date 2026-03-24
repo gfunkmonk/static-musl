@@ -35,7 +35,7 @@ cd xz-${XZ_VERSION}/ && \
 ./configure CC=clang \
   --enable-static --disable-shared --disable-nls \
   LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
-  CFLAGS='-Os -ffunction-sections -fdata-sections -Wno-unterminated-string-initialization' && \
+  CFLAGS='-Os  ${ARCH_FLAGS} -ffunction-sections -fdata-sections -Wno-unterminated-string-initialization' && \
 CC=clang LDFLAGS='-static -Wl,--gc-sections' make -j\$(nproc) && \
 strip src/xz/xz && \
 ../upx --lzma src/xz/xz"

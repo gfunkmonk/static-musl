@@ -45,7 +45,7 @@ autoreconf -f -i && \
 ./configure --enable-static \
   LDFLAGS='-static -Wl,--gc-sections' \
   PKG_CONFIG='pkg-config --static' \
-  CFLAGS='-Os -static -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie -fstack-clash-protection' && \
+  CFLAGS='-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie -fstack-clash-protection' && \
 make -j\$(nproc) && \
 strip src/dash && \
 ../upx --lzma src/dash"

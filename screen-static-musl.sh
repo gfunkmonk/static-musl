@@ -32,7 +32,7 @@ cd screen-${SCREEN_VERSION}/ && \
 ./configure CC=gcc --enable-telnet --with-pty-mode=0600  --enable-colors256 --enable-rxvt_osc --with-pty-group=5 \
   --enable-socket-dir=/run/screen --disable-pam --enable-utmp --enable-socket-dir \
   LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
-  CFLAGS='-Os -static -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie' && \
+  CFLAGS='-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie' && \
 make -j\$(nproc) && \
 strip screen && \
 ../upx --brute screen"
