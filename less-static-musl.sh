@@ -17,15 +17,7 @@ run_build_setup "less" "${LESS_VERSION}" "${LESS_TARBALL}" \
 
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
 set -e
-apk update
-apk add build-base \
-musl-dev \
-ccache \
-pkgconfig \
-pcre2-static \
-pcre2-dev \
-ncurses-dev \
-ncurses-static
+apk update && apk add build-base musl-dev ccache pkgconfig pcre2-static pcre2-dev ncurses-dev ncurses-static
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
 chmod 755 upx
 tar xf ${LESS_TARBALL}
