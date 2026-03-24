@@ -28,29 +28,7 @@ run_build_setup "aria2" "${ARIA2_VERSION}" "${ARIA2_TARBALL}" \
 
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
 set -e
-apk update
-apk add build-base \
-musl-dev \
-ccache \
-openssl-dev \
-openssl-libs-static \
-zlib-dev \
-zlib-static \
-libpsl-dev \
-libpsl-static \
-libidn2-static \
-c-ares-dev \
-libssh2-dev \
-libssh2-static \
-sqlite-dev \
-sqlite-static \
-libxml2-dev \
-libxml2-static \
-util-linux-static \
-xz-dev \
-xz-static \
-patch \
-pkgconfig
+apk update && apk add build-base musl-dev ccache openssl-dev openssl-libs-static zlib-dev zlib-static libpsl-dev libpsl-static libidn2-static c-ares-dev libssh2-dev libssh2-static sqlite-dev sqlite-static libxml2-dev libxml2-static util-linux-static xz-dev xz-static patch pkgconfig
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
 chmod 755 upx
 tar xf aria2-${ARIA2_VERSION}.tar.gz
