@@ -3,14 +3,13 @@
 # Source this file at the top of each build script: . "$(dirname "$0")/common.sh"
 
 ######### Variables ###########
-CHROOTDIR=${CHROOTDIR:-pasta}
 ARCH=${ARCH:-x86_64}
 ALPINE_VERSION="3.23.3"
 ALPINE_MAJOR_MINOR="${ALPINE_VERSION%.*}"
 
-###### Bundled tools #########
-JQ="tools/jq/jq-${ARCH}"
-CURL="tools/curl/curl-${ARCH}"
+# Set directory name for the target chroot
+CHROOTDIR=
+CHROOTDIR=${CHROOTDIR:-potato}
 
 # CCACHE_CHROOT_DIR: path inside the chroot where ccache stores its cache.
 # Set this to a host-mounted path (e.g. via CI cache) to persist ccache across
@@ -26,7 +25,12 @@ CCACHE_LOG_DIR="${CCACHE_LOG_DIR:-/var/log/ccache}"
 
 # Set KEEP_CHROOT=true via environment to preserve chroot after failed
 # builds (for debugging)
+KEEP_CHROOT="false"
 KEEP_CHROOT=${KEEP_CHROOT:-false}
+
+###### Bundled tools #########
+JQ="tools/jq/jq-${ARCH}"
+CURL="tools/curl/curl-${ARCH}"
 
 ##### Colors ################
 ORANGE="\033[38;2;255;165;0m"
