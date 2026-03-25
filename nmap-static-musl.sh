@@ -39,7 +39,7 @@ make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip nmap
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
-../upx --brute nmap
+../upx --lzma nmap
 EOF
 
 package_output "nmap" "./${CHROOTDIR}/nmap-${NMAP_VERSION}/nmap"

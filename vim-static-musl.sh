@@ -48,7 +48,7 @@ CC='gcc' make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip src/vim
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
-../upx --ultra-brute src/vim
+../upx --lzma src/vim
 EOF
 
 package_output "vim" "./${CHROOTDIR}/vim-${VIM_VERSION}/src/vim"

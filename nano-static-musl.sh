@@ -42,7 +42,7 @@ CC='gcc' make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip src/nano
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
-../upx --ultra-brute src/nano
+../upx --lzma src/nano
 EOF
 
 package_output "nano" "./${CHROOTDIR}/nano-${NANO_VERSION}/src/nano"

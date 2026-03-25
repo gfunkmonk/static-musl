@@ -49,7 +49,7 @@ make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip oksh
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
-../upx --ultra-brute oksh
+../upx --lzma oksh
 EOF
 
 package_output "oksh" "./${CHROOTDIR}/oksh-${OKSH_VERSION}/oksh"

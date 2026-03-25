@@ -93,7 +93,7 @@ CC='gcc' make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip bash
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
-../upx --ultra-brute bash
+../upx --lzma bash
 EOF
 
 package_output "bash" "${CHROOTDIR}/bash-${BASH_VERSION}/bash"

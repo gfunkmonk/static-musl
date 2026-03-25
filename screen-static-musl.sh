@@ -34,7 +34,7 @@ make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip screen
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
-../upx --brute screen
+../upx --lzma screen
 EOF
 
 package_output "screen" "./${CHROOTDIR}/screen-${SCREEN_VERSION}/screen"

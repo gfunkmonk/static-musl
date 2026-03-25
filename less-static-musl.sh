@@ -41,7 +41,7 @@ make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip less
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
-../upx --brute less
+../upx --lzma less
 EOF
 
 package_output "less" "./${CHROOTDIR}/less-${LESS_VERSION}/less"
