@@ -4,6 +4,7 @@ set -euo pipefail
 
 setup_tools
 
+echo -e "${VIOLET}= fetching latest axel version${NC}"
 AXEL_VERSION=$(gh_latest_release "axel-download-accelerator/axel" '.tag_name | ltrimstr("v")') || true
 if [ -z "${AXEL_VERSION}" ]; then
   echo -e "${TAWNY}= GitHub API unavailable, falling back to axel 2.17.14${NC}"

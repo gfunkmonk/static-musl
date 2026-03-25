@@ -4,7 +4,13 @@ set -euo pipefail
 
 setup_tools
 
-LFTP_VERSION="4.9.3"
+echo -e "${VIOLET}= fetching latest lftp version${NC}"
+LFTP_VERSION=$(gh_latest_release "lavv17/lftp" '.tag_name | ltrimstr("v")') || true
+if [ -z "${LFTP_VERSION}" ]; then
+  echo -e "${TAWNY}= GitHub API unavailable, falling back to lftp 4.9.3${NC}"
+  LFTP_VERSION="4.9.3"
+fi
+
 PACKAGE_VERSION="${LFTP_VERSION}"
 LFTP_TARBALL="lftp-${LFTP_VERSION}.tar.gz"
 LFTP_MIRRORS=(

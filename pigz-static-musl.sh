@@ -4,13 +4,19 @@ set -euo pipefail
 
 setup_tools
 
-PIGZ_VERSION="2.8"
+echo -e "${VIOLET}= fetching latest pigz version${NC}"
+PIGZ_VERSION=$(gh_latest_tag "madler/pigz" '.[0].name | ltrimstr("v")') || true
+if [ -z "${PIGZ_VERSION}" ]; then
+  echo -e "${TAWNY}= GitHub API unavailable, falling back to pigz 2.8${NC}"
+  PIGZ_VERSION="2.8"
+fi
+
 PACKAGE_VERSION="${PIGZ_VERSION}"
 PIGZ_TARBALL="pigz-${PIGZ_VERSION}.tar.gz"
 PIGZ_MIRRORS=(
+  "https://github.com/madler/pigz/archive/v${PIGZ_VERSION}/pigz-${PIGZ_VERSION}.tar.gz"
   "https://zlib.net/pigz/pigz-${PIGZ_VERSION}.tar.gz"
   "https://fossies.org/linux/privat/pigz-${PIGZ_VERSION}.tar.gz"
-  "https://gentoo.osuosl.org/distfiles/70/pigz-${PIGZ_VERSION}.tar.gz"
 )
 
 run_build_setup "pigz" "${PIGZ_VERSION}" "${PIGZ_TARBALL}" \
