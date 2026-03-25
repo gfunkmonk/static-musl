@@ -143,7 +143,7 @@ install_host_deps() {
   echo -e "${AQUA}= install dependencies${NC}"
   local DEBIAN_DEPS=(binutils)
   [ -n "${QEMU_ARCH}" ] && DEBIAN_DEPS+=(qemu-user-static)
-  sudo apt-get update -qy && sudo apt-get install -y "${DEBIAN_DEPS[@]}"
+  sudo apt-get update -qy && sudo apt-get install -qy --no-install-recommends "${DEBIAN_DEPS[@]}"
 }
 
 # download_source LABEL VERSION TARBALL mirror1 [mirror2 ...]

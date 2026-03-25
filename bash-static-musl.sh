@@ -81,8 +81,7 @@ while read -r patch; do
   echo -e "${NAVAJO}= applying \$patch${NC}"
   patch -p0 < ../${BASH_PATCH_DIR}/"\$patch"
 done < ../${BASH_PATCH_DIR}/.patch-list
-echo -e "${BOYSENBERRY}= applying bash-5.3_my.patch${NC}"
-echo -e "${LAGOON}= Applying custom patch${NC}"
+echo -e "${BOYSENBERRY}= applying custom patch${NC}"
 patch -p1 --fuzz=4 < ../bash.patch
 echo -e "${PEACH}= Configure source${NC}"
 ./configure \

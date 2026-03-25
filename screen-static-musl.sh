@@ -27,7 +27,7 @@ tar xf screen-${SCREEN_VERSION}.tar.gz
 cd screen-${SCREEN_VERSION}/
 echo -e "${PEACH}= Configure source${NC}"
 ./configure CC=gcc --enable-telnet --with-pty-mode=0600  --enable-colors256 --enable-rxvt_osc --with-pty-group=5 \
-  --enable-socket-dir=/run/screen --disable-pam --enable-utmp --enable-socket-dir \
+  --enable-socket-dir=/run/screen --disable-pam --enable-utmp \
   LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
   CFLAGS='-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie'
 echo -e "${VIOLET}= Building...${NC}"

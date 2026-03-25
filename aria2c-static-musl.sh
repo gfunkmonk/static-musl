@@ -48,7 +48,9 @@ echo -e "${PEACH}= Configure source${NC}"
   CFLAGS='-Os -static $ARCH_FLAGS -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie -Wno-unterminated-string-initialization'
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc)
+echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip src/aria2c
+echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
 ../upx --lzma src/aria2c
 EOF
 
