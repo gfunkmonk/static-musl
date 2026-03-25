@@ -1,0 +1,39 @@
+Description: Do not encode unknown mode bits with oldgnu format.
+ The oldgnu format can encode large header fields in base-256. On the Hurd,
+ for example, a fifo is a translator and its mode bits contain at least the
+ S_IROOT (040000000) bit set. For the v7 and ustar formats all unknown
+ mode bits are masked at the call site, and ustar, posix and gnu formats
+ only encode known mode bits. But oldgnu is left unmasked and encoding all
+ unknown bits, which is very unexpected as these are system-specific internal
+ details on how to represent fifos (or other translators).
+ .
+ GNU tar should consider oldgnu in the same way as the gnu, posix and ustar
+ formats, and ignore unknown bits when encoding the mode.
+Author: Guillem Jover <guillem@debian.org>
+Origin: vendor
+Forwarded: no
+Last-Update: 2018-10-14
+
+---
+
+Index: tar.git/src/create.c
+===================================================================
+--- tar.git.orig/src/create.c	2020-11-20 14:29:25.259596846 +0000
++++ tar.git/src/create.c	2020-11-20 14:29:25.259596846 +0000
+@@ -384,7 +384,7 @@
+ mode_to_chars (mode_t v, char *p, size_t s)
+ {
+   /* In the common case where the internal and external mode bits are the same,
+-     and we are not using POSIX or GNU format,
++     and we are not using POSIX or GNU formats,
+      propagate all unknown bits to the external mode.
+      This matches historical practice.
+      Otherwise, just copy the bits we know about.  */
+@@ -396,6 +396,7 @@
+       && S_IROTH == TOREAD && S_IWOTH == TOWRITE && S_IXOTH == TOEXEC
+       && archive_format != POSIX_FORMAT
+       && archive_format != USTAR_FORMAT
++      && archive_format != OLDGNU_FORMAT
+       && archive_format != GNU_FORMAT)
+     {
+       negative = v < 0;

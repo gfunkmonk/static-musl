@@ -21,6 +21,10 @@ LFTP_MIRRORS=(
 
 run_build_setup "lftp" "${LFTP_VERSION}" "${LFTP_TARBALL}" \
   "lftp.patch" \
+  "lftp-4.9.1-libdir-readline.patch" \
+  "lftp-4.9.2-socks.patch" \
+  "lftp-4.9.3-gnulib-stdlib.h.patch" \
+  "lftp-4.9.3-gnulib.patch" \
   -- "${LFTP_MIRRORS[@]}"
 
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
@@ -35,8 +39,12 @@ tar xf lftp-${LFTP_VERSION}.tar.gz
 cd lftp-${LFTP_VERSION}/
 echo -e "${LAGOON}= Applying custom patch${NC}"
 patch -p1 --fuzz=4 < ../lftp.patch
-autoreconf -i -f
+patch -p1 --fuzz=4 < ../lftp-4.9.1-libdir-readline.patch
+patch -p1 --fuzz=4 < ../lftp-4.9.2-socks.patch
+patch -p1 --fuzz=4 < ../lftp-4.9.3-gnulib-stdlib.h.patch
+patch -p1 --fuzz=4 < ../lftp-4.9.3-gnulib.patch
 echo -e "${PEACH}= Configure source${NC}"
+autoreconf -f -i
 ./configure CC=gcc CXX=g++ LIBS='-l:libreadline.a -l:libncursesw.a' \
   --with-openssl --without-gnutls --enable-static --enable-threads=posix --disable-nls --disable-shared \
   LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \

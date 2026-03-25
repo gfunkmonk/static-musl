@@ -13,6 +13,10 @@ SED_MIRRORS=(
 )
 
 run_build_setup "sed" "${SED_VERSION}" "${SED_SEDBALL}" \
+  "sed-b-flag.patch" \
+  "sed-c-flag.patch" \
+  "sed-covscan-annotations.patch" \
+  "sed-regexp-cache-size.patch" \
   -- "${SED_MIRRORS[@]}"
 
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
@@ -25,6 +29,11 @@ chmod 755 upx
 echo -e "${LIME}= Extracting source${NC}"
 tar xf sed-${SED_VERSION}.tar.xz
 cd sed-${SED_VERSION}/
+echo -e "${LAGOON}= Applying custom patch${NC}"
+patch -p1 --fuzz=4 < ../sed-b-flag.patch
+patch -p1 --fuzz=4 < ../sed-c-flag.patch
+patch -p1 --fuzz=4 < ../sed-covscan-annotations.patch
+patch -p1 --fuzz=4 < ../sed-regexp-cache-size.patch
 echo -e "${PEACH}= Configure source${NC}"
 ./configure --enable-threads=posix --disable-nls --disable-i18n --disable-rpath \
   LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \

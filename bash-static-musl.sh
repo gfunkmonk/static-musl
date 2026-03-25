@@ -62,7 +62,13 @@ download_bash_upstream_patches() {
 
 download_bash_upstream_patches
 run_build_setup "bash" "${BASH_VERSION}" "${BASH_TARBALL}" \
-  "bash.patch" \
+  "bash-aliases-repeat.patch" \
+  "bash-bash-config.patch" \
+  "bash-bashansi-bool-c23.patch" \
+  "bash-default-editor.patch" \
+  "bash-input-err.patch" \
+  "bash_cd_three_dot.patch" \
+  "bash_make-the-bash-fc-builtin-more-reliable-for-scripting.patch" \
   -- "${BASH_MIRRORS[@]}"
 cp -r distfiles/"${BASH_PATCH_DIR}" "./${CHROOTDIR}/"
 
@@ -82,7 +88,14 @@ while read -r patch; do
   patch -p0 < ../${BASH_PATCH_DIR}/"\$patch"
 done < ../${BASH_PATCH_DIR}/.patch-list
 echo -e "${BOYSENBERRY}= applying custom patch${NC}"
-patch -p1 --fuzz=4 < ../bash.patch
+#patch -p1 --fuzz=4 < ../bash.patch
+patch -p1 --fuzz=4 < ../bash-aliases-repeat.patch
+patch -p1 --fuzz=4 < ../bash-bash-config.patch
+patch -p1 --fuzz=4 < ../bash-bashansi-bool-c23.patch
+patch -p1 --fuzz=4 < ../bash-default-editor.patch
+patch -p1 --fuzz=4 < ../bash-input-err.patch
+patch -p1 --fuzz=4 < ../bash_cd_three_dot.patch
+patch -p1 --fuzz=4 < ../bash_make-the-bash-fc-builtin-more-reliable-for-scripting.patch
 echo -e "${PEACH}= Configure source${NC}"
 ./configure \
   --disable-nls --without-bash-malloc --with-curses --enable-static-link \

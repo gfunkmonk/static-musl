@@ -45,39 +45,6 @@ diff -ruN tar-1.35.orig/src/Makefile.in tar-1.35/src/Makefile.in
  
  all: all-am
  
-diff -ruN tar-1.35.orig/src/buffer.c tar-1.35/src/buffer.c
---- tar-1.35.orig/src/buffer.c	2023-07-10 03:29:17.000000000 -0400
-+++ tar-1.35/src/buffer.c	2026-03-17 16:54:44.307850784 -0400
-@@ -987,8 +987,7 @@
-     }
- 
-   record_end = record_start + (record_size - left) / BLOCKSIZE;
--  if (left == 0)
--    records_read++;
-+  records_read++;
- }
- 
- /*  Flush the current buffer to/from the archive.  */
-diff -ruN tar-1.35.orig/src/create.c tar-1.35/src/create.c
---- tar-1.35.orig/src/create.c	2023-07-10 09:43:02.000000000 -0400
-+++ tar-1.35/src/create.c	2026-03-17 16:54:44.307019064 -0400
-@@ -380,7 +380,7 @@
- mode_to_chars (mode_t v, char *p, size_t s)
- {
-   /* In the common case where the internal and external mode bits are the same,
--     and we are not using POSIX or GNU format,
-+     and we are not using POSIX or GNU formats,
-      propagate all unknown bits to the external mode.
-      This matches historical practice.
-      Otherwise, just copy the bits we know about.  */
-@@ -392,6 +392,7 @@
-       && S_IROTH == TOREAD && S_IWOTH == TOWRITE && S_IXOTH == TOEXEC
-       && archive_format != POSIX_FORMAT
-       && archive_format != USTAR_FORMAT
-+      && archive_format != OLDGNU_FORMAT
-       && archive_format != GNU_FORMAT)
-     {
-       negative = v < 0;
 diff -ruN tar-1.35.orig/src/extract.c tar-1.35/src/extract.c
 --- tar-1.35.orig/src/extract.c	2023-07-10 06:13:55.000000000 -0400
 +++ tar-1.35/src/extract.c	2026-03-17 16:54:44.319749464 -0400
@@ -100,19 +67,3 @@ diff -ruN tar-1.35.orig/tests/Makefile.am tar-1.35/tests/Makefile.am
 - $(LIB_SELINUX) $(LIB_SETLOCALE_NULL)
 + $(LIB_SELINUX) $(LIB_SETLOCALE_NULL) \
 + $(LIBINTL) $(LIBICONV)
-diff -ruN tar-1.35.orig/tests/delete06.at tar-1.35/tests/delete06.at
---- tar-1.35.orig/tests/delete06.at	2023-07-10 03:29:18.000000000 -0400
-+++ tar-1.35/tests/delete06.at	2026-03-17 16:54:44.308378264 -0400
-@@ -36,7 +36,10 @@
- dd if=archive.tar of=trunc.tar bs=$size count=1 2>/dev/null
- tar --delete 'b/' -f trunc.tar
- ],
--[0],
--[],[],[],[],[gnu, pax])
-+[2],
-+[],
-+[tar: lseek: trunc.tar: Value too large for defined data type
-+tar: Exiting with failure status due to previous errors
-+],[],[],[gnu, pax])
- 
- AT_CLEANUP

@@ -13,6 +13,8 @@ SCREEN_MIRRORS=(
 )
 
 run_build_setup "screen" "${SCREEN_VERSION}" "${SCREEN_TARBALL}" \
+  "screen-5.0.0-supress_remap.patch" \
+  "screen-5.0.1-big-endian.patch" \
   -- "${SCREEN_MIRRORS[@]}"
 
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
@@ -25,6 +27,9 @@ chmod 755 upx
 echo -e "${LIME}= Extracting source${NC}"
 tar xf screen-${SCREEN_VERSION}.tar.gz
 cd screen-${SCREEN_VERSION}/
+echo -e "${LAGOON}= Applying custom patch${NC}"
+patch -p1 --fuzz=4 < ../screen-5.0.0-supress_remap.patch
+patch -p1 --fuzz=4 < ../screen-5.0.1-big-endian.patch
 echo -e "${PEACH}= Configure source${NC}"
 ./configure CC=gcc --enable-telnet --with-pty-mode=0600  --enable-colors256 --enable-rxvt_osc --with-pty-group=5 \
   --enable-socket-dir=/run/screen --disable-pam --enable-utmp \
