@@ -14,11 +14,15 @@ Build scripts that produce fully static, multi-architecture binaries using musl 
 | curl | latest | Data transfer tool |
 | dash | 0.5.13.1 | POSIX shell |
 | htop | latest | Interactive process viewer |
+| less | latest | pager program similar to more |
 | lftp | 4.9.3 | Command line ftp client |
 | nano | 8.7.1 | Small command-line text editor |
+| nmap | 7.98 | Network scanning & discovery tool |
 | oksh | latest | OpenBSD ksh shell |
 | openssh | 10.2p1 | OpenSSH ssh client |
 | pigz | 2.8 | Parallel implementation of GZip |
+| sed | 4.9 | Stream editor for filtering/transforming text |
+| screen | 5.0.1 | Screen is a mature terminal multiplexer |
 | tar | 1.35 | GNU tar archive utility |
 | upx | latest | UPX w/ custom patch & zstd support |
 | vim | latest | Text editor |
@@ -27,7 +31,7 @@ Build scripts that produce fully static, multi-architecture binaries using musl 
 
 ## Architectures
 
-`x86_64` · `x86` · `aarch64` · `armv7`
+`x86_64` · `x86` · `aarch64` · `armv7` · `armhf`
 
 ## Usage
 

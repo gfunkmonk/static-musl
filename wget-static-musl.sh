@@ -16,46 +16,34 @@ WGET_MIRRORS=(
   "https://mirror.csclub.uwaterloo.ca/gnu/wget/wget-${WGET_VERSION}.tar.gz"
 )
 
-setup_arch
-setup_cleanup
-install_host_deps
-download_source "wget" "${WGET_VERSION}" "${WGET_TARBALL}" "${WGET_MIRRORS[@]}"
-setup_alpine_chroot "${WGET_TARBALL}"
-copy_patches "wget-passive-ftp.patch"
-setup_qemu
-mount_chroot
+run_build_setup "wget" "${WGET_VERSION}" "${WGET_TARBALL}" \
+  "wget-passive-ftp.patch" \
+  -- "${WGET_MIRRORS[@]}"
 
-sudo chroot "./${CHROOTDIR}/" /bin/sh -c "set -e && apk update && apk add build-base \
-musl-dev \
-ccache \
-openssl-dev \
-zlib-dev \
-libidn2-dev \
-libpsl-dev \
-libidn2-static \
-openssl-libs-static \
-zlib-static \
-libpsl-static \
-libunistring-dev \
-libunistring-static \
-patch \
-texinfo \
-pcre2-dev \
-pcre2-static \
-perl && \
-mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH && \
-chmod 755 upx && \
-tar xf wget-${WGET_VERSION}.tar.gz && \
-cd wget-${WGET_VERSION}/ && \
-patch -p1 --fuzz=4 < ../wget-passive-ftp.patch && \
+sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
+set -e
+echo -e "${ORANGE}= Installing dependencies...${NC}"
+apk update && apk add build-base musl-dev ccache openssl-dev zlib-dev libidn2-dev libpsl-dev libidn2-static openssl-libs-static zlib-static libpsl-static libunistring-dev libunistring-static patch texinfo pcre2-dev pcre2-static perl
+mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
+chmod 755 upx
+echo -e "${LIME}= Extracting source${NC}"
+tar xf wget-${WGET_VERSION}.tar.gz
+cd wget-${WGET_VERSION}/
+echo -e "${LAGOON}= Applying custom patch${NC}"
+patch -p1 --fuzz=4 < ../wget-passive-ftp.patch
+echo -e "${PEACH}= Configure source${NC}"
 ./configure CC=gcc --with-ssl=openssl --with-libidn --disable-nls \
   --disable-rpath --sysconfdir=/etc \
   LDFLAGS='-static -lidn2 -lunistring -Wl,--gc-sections' \
   PKG_CONFIG='pkg-config --static' \
-  CFLAGS='-Os -static -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie -Wno-unterminated-string-initialization' \
-  PERL=/usr/bin/perl && \
-make -j\$(nproc) && \
-strip src/wget && \
-../upx --lzma src/wget"
+  CFLAGS='-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie -Wno-unterminated-string-initialization' \
+  PERL=/usr/bin/perl
+echo -e "${VIOLET}= Building...${NC}"
+make -j\$(nproc)
+echo -e "${CHARTREUSE}= Stripping binary${NC}"
+strip src/wget
+echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
+../upx --lzma src/wget
+EOF
 
 package_output "wget" "./${CHROOTDIR}/wget-${WGET_VERSION}/src/wget"

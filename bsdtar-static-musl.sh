@@ -21,51 +21,38 @@ BSDTAR_MIRRORS=(
   "https://ftp.fau.de/macports/distfiles/libarchive/libarchive-${BSDTAR_VERSION}.tar.xz"
 )
 
-setup_arch
-setup_cleanup
-install_host_deps
-download_source "libarchive" "${BSDTAR_VERSION}" "${BSDTAR_TARBALL}" "${BSDTAR_MIRRORS[@]}"
-setup_alpine_chroot "${BSDTAR_TARBALL}"
-setup_qemu
-mount_chroot
+run_build_setup "libarchive" "${BSDTAR_VERSION}" "${BSDTAR_TARBALL}" \
+  -- "${BSDTAR_MIRRORS[@]}"
 
-# Note: --with-zlib, --without-bz2lib; lzma/zstd/xml2/openssl linked via pkg-config --static
-sudo chroot "./${CHROOTDIR}/" /bin/sh -c "set -e && apk update && apk add build-base \
-musl-dev \
-ccache \
-make \
-pkgconfig \
-zlib-dev \
-zlib-static \
-xz-dev \
-xz-static \
-zstd-dev \
-zstd-static \
-lz4-dev \
-lz4-static \
-openssl-dev \
-openssl-libs-static \
-libbz2 \
-bzip2-static \
-libxml2-dev \
-libxml2-static && \
-mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH && \
-chmod 755 upx && \
-tar xf libarchive-${BSDTAR_VERSION}.tar.xz && \
-cd libarchive-${BSDTAR_VERSION}/ && \
+sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
+set -e
+echo -e "${ORANGE}= Installing dependencies...${NC}"
+apk update && apk add build-base musl-dev ccache make pkgconfig zlib-dev zlib-static xz-dev xz-static zstd-dev zstd-static lz4-dev lz4-static openssl-dev openssl-libs-static libbz2 bzip2-static libxml2-dev libxml2-static
+mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
+chmod 755 upx
+echo -e "${LIME}= Extracting source${NC}"
+tar xf libarchive-${BSDTAR_VERSION}.tar.xz
+cd libarchive-${BSDTAR_VERSION}/
+echo -e "${PEACH}= Configure source${NC}"
 ./configure CC=gcc \
   --disable-shared --enable-static --enable-bsdtar=static \
   --disable-bsdcat --disable-bsdcpio --with-zlib \
   --disable-maintainer-mode --with-bz2lib --disable-dependency-tracking \
   LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
-  CFLAGS='-Os -static -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie' && \
-make -j\$(nproc) && \
-gcc -static -o bsdtar tar/bsdtar-bsdtar.o \
+  CFLAGS='-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie'
+echo -e "${VIOLET}= Building...${NC}"
+make -j\$(nproc)
+LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
+  CFLAGS='-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie' \
+  gcc -static -o bsdtar tar/bsdtar-bsdtar.o \
   tar/bsdtar-cmdline.o tar/bsdtar-creation_set.o \
   tar/bsdtar-read.o tar/bsdtar-subst.o tar/bsdtar-util.o \
   tar/bsdtar-write.o .libs/libarchive.a .libs/libarchive_fe.a \
-  -lz -lbz2 -llzma -lzstd -llz4 -lxml2 -lcrypto -lssl && \
-strip bsdtar && \
-../upx --lzma bsdtar"
+  -lz -lbz2 -llzma -lzstd -llz4 -lxml2 -lcrypto -lssl
+echo -e "${CHARTREUSE}= Stripping binary${NC}"
+strip bsdtar
+echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
+../upx --lzma bsdtar
+EOF
 
 package_output "bsdtar" "./${CHROOTDIR}/libarchive-${BSDTAR_VERSION}/bsdtar"

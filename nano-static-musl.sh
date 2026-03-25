@@ -15,38 +15,34 @@ NANO_MIRRORS=(
   "https://pilotfiber.dl.sourceforge.net/project/immortalwrt/sources/nano-${NANO_VERSION}.tar.xz"
 )
 
-setup_arch
-setup_cleanup
-install_host_deps
-download_source "nano" "${NANO_VERSION}" "${NANO_TARBALL}" "${NANO_MIRRORS[@]}"
-setup_alpine_chroot "${NANO_TARBALL}"
-copy_patches "nano-colors.patch"
-setup_qemu
-mount_chroot
+run_build_setup "nano" "${NANO_VERSION}" "${NANO_TARBALL}" \
+  "nano-colors.patch" \
+  -- "${NANO_MIRRORS[@]}"
 
-sudo chroot "./${CHROOTDIR}/" /bin/sh -c "set -e && apk update && apk add build-base \
-musl-dev \
-ccache \
-pkgconfig \
-ncurses-dev \
-ncurses-static \
-libmagic-static \
-libmagic \
-file-dev \
-linux-headers && \
-mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH && \
-chmod 755 upx && \
-tar xf ${NANO_TARBALL} && \
-cd nano-${NANO_VERSION}/ && \
-patch -p1 --fuzz=4 < ../nano-colors.patch && \
+sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
+set -e
+echo -e "${ORANGE}= Installing dependencies...${NC}"
+apk update && apk add build-base musl-dev ccache pkgconfig ncurses-dev ncurses-static libmagic-static libmagic file-dev linux-headers
+mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
+chmod 755 upx
+echo -e "${LIME}= Extracting source${NC}"
+tar xf ${NANO_TARBALL}
+cd nano-${NANO_VERSION}/
+echo -e "${LAGOON}= Applying custom patch${NC}"
+patch -p1 --fuzz=4 < ../nano-colors.patch
+echo -e "${PEACH}= Configure source${NC}"
 ./configure CC='gcc' \
   --sysconfdir=/etc --disable-nls --disable-utf8 --disable-tiny \
   --enable-nanorc --enable-color --enable-extra --enable-largefile \
   --enable-libmagic --disable-justify \
   LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
-  CFLAGS='-Os -static -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie' && \
-CC='gcc' make -j\$(nproc) && \
-strip src/nano && \
-../upx --ultra-brute src/nano"
+  CFLAGS='-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie'
+echo -e "${VIOLET}= Building...${NC}"
+CC='gcc' make -j\$(nproc)
+echo -e "${CHARTREUSE}= Stripping binary${NC}"
+strip src/nano
+echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
+../upx --ultra-brute src/nano
+EOF
 
 package_output "nano" "./${CHROOTDIR}/nano-${NANO_VERSION}/src/nano"

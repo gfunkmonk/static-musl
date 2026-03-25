@@ -22,11 +22,15 @@ on:
           - curl
           - dash
           - htop
+          - less
           - lftp
           - nano
+          - nmap
           - oksh
           - openssh
           - pigz
+          - sed
+          - screen
           - tar
           - upx
           - vim
@@ -49,14 +53,14 @@ jobs:
         id: set-matrix
         run: |
           if [[ "${{ github.event_name }}" == "schedule" || "${{ inputs.tool }}" == "all" || "${{ inputs.tool }}" == "" ]]; then
-            echo 'matrix=["7zz","aria2c","axel","bash","bsdtar","curl","dash","htop","lftp","nano","oksh","openssh","pigz","tar","upx","vim","wget","xz"]' >> "$GITHUB_OUTPUT"
+            echo 'matrix=["7zz","aria2c","axel","bash","bsdtar","curl","dash","htop","less","lftp","nano","nmap","oksh","openssh","pigz","sed","screen","tar","upx","vim","wget","xz"]' >> "$GITHUB_OUTPUT"
           else
             echo 'matrix=["${{ inputs.tool }}"]' >> "$GITHUB_OUTPUT"
           fi
 
   build:
     needs: setup
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runner }}
     env:
       CCACHE_DIR: ${{ github.workspace }}/.ccache
       CCACHE_CHROOT_DIR: /ccache
@@ -64,50 +68,93 @@ jobs:
       fail-fast: false
       matrix:
         tool: ${{ fromJson(needs.setup.outputs.matrix) }}
-        arch: [x86_64, x86, aarch64, armv7]
+        arch: [x86_64, x86, aarch64, armv7, armhf]
+        include:
+          - arch: x86_64
+            runner: ubuntu-latest
+          - arch: x86
+            runner: ubuntu-latest
+          - arch: aarch64
+            runner: ubuntu-24.04-arm
+          - arch: armv7
+            runner: ubuntu-24.04-arm
+          - arch: armhf
+            runner: ubuntu-24.04-arm
 
     steps:
     - uses: actions/checkout@v6
 
-    - name: read Alpine version
+    - name: Read Alpine version
+      id: alpine-version
       run: |
-        echo "ALPINE_VERSION=$(grep '^ALPINE_VERSION=' common.sh | cut -d= -f2 | tr -d '"')" >> "$GITHUB_ENV"
+        ALPINE_VERSION=$(grep '^ALPINE_VERSION=' common.sh | cut -d= -f2 | tr -d '"')
+        echo "version=${ALPINE_VERSION}" >> "$GITHUB_OUTPUT"
+        echo "ALPINE_VERSION=${ALPINE_VERSION}" >> "$GITHUB_ENV"
 
-    - name: Prepare ccache directory
-      run: |
-            mkdir -p "${CCACHE_DIR}"
-            cat >> "$GITHUB_ENV" << 'EOF'
-            CCACHE_NOHASHDIR=true
-            CCACHE_NOHARDLINK=true
-            CCACHE_NLEVELS=4
-            CCACHE_COMPILERCHECK=content
-            CCACHE_COMPRESS=1
-            CCACHE_COMPRESSLEVEL=7
-            CCACHE_INODECACHE=true
-            CCACHE_SLOPINESS=file_macro,locale,time_macros
-            CCACHE_NOFILECLONE=true
-            CCACHE_DIRECT=true
-            CCACHE_DEPEND=true
-            EOF
-            echo "CCACHE Environment set!"
+    #- name: Prepare ccache directory and config
+    #  run: |
+    #        mkdir -p "${CCACHE_DIR}"
+    #        cat >> "$GITHUB_ENV" << 'EOF'
+    #        CCACHE_NOHASHDIR=true
+    #        CCACHE_NOHARDLINK=true
+    #        CCACHE_NLEVELS=4
+    #        CCACHE_COMPILERCHECK=content
+    #        CCACHE_COMPRESS=1
+    #        CCACHE_COMPRESSLEVEL=7
+    #        CCACHE_INODECACHE=true
+    #        CCACHE_SLOPPINESS=file_macro,locale,time_macros
+    #        CCACHE_NOFILECLONE=true
+    #        CCACHE_DIRECT=true
+    #        CCACHE_DEPEND=true
+    #        EOF
+    #        echo "CCACHE Environment set!"
 
     - name: Set up ccache
-      uses: hendrikmuhs/ccache-action@v1.2
+      #uses: hendrikmuhs/ccache-action@v1.2
+      #with:
+      #  create-symlink: true
+      #  key: ccache-${{ steps.alpine-version.outputs.version }}-${{ matrix.arch }}-${{ matrix.tool }}-${{ hashFiles(format('{0}-static-musl.sh', matrix.tool)) }}
+      #  restore-keys: |
+      #    ccache-${{ steps.alpine-version.outputs.version }}-${{ matrix.arch }}-${{ matrix.tool }}-
+      #    ccache-${{ steps.alpine-version.outputs.version }}-${{ matrix.arch }}-
+      #  append-timestamp: false
+      #  max-size: 3G
+      uses: Chocobo1/setup-ccache-action@v1
       with:
-        create-symlink: true
-        key: ccache-${{ env.ALPINE_VERSION }}-${{ matrix.arch }}-${{ matrix.tool }}-${{ hashFiles(format('{0}-static-musl.sh', matrix.tool)) }}
-        restore-keys: |
-          ccache-${{ env.ALPINE_VERSION }}-${{ matrix.arch }}-${{ matrix.tool }}-
-        append-timestamp: false
-        max-size: 3G
+        update_packager_index: true
+        install_ccache: true
+        prepend_symlinks_to_path: true
+        override_cache_key: ccache-${{ steps.alpine-version.outputs.version }}-${{ matrix.arch }}-${{ matrix.tool }}-${{ hashFiles(format('{0}-static-musl.sh', matrix.tool)) }}
+        override_cache_key_fallback: |
+          ccache-${{ steps.alpine-version.outputs.version }}-${{ matrix.arch }}-${{ matrix.tool }}-
+          ccache-${{ steps.alpine-version.outputs.version }}-${{ matrix.arch }}-
+        ccache_options: |
+          max_size=3000M
+          compression=true
+          compression_level=7
+          hash_dir=false
+          sloppiness=file_macro,locale,time_macros
+          file_clone=true
+          hard_link=false
+          inode_cache=true
+          direct_mode=true
+          depend_mode=true
+          compiler_check=content
 
-    - name: Cache tarballs
+    - name: Cache distfiles
       uses: actions/cache@v5
       with:
         path: distfiles/
-        key: distfiles-${{ env.ALPINE_VERSION }}-${{ matrix.arch }}-${{ matrix.tool }}-${{ hashFiles(format('{0}-static-musl.sh', matrix.tool)) }}
+        key: distfiles-${{ steps.alpine-version.outputs.version }}-${{ matrix.tool }}-${{ hashFiles(format('{0}-static-musl.sh', matrix.tool)) }}
         restore-keys: |
-          distfiles-${{ env.ALPINE_VERSION }}-${{ matrix.arch }}-${{ matrix.tool }}-
+          distfiles-${{ steps.alpine-version.outputs.version }}-${{ matrix.tool }}-
+          distfiles-${{ steps.alpine-version.outputs.version }}-
+
+    - name: Cache Alpine rootfs
+      uses: actions/cache@v5
+      with:
+        path: minirootfs/alpine-minirootfs-*.tar.gz
+        key: alpine-rootfs-${{ steps.alpine-version.outputs.version }}-${{ matrix.arch }}
 
     - name: Build ${{ matrix.tool }} for ${{ matrix.arch }}
       run: |
@@ -124,7 +171,7 @@ jobs:
         shopt -s nullglob
         files=(dist/${{ matrix.tool }}-*-${{ matrix.arch }}.tar.xz)
         if [ "${#files[@]}" -ne 1 ]; then
-          echo "Expected exactly one artifact, found ${#files[@]}" >&2
+          echo "::error::Expected exactly one artifact, found ${#files[@]}"
           ls -al dist || true
           exit 1
         fi
@@ -133,9 +180,13 @@ jobs:
         base="${name%.tar.xz}"
         version="${base#${{ matrix.tool }}-}"
         version="${version%-${{ matrix.arch }}}"
-        echo "file=${file}" >> "$GITHUB_OUTPUT"
-        echo "name=${name}" >> "$GITHUB_OUTPUT"
-        echo "version=${version}" >> "$GITHUB_OUTPUT"
+
+        # Output with proper formatting
+        {
+          echo "file=${file}"
+          echo "name=${name}"
+          echo "version=${version}"
+        } >> "$GITHUB_OUTPUT"
         echo "TOOL_VERSION=${version}" >> "$GITHUB_ENV"
 
     - name: Upload artifact
@@ -143,6 +194,7 @@ jobs:
       with:
         name: ${{ steps.artifact-info.outputs.name }}
         path: ${{ steps.artifact-info.outputs.file }}
+        compression-level: 0  # Already compressed with xz
 
   release:
     needs: [setup, build]
@@ -157,7 +209,7 @@ jobs:
 
     steps:
     - name: Download artifacts for ${{ matrix.tool }}
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v8
       with:
         path: dist/
         pattern: ${{ matrix.tool }}-*
@@ -170,7 +222,7 @@ jobs:
         shopt -s nullglob
         files=(dist/${{ matrix.tool }}-*-*.tar.xz)
         if [ "${#files[@]}" -eq 0 ]; then
-          echo "No artifacts found for ${{ matrix.tool }}" >&2
+          echo "::error::No artifacts found for ${{ matrix.tool }}"
           ls -al dist || true
           exit 1
         fi
@@ -184,7 +236,9 @@ jobs:
 
     - name: Delete Previous Release
       run: |
-        gh release delete "${{ matrix.tool }}-${{ steps.release-version.outputs.version }}" --repo "${GITHUB_REPOSITORY}" --cleanup-tag -y || echo "No release to delete"
+        gh release delete "${{ matrix.tool }}-${{ steps.release-version.outputs.version }}" \
+          --repo "${GITHUB_REPOSITORY}" --cleanup-tag -y 2>/dev/null || \
+          echo "::notice::No previous release to delete"
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       continue-on-error: true
@@ -198,7 +252,11 @@ jobs:
         draft: false
         generate_release_notes: false
         make_latest: false
-        files: |
-          dist/*.tar.xz
+        files: dist/*.tar.xz
+        body: |
+          Static musl build of ${{ matrix.tool }} version ${{ steps.release-version.outputs.version }}
+
+          **Architectures:** x86_64, x86, aarch64, armv7, armhf
+          **Built with:** Alpine Linux ${{ env.ALPINE_VERSION }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

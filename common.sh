@@ -2,6 +2,32 @@
 # common.sh - Shared functions and variables for all *-static-musl.sh scripts.
 # Source this file at the top of each build script: . "$(dirname "$0")/common.sh"
 
+######### Variables ###########
+CHROOTDIR=${CHROOTDIR:-pasta}
+ARCH=${ARCH:-x86_64}
+ALPINE_VERSION="3.23.3"
+ALPINE_MAJOR_MINOR="${ALPINE_VERSION%.*}"
+
+###### Bundled tools #########
+JQ="tools/jq/jq-${ARCH}"
+CURL="tools/curl/curl-${ARCH}"
+
+# CCACHE_CHROOT_DIR: path inside the chroot where ccache stores its cache.
+# Set this to a host-mounted path (e.g. via CI cache) to persist ccache across
+# builds.
+# Defaults to /ccache (ephemeral, inside the chroot).
+CCACHE_CHROOT_DIR="${CCACHE_CHROOT_DIR:-/ccache}"
+
+# CCACHE gets its panties in a knot if the host has log_file defined and it doesn't
+# exist in the chroot when the CCACHE directories are bind mounted. This was the best
+# way I could find to get that string to make the directory.
+CCACHE_LOG_DIR=$(ccache -p 2>/dev/null | grep log_file | cut -d "=" -f2 | rev | cut -d'/' -f2- | rev | sed 's/ //g') || true
+CCACHE_LOG_DIR="${CCACHE_LOG_DIR:-/var/log/ccache}"
+
+# Set KEEP_CHROOT=true via environment to preserve chroot after failed
+# builds (for debugging)
+KEEP_CHROOT=${KEEP_CHROOT:-false}
+
 ##### Colors ################
 ORANGE="\033[38;2;255;165;0m"
 LEMON="\033[38;2;255;244;79m"
@@ -23,35 +49,25 @@ NAVAJO="\033[38;2;255;222;173m"
 BOYSENBERRY="\033[38;2;135;50;96m"
 CORAL="\033[38;2;240;128;128m"
 CAMEL="\033[38;2;193;154;107m"
+INDIGO="\033[38;2;111;0;255m"
+CHARTREUSE="\033[38;2;127;255;0m"
+PURPLE_BLUE="\033[38;2;147;130;255m"
 NC="\033[0m"
 
-######### Variables ###########
-CHROOTDIR="pasta"
-ARCH=${ARCH:-x86_64}
-ALPINE_VERSION="3.23.3"
-ALPINE_MAJOR_MINOR="${ALPINE_VERSION%.*}"
-JQ="tools/jq/jq-${ARCH}"
-CURL="tools/curl/curl-${ARCH}"
-
-# CCACHE_CHROOT_DIR: path inside the chroot where ccache stores its cache.
-# Set this to a host-mounted path (e.g. via CI cache) to persist ccache across builds.
-# Defaults to /ccache (ephemeral, inside the chroot).
-CCACHE_CHROOT_DIR="${CCACHE_CHROOT_DIR:-/ccache}"
-
 setup_tools() {
-  if [[ -x "${JQ}" ]]; then
+  if [[ -x "${JQ}" ]] && "${JQ}" --version >/dev/null 2>&1; then
     : # use bundled jq
   elif command -v jq >/dev/null 2>&1; then
-    echo -e "${LEMON}= bundled jq binary not found, falling back to system jq${NC}" >&2
+    echo -e "${LEMON}= bundled jq not usable on this arch, falling back to system jq${NC}" >&2
     JQ="jq"
   else
     echo -e "${TOMATO}= ERROR: no jq binary available (checked ${JQ} and PATH)${NC}" >&2
     exit 1
   fi
-  if [[ -x "${CURL}" ]]; then
+  if [[ -x "${CURL}" ]] && "${CURL}" --version >/dev/null 2>&1; then
     : # use bundled curl
   elif command -v curl >/dev/null 2>&1; then
-    echo -e "${LEMON}= bundled curl not found, falling back to system curl${NC}" >&2
+    echo -e "${LEMON}= bundled curl not usable on this arch, falling back to system curl${NC}" >&2
     CURL="curl"
   else
     echo -e "${TOMATO}= ERROR: no curl available (checked ${CURL} and PATH)${NC}" >&2
@@ -62,12 +78,28 @@ setup_tools() {
 # setup_arch: resolve QEMU_ARCH, ALPINE_URL, and TARBALL from ARCH
 setup_arch() {
   case "${ARCH}" in
-    x86_64)  QEMU_ARCH="" ;;
-    x86)     QEMU_ARCH="i386" ;;
-    aarch64) QEMU_ARCH="aarch64" ;;
-    armv7)   QEMU_ARCH="arm" ;;
+    x86_64)
+      QEMU_ARCH=""
+      ARCH_FLAGS="-march=x86-64 -mtune=generic"
+      ;;
+    x86)
+      QEMU_ARCH="i386"
+      ARCH_FLAGS="-march=pentium -mtune=generic -m32"
+      ;;
+    aarch64)
+      QEMU_ARCH="aarch64"
+      ARCH_FLAGS="-march=armv8-a"
+      ;;
+    armv7)
+      QEMU_ARCH="arm"
+      ARCH_FLAGS="-march=armv7-a -mfpu=neon-vfpv4 -mfloat-abi=hard"
+      ;;
+    armhf)
+      QEMU_ARCH="arm"
+      ARCH_FLAGS="-march=armv6kz -mfloat-abi=hard -mfpu=vfp"
+      ;;
     *)
-      echo -e "${LAGOON}Unknown architecture: ${HOTPINK}${ARCH}${NC}"
+      echo -e "${LAGOON}Unknown architecture: ${HOTPINK}${ARCH}${NC}" >&2
       exit 1
       ;;
   esac
@@ -99,8 +131,9 @@ gh_latest_tag() {
 # setup_cleanup: register unmount trap for chroot bind mounts
 setup_cleanup() {
   cleanup() {
-    echo -e "${CAMEL}Unmounting filesystems from chroot -- $CHROOTDIR${NC}"
-    grep "$(pwd)/${CHROOTDIR}" /proc/mounts | cut -f2 -d" " | sort -r | xargs -r sudo umount -nl || true
+    echo -e "${CAMEL}Unmounting filesystems from chroot -- ${CHROOTDIR}${NC}"
+    # Use -F for literal string matching (no regex), quote variables for safety
+    grep -F "$(pwd)/${CHROOTDIR}" /proc/mounts | cut -f2 -d" " | sort -r | xargs -r sudo umount -n || true
   }
   trap cleanup EXIT
 }
@@ -116,15 +149,21 @@ install_host_deps() {
 # download_source LABEL VERSION TARBALL mirror1 [mirror2 ...]
 # Downloads TARBALL from the first mirror that succeeds.
 # Skips the download if TARBALL already exists (e.g. restored from cache).
+# Validates downloaded file is not empty.
 download_source() {
   local label="$1" version="$2" tarball="$3"
   shift 3
   if [ ! -d distfiles/ ]; then
-    echo -e "${HOTPINK}distfiles dir does not exist. Creating it now.${NC}"
+    echo -e "${INDIGO}distfiles dir does not exist. Creating it now.${NC}"
     mkdir -p distfiles/
   fi
   if [ -f "distfiles/${tarball}" ]; then
     echo -e "${SLATE}= ${label}-${version}: distfiles/${tarball} already cached, skipping download${NC}"
+    # Verify cached file is not empty
+    if [ ! -s "distfiles/${tarball}" ]; then
+      echo -e "${TOMATO}= ERROR: Cached file is empty: distfiles/${tarball}${NC}" >&2
+      exit 1
+    fi
     return 0
   fi
   echo -e "${AQUA}= downloading ${label}-${version} tarball${NC}"
@@ -133,6 +172,12 @@ download_source() {
     echo -e "${TAWNY}= trying mirror: ${mirror}${NC}"
     if "${CURL}" -fsSL --retry 3 --retry-delay 2 --connect-timeout 10 --max-time 120 \
         -o distfiles/"${tarball}" "${mirror}"; then
+      # Verify downloaded file is not empty
+      if [ ! -s distfiles/"${tarball}" ]; then
+        echo -e "${LEMON}= downloaded file is empty, trying next mirror${NC}"
+        rm -f distfiles/"${tarball}"
+        continue
+      fi
       echo -e "${MINT}= downloaded from: ${mirror}${NC}"
       downloaded=true
       break
@@ -142,7 +187,7 @@ download_source() {
     fi
   done
   if [ "${downloaded}" = false ]; then
-    echo -e "${TOMATO}= ERROR: all mirrors failed for ${tarball}${NC}"
+    echo -e "${TOMATO}= ERROR: all mirrors failed for ${tarball}${NC}" >&2
     exit 1
   fi
 }
@@ -151,26 +196,35 @@ download_source() {
 # Downloads Alpine rootfs, extracts it, and copies resolv.conf + source tarball inside.
 setup_alpine_chroot() {
   local tarball="$1"
-  if [ -d "./${CHROOTDIR}/" ]; then
+  if [ -d "./${CHROOTDIR}/" ] && [ "${KEEP_CHROOT}" = "false" ]; then
     echo -e "${CORAL}chroot dir exist! Removing it now.${NC}"
     rm -fr "./${CHROOTDIR}/"
   fi
-  if [ -f distfiles/"${TARBALL}" ]; then
+  if [ ! -d minirootfs/ ]; then
+    echo -e "${INDIGO}minirootfs dir does not exist. Creating it now.${NC}"
+    mkdir -p minirootfs/
+  fi
+  if [ -f minirootfs/"${TARBALL}" ]; then
     echo -e "${SLATE}= Alpine rootfs ${TARBALL} already cached, skipping download${NC}"
   else
     echo -e "${HELIOTROPE}= download alpine rootfs${NC}"
     "${CURL}" -fsSL --retry 3 --retry-delay 2 --connect-timeout 10 --max-time 120 \
-      -o distfiles/"${TARBALL}" "${ALPINE_URL}" \
+      -o minirootfs/"${TARBALL}" "${ALPINE_URL}" \
       || { echo -e "${TOMATO}= ERROR: failed to download Alpine rootfs${NC}" >&2; exit 1; }
+    # Verify downloaded rootfs is not empty
+    if [ ! -s minirootfs/"${TARBALL}" ]; then
+      echo -e "${TOMATO}= ERROR: Downloaded Alpine rootfs is empty${NC}" >&2
+      exit 1
+    fi
   fi
   echo -e "${SKY}= extract rootfs${NC}"
   mkdir -p "${CHROOTDIR}"
-  tar xf distfiles/"${TARBALL}" -C "${CHROOTDIR}"/
+  tar xf minirootfs/"${TARBALL}" -C "${CHROOTDIR}"/
   echo -e "${PEACH}= copy resolv.conf and ${tarball} into chroot${NC}"
   cp /etc/resolv.conf ./${CHROOTDIR}/etc/
   cp distfiles/"${tarball}" "./${CHROOTDIR}/${tarball}"
   if [[ ! -f "tools/upx/upx-${ARCH}" ]]; then
-    echo -e "${TOMATO}= ERROR: tools/upx/upx-${ARCH} not found${NC}"
+    echo -e "${TOMATO}= ERROR: tools/upx/upx-${ARCH} not found${NC}" >&2
     exit 1
   else
     cp "tools/upx/upx-${ARCH}" "./${CHROOTDIR}/upx"
@@ -182,7 +236,7 @@ setup_alpine_chroot() {
 copy_patches() {
   for patch in "$@"; do
     if [ ! -f "patches/${patch}" ]; then
-      echo -e "${TOMATO}= ERROR: patch file not found: patches/${patch}${NC}"
+      echo -e "${TOMATO}= ERROR: patch file not found: patches/${patch}${NC}" >&2
       exit 1
     fi
     cp "patches/${patch}" "./${CHROOTDIR}/${patch}"
@@ -190,37 +244,80 @@ copy_patches() {
 }
 
 # setup_qemu: copy qemu static binary into chroot for cross-arch builds
+# Validates QEMU binary exists before copying.
 setup_qemu() {
   if [ -n "${QEMU_ARCH}" ]; then
     echo -e "${OCHRE}= setup QEMU for cross-arch builds${NC}"
+    local qemu_bin="/usr/bin/qemu-${QEMU_ARCH}-static"
+    if [ ! -f "${qemu_bin}" ]; then
+      echo -e "${TOMATO}= ERROR: QEMU binary not found: ${qemu_bin}${NC}" >&2
+      echo -e "${HELIOTROPE}= Install it with: sudo apt-get install qemu-user-static${NC}" >&2
+      exit 1
+    fi
     sudo mkdir -p "./${CHROOTDIR}/usr/bin/"
-    sudo cp "/usr/bin/qemu-${QEMU_ARCH}-static" "./${CHROOTDIR}/usr/bin/"
+    sudo cp "${qemu_bin}" "./${CHROOTDIR}/usr/bin/"
   fi
 }
 
 # mount_chroot: bind-mount proc/dev/sys into the chroot directory
+# Validates CCACHE_DIR exists before mounting.
 mount_chroot() {
   echo -e "${VIOLET}= mount, bind and chroot into dir${NC}"
-  sudo mount --rbind /dev "./${CHROOTDIR}/dev/"
-  sudo mount --make-rslave "./${CHROOTDIR}/dev/"
+  sudo mount --rbind /dev "./${CHROOTDIR}/dev/" && sudo mount --make-rslave "./${CHROOTDIR}/dev/"
+  sudo mount --rbind /sys "./${CHROOTDIR}/sys/" && sudo mount --make-rslave "./${CHROOTDIR}/sys/"
   sudo mount -t proc none "./${CHROOTDIR}/proc/"
-  sudo mount --rbind /sys "./${CHROOTDIR}/sys/"
-  sudo mount --make-rslave "./${CHROOTDIR}/sys/"
-  if [ -n "${CCACHE_DIR:-}" ] && [ -d "${CCACHE_DIR}" ]; then
+  sudo mount -o bind /tmp "./${CHROOTDIR}/tmp/"
+  sudo mount -t tmpfs -o nosuid,nodev,noexec,mode=755 none "./${CHROOTDIR}/run"
+  sudo mount -t devpts devpts "./${CHROOTDIR}/dev/pts/"
+
+  # Mount ccache directories if CCACHE_DIR is set
+  if [ -n "${CCACHE_DIR:-}" ]; then
+    if [ ! -d "${CCACHE_DIR}" ]; then
+      echo -e "${TOMATO}= ERROR: CCACHE_DIR is set but directory does not exist: ${CCACHE_DIR}${NC}" >&2
+      exit 1
+    fi
+    echo -e "${JUNEBUD}= bind mounting ccache directories${NC}"
     sudo mkdir -p "./${CHROOTDIR}/${CCACHE_CHROOT_DIR}"
     sudo mount --bind "${CCACHE_DIR}" "./${CHROOTDIR}/${CCACHE_CHROOT_DIR}"
-    sudo mkdir -p "./${CHROOTDIR}/var/log/ccache/"
+    sudo mount --make-slave "./${CHROOTDIR}/${CCACHE_CHROOT_DIR}"
+    sudo mkdir -p "./${CHROOTDIR}/${CCACHE_LOG_DIR}"
   fi
+}
+
+# run_build_setup TOOL VERSION TARBALL [PATCH...] -- MIRROR [MIRROR...]
+# Runs the full pre-chroot setup sequence. Patches and mirrors are separated by --.
+# Usage: run_build_setup "curl" "8.19.0" "curl-8.19.0.tar.xz" -- "https://..." [...]
+# Usage (with patches): run_build_setup "wget" "1.25.0" "wget.tar.gz" "wget.patch" -- "https://..." [...]
+run_build_setup() {
+  local tool="$1" version="$2" tarball="$3"
+  shift 3
+  local patches=()
+  while [[ $# -gt 0 && "$1" != "--" ]]; do
+    patches+=("$1")
+    shift
+  done
+  [[ $# -gt 0 && "$1" == "--" ]] && shift
+  local mirrors=("$@")
+  setup_arch
+  setup_cleanup
+  install_host_deps
+  download_source "${tool}" "${version}" "${tarball}" "${mirrors[@]}"
+  setup_alpine_chroot "${tarball}"
+  [[ ${#patches[@]} -gt 0 ]] && copy_patches "${patches[@]}"
+  setup_qemu
+  mount_chroot
 }
 
 # package_output TOOL BINARY
 # Copies the built binary to dist/, creates a tar.xz archive, and prints info.
 package_output() {
   local tool="$1" binary="$2"
-  local version_suffix=""
-  if [ -n "${PACKAGE_VERSION:-}" ]; then
-    version_suffix="-${PACKAGE_VERSION}"
+  if [ ! -f "${binary}" ]; then
+    echo -e "${TOMATO}= ERROR: Binary not found: ${binary}${NC}" >&2
+    exit 1
   fi
+  local version_suffix=""
+  [ -n "${PACKAGE_VERSION:-}" ] && version_suffix="-${PACKAGE_VERSION}"
   local filename="${tool}${version_suffix}-${ARCH}"
   mkdir -p dist
   cp "${binary}" "dist/${filename}"

@@ -18,29 +18,23 @@ VIM_MIRRORS=(
   "https://fossies.org/linux/misc/vim-${VIM_VERSION}.tar.gz"
 )
 
-setup_arch
-setup_cleanup
-install_host_deps
-download_source "vim" "${VIM_VERSION}" "${VIM_TARBALL}" "${VIM_MIRRORS[@]}"
-setup_alpine_chroot "${VIM_TARBALL}"
-copy_patches "vim.patch"
-setup_qemu
-mount_chroot
+run_build_setup "vim" "${VIM_VERSION}" "${VIM_TARBALL}" \
+  "vim.patch" \
+  -- "${VIM_MIRRORS[@]}"
 
-sudo chroot "./${CHROOTDIR}/" /bin/sh -c "set -e && apk update && apk add build-base \
-musl-dev \
-ccache \
-sed \
-patch \
-pkgconfig \
-ncurses-dev \
-ncurses-static && \
-mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH && \
-chmod 755 upx && \
-tar xf ${VIM_TARBALL} && \
-cd vim-${VIM_VERSION}/ && \
-patch -p1 --fuzz=4 < ../vim.patch && \
-sed -i 's#emsg(_(e_failed_to_source_defaults));#(void)0;#g' src/main.c && \
+sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
+set -e
+echo -e "${ORANGE}= Installing dependencies...${NC}"
+apk update && apk add build-base musl-dev ccache sed patch pkgconfig ncurses-dev ncurses-static
+mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
+chmod 755 upx
+echo -e "${LIME}= Extracting source${NC}"
+tar xf ${VIM_TARBALL}
+cd vim-${VIM_VERSION}/
+echo -e "${LAGOON}= Applying custom patch${NC}"
+patch -p1 --fuzz=4 < ../vim.patch
+sed -i 's#emsg(_(e_failed_to_source_defaults));#(void)0;#g' src/main.c
+echo -e "${PEACH}= Configure source${NC}"
 ./configure CC='gcc' \
   --disable-channel --disable-gpm --disable-gtktest --disable-gui \
   --disable-netbeans --disable-nls --disable-selinux --disable-smack \
@@ -48,9 +42,13 @@ sed -i 's#emsg(_(e_failed_to_source_defaults));#(void)0;#g' src/main.c && \
   --enable-multibyte \
   --with-features=huge --with-tlib=ncursesw --without-x \
   LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
-  CFLAGS='-Os -static -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie' && \
-CC='gcc' make -j\$(nproc) && \
-strip src/vim && \
-../upx --ultra-brute src/vim"
+  CFLAGS='-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie'
+echo -e "${VIOLET}= Building...${NC}"
+CC='gcc' make -j\$(nproc)
+echo -e "${CHARTREUSE}= Stripping binary${NC}"
+strip src/vim
+echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
+../upx --ultra-brute src/vim
+EOF
 
 package_output "vim" "./${CHROOTDIR}/vim-${VIM_VERSION}/src/vim"

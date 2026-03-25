@@ -14,46 +14,33 @@ TAR_MIRRORS=(
   "https://mirrors.omnios.org/tar/tar-${TAR_VERSION}.tar.xz"
 )
 
-setup_arch
-setup_cleanup
-install_host_deps
-download_source "tar" "${TAR_VERSION}" "${TAR_TARBALL}" "${TAR_MIRRORS[@]}"
-setup_alpine_chroot "${TAR_TARBALL}"
-copy_patches "tar.patch"
-setup_qemu
-mount_chroot
+run_build_setup "tar" "${TAR_VERSION}" "${TAR_TARBALL}" \
+  "tar.patch" \
+  -- "${TAR_MIRRORS[@]}"
 
-# Note: --with-zlib, --without-bz2lib; lzma/zstd/xml2/openssl linked via pkg-config --static
-sudo chroot "./${CHROOTDIR}/" /bin/sh -c "set -e && apk update && apk add build-base \
-musl-dev \
-ccache \
-automake \
-autoconf \
-pkgconfig \
-zlib-dev \
-zlib-static \
-xz-dev \
-xz-static \
-zstd-dev \
-zstd-static \
-lz4-dev \
-lz4-static \
-libbz2 \
-bzip2-static \
-gettext-dev \
-gettext-static && \
-mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH && \
-chmod 755 upx && \
-tar xf tar-${TAR_VERSION}.tar.xz && \
-cd tar-${TAR_VERSION}/ && \
-patch -p1 --fuzz=4 < ../tar.patch && \
-autoreconf -f -i && \
-FORCE_UNSAFE_CONFIGURE=1 ./configure CC=gcc  --without-selinux \
-  --disable-nls --disable-rpath --enable-largefile \
+sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
+set -e
+echo -e "${ORANGE}= Installing dependencies...${NC}"
+apk update && apk add build-base musl-dev ccache automake autoconf pkgconfig zlib-dev zlib-static xz-dev xz-static zstd-dev zstd-static lz4-dev lz4-static libbz2 bzip2-static gettext-dev gettext-static
+mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
+chmod 755 upx
+echo -e "${LIME}= Extracting source${NC}"
+tar xf tar-${TAR_VERSION}.tar.xz
+cd tar-${TAR_VERSION}/
+echo -e "${LAGOON}= Applying custom patch${NC}"
+patch -p1 --fuzz=4 < ../tar.patch
+autoreconf -f -i
+echo -e "${PEACH}= Configure source${NC}"
+FORCE_UNSAFE_CONFIGURE=1 ./configure CC=gcc \
+  --without-selinux --disable-nls --disable-rpath --enable-largefile \
   LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
-  CFLAGS='-Os -static -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie' && \
-make -j\$(nproc) && \
-strip src/tar && \
-../upx --lzma src/tar"
+  CFLAGS='-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie'
+echo -e "${VIOLET}= Building...${NC}"
+make -j\$(nproc)
+echo -e "${CHARTREUSE}= Stripping binary${NC}"
+strip src/tar
+echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
+../upx --lzma src/tar
+EOF
 
 package_output "tar" "./${CHROOTDIR}/tar-${TAR_VERSION}/src/tar"

@@ -18,37 +18,32 @@ HTOP_MIRRORS=(
   "https://fossies.org/linux/misc/htop-${HTOP_VERSION}.tar.xz"
 )
 
-setup_arch
-setup_cleanup
-install_host_deps
-download_source "htop" "${HTOP_VERSION}" "${HTOP_TARBALL}" "${HTOP_MIRRORS[@]}"
-setup_alpine_chroot "${HTOP_TARBALL}"
-copy_patches "htop.patch"
-setup_qemu
-mount_chroot
+run_build_setup "htop" "${HTOP_VERSION}" "${HTOP_TARBALL}" \
+  "htop.patch" \
+  -- "${HTOP_MIRRORS[@]}"
 
-sudo chroot "./${CHROOTDIR}/" /bin/sh -c "set -e && apk update && apk add build-base \
-musl-dev \
-ccache \
-pkgconfig \
-ncurses-dev \
-ncurses-static \
-python3 \
-lm-sensors-dev \
-libnl3-dev \
-libnl3-static \
-linux-headers && \
-mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH && \
-chmod 755 upx && \
-tar xf ${HTOP_TARBALL} && \
-cd htop-${HTOP_VERSION}/ && \
-patch -p1 --fuzz=4 < ../htop.patch && \
+sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
+set -e
+echo -e "${ORANGE}= Installing dependencies...${NC}"
+apk update && apk add build-base musl-dev ccache pkgconfig ncurses-dev ncurses-static python3 lm-sensors-dev libnl3-dev libnl3-static linux-headers
+mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
+chmod 755 upx
+echo -e "${LIME}= Extracting source${NC}"
+tar xf ${HTOP_TARBALL}
+cd htop-${HTOP_VERSION}/
+echo -e "${LAGOON}= Applying custom patch${NC}"
+patch -p1 --fuzz=4 < ../htop.patch
+echo -e "${PEACH}= Configure source${NC}"
 ./configure CC='gcc' \
   --enable-unicode --enable-static --enable-affinity --enable-delayacct \
   LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
-  CFLAGS='-Os -static -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie' && \
-CC='gcc' make -j\$(nproc) && \
-strip htop && \
-../upx --lzma htop"
+  CFLAGS='-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie'
+echo -e "${VIOLET}= Building...${NC}"
+CC='gcc' make -j\$(nproc)
+echo -e "${CHARTREUSE}= Stripping binary${NC}"
+strip htop
+echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
+../upx --lzma htop
+EOF
 
 package_output "htop" "./${CHROOTDIR}/htop-${HTOP_VERSION}/htop"
