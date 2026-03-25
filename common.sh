@@ -227,6 +227,12 @@ setup_alpine_chroot() {
   echo -e "${PEACH}= copy resolv.conf and ${tarball} into chroot${NC}"
   cp /etc/resolv.conf ./${CHROOTDIR}/etc/
   cp distfiles/"${tarball}" "./${CHROOTDIR}/${tarball}"
+  if [[ ! -f "tools/7zz/7zz-${ARCH}" ]]; then
+    echo -e "${TOMATO}= ERROR: tools/7zz/7zz-${ARCH} not found${NC}" >&2
+    exit 1
+  else
+    cp "tools/7zz/7zz-${ARCH}" "./${CHROOTDIR}/7zz"
+  fi
   if [[ ! -f "tools/upx/upx-${ARCH}" ]]; then
     echo -e "${TOMATO}= ERROR: tools/upx/upx-${ARCH} not found${NC}" >&2
     exit 1
