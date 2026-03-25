@@ -263,12 +263,16 @@ setup_qemu() {
 # Validates CCACHE_DIR exists before mounting.
 mount_chroot() {
   echo -e "${VIOLET}= mount, bind and chroot into dir${NC}"
-  sudo mount --rbind /dev "./${CHROOTDIR}/dev/" && sudo mount --make-rslave "./${CHROOTDIR}/dev/"
-  sudo mount --rbind /sys "./${CHROOTDIR}/sys/" && sudo mount --make-rslave "./${CHROOTDIR}/sys/"
+  #sudo mount --rbind /dev "./${CHROOTDIR}/dev/" && sudo mount --make-rslave "./${CHROOTDIR}/dev/"
+  #sudo mount --rbind /sys "./${CHROOTDIR}/sys/" && sudo mount --make-rslave "./${CHROOTDIR}/sys/"
+  sudo mount --rbind /dev "./${CHROOTDIR}/dev/"
+  sudo mount --make-rslave "./${CHROOTDIR}/dev/"
+  sudo mount --rbind /sys "./${CHROOTDIR}/sys/"
+  sudo mount --make-rslave "./${CHROOTDIR}/sys/"
   sudo mount -t proc none "./${CHROOTDIR}/proc/"
   sudo mount -o bind /tmp "./${CHROOTDIR}/tmp/"
   sudo mount -t tmpfs -o nosuid,nodev,noexec,mode=755 none "./${CHROOTDIR}/run"
-  sudo mount -t devpts devpts "./${CHROOTDIR}/dev/pts/"
+  #sudo mount -t devpts devpts "./${CHROOTDIR}/dev/pts/"
 
   # Mount ccache directories if CCACHE_DIR is set
   if [ -n "${CCACHE_DIR:-}" ]; then

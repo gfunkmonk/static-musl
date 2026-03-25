@@ -24,7 +24,7 @@ run_build_setup "less" "${LESS_VERSION}" "${LESS_TARBALL}" \
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
 set -e
 echo -e "${ORANGE}= Installing dependencies...${NC}"
-apk update && apk add build-base musl-dev ccache pkgconfig pcre2-static pcre2-dev ncurses-dev ncurses-static perl autoconf automake gpg groff
+apk update && apk add build-base musl-dev ccache pkgconfig pcre2-static pcre2-dev ncurses-dev ncurses-static perl autoconf automake gpg groff clang
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
 chmod 755 upx
 echo -e "${LIME}= Extracting source${NC}"
@@ -33,11 +33,11 @@ cd less-${LESS_VERSION}/
 echo -e "${HOTPINK}= Generating files${NC}"
 make -f Makefile.aut distfiles
 echo -e "${PEACH}= Configure source${NC}"
-./configure --with-regex=pcre2 --enable-year2038 --sysconfdir=/etc --with-editor=/usr/bin/editor \
+./configure CC=clang --with-regex=pcre2 --enable-year2038 --sysconfdir=/etc --with-editor=/usr/bin/editor \
   LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
   CFLAGS='-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector'
 echo -e "${VIOLET}= Building...${NC}"
-make -j\$(nproc)
+CC=clang make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip less
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
