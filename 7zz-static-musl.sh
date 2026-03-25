@@ -91,7 +91,7 @@ echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip 7zz
 cp 7zz /7-Zip-zstd-${SEVENZIP_SHORT}/7zz
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
-../upx --lzma /7-Zip-zstd-${SEVENZIP_SHORT}/7zz
+/usr/local/bin/upx --lzma /7-Zip-zstd-${SEVENZIP_SHORT}/7zz
 EOF
 
 package_output "7zz" "./${CHROOTDIR}/7-Zip-zstd-${SEVENZIP_SHORT}/7zz"
