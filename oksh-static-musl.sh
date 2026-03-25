@@ -24,26 +24,16 @@ run_build_setup "oksh" "${OKSH_VERSION}" "${OKSH_TARBALL}" \
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
 set -e
 echo -e "${ORANGE}= Installing dependencies...${NC}"
-if [ "$ARCH" = "x86" ]; then
-  apk update && apk add build-base musl-dev ccache pkgconfig ncurses-dev ncurses-static
-else
-  apk update && apk add build-base musl-dev ccache pkgconfig ncurses-dev ncurses-static clang
-fi
+apk update && apk add build-base musl-dev ccache pkgconfig ncurses-dev ncurses-static clang
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
 chmod 755 upx
 echo -e "${LIME}= Extracting source${NC}"
 tar xf oksh-${OKSH_VERSION}.tar.gz
 cd oksh-${OKSH_VERSION}/
 echo -e "${PEACH}= Configure source${NC}"
-if [ "$ARCH" = "x86" ]; then
-./configure --cc=gcc --cflags="-Os ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer" \
-    --enable-curses --enable-static --enable-lto \
-    LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static'
-else
 ./configure --cc=clang --cflags="-Os ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer" \
-    --enable-curses --enable-static --enable-lto \
-    LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static'
-fi
+  --enable-curses --enable-static --enable-lto \
+  LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static'
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"

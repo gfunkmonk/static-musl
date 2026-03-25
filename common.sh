@@ -84,7 +84,7 @@ setup_arch() {
       ;;
     x86)
       QEMU_ARCH="i386"
-      ARCH_FLAGS="-march=pentium -mtune=generic -m32"
+      ARCH_FLAGS="-march=pentium -mtune=generic -msse -m32"
       ;;
     aarch64)
       QEMU_ARCH="aarch64"

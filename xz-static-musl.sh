@@ -26,32 +26,19 @@ run_build_setup "xz" "${XZ_VERSION}" "${XZ_TARBALL}" \
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
 set -e
 echo -e "${ORANGE}= Installing dependencies...${NC}"
-if [ "$ARCH" = "x86" ]; then
-  apk update && apk add build-base musl-dev ccache pkgconfig
-else
-  apk update && apk add build-base musl-dev ccache pkgconfig clang
-fi
+apk update && apk add build-base musl-dev ccache pkgconfig clang
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
 chmod 755 upx
 echo -e "${LIME}= Extracting source${NC}"
 tar xf xz-${XZ_VERSION}.tar.xz
 cd xz-${XZ_VERSION}/
 echo -e "${PEACH}= Configure source${NC}"
-if [ "$ARCH" = "x86" ]; then
-  ./configure CC=gcc \
-    --enable-static --disable-shared --disable-nls \
-    LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
-    CFLAGS='-Os  ${ARCH_FLAGS} -ffunction-sections -fdata-sections -Wno-unterminated-string-initialization'
-  echo -e "${VIOLET}= Building...${NC}"
-  CC=gcc LDFLAGS='-static -Wl,--gc-sections' make -j\$(nproc)
-else
-  ./configure CC=clang \
-    --enable-static --disable-shared --disable-nls \
-    LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
-    CFLAGS='-Os  ${ARCH_FLAGS} -ffunction-sections -fdata-sections -Wno-unterminated-string-initialization'
-  echo -e "${VIOLET}= Building...${NC}"
-  CC=clang LDFLAGS='-static -Wl,--gc-sections' make -j\$(nproc)
-fi
+./configure CC=clang \
+  --enable-static --disable-shared --disable-nls \
+  LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
+  CFLAGS='-Os  ${ARCH_FLAGS} -ffunction-sections -fdata-sections -Wno-unterminated-string-initialization'
+echo -e "${VIOLET}= Building...${NC}"
+CC=clang LDFLAGS='-static -Wl,--gc-sections' make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip src/xz/xz
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
