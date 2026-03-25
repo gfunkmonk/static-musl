@@ -20,7 +20,8 @@ run_build_setup "nmap" "${NMAP_VERSION}" "${NMAP_TARBALL}" \
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
 set -e
 echo -e "${ORANGE}= Installing dependencies...${NC}"
-apk update && apk add build-base musl-dev ccache bash make python3 perl linux-headers openssl-libs-static openssl-dev libpcap-dev autoconf automake libtool
+apk update && apk add build-base ccache bash make python3 perl linux-headers openssl-libs-static openssl-dev libpcap-dev autoconf automake libtool
+apk upgrade musl-dev --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
 chmod 755 upx
 echo -e "${LIME}= Extracting source${NC}"

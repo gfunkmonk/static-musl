@@ -20,7 +20,8 @@ run_build_setup "lftp" "${LFTP_VERSION}" "${LFTP_TARBALL}" \
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
 set -e
 echo -e "${ORANGE}= Installing dependencies...${NC}"
-apk update && apk add build-base musl-dev ccache autoconf automake libtool linux-headers expat-dev expat-static libidn-dev libunistring-dev libunistring-static pkgconfig ncurses-dev ncurses-static openssl-dev openssl-libs-static readline-dev readline-static zlib-dev zlib-static libstdc++-dev gettext-dev gettext-static
+apk update && apk add build-base ccache autoconf automake libtool linux-headers expat-dev expat-static libidn-dev libunistring-dev libunistring-static pkgconfig ncurses-dev ncurses-static openssl-dev openssl-libs-static readline-dev readline-static zlib-dev zlib-static libstdc++-dev gettext-dev gettext-static
+apk upgrade musl-dev --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
 chmod 755 upx
 echo -e "${LIME}= Extracting source${NC}"

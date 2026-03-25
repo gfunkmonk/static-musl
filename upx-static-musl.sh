@@ -26,7 +26,8 @@ run_build_setup "upx" "${UPX_VERSION}" "${UPX_TARBALL}" \
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
 set -e
 echo -e "${ORANGE}= Installing dependencies...${NC}"
-apk update && apk add build-base musl-dev ccache zlib-dev zlib-static zstd-dev zstd-static cmake samurai
+apk update && apk add build-base ccache zlib-dev zlib-static zstd-dev zstd-static cmake samurai
+apk upgrade musl-dev --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
 chmod 755 upx
 echo -e "${LIME}= Extracting source${NC}"

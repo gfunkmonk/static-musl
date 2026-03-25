@@ -62,7 +62,8 @@ esac
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
 set -e
 echo -e "${ORANGE}= Installing dependencies...${NC}"
-apk update && apk add build-base musl-dev ccache gcc g++ patch git nasm make
+apk update && apk add build-base ccache gcc g++ patch git nasm make
+apk upgrade musl-dev --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
 apk add uasm --repository=https://dl-cdn.alpinelinux.org/alpine/edge/testing
 mkdir -p /ccache
 export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH

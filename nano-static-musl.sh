@@ -22,7 +22,8 @@ run_build_setup "nano" "${NANO_VERSION}" "${NANO_TARBALL}" \
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
 set -e
 echo -e "${ORANGE}= Installing dependencies...${NC}"
-apk update && apk add build-base musl-dev ccache pkgconfig ncurses-dev ncurses-static libmagic-static libmagic file-dev linux-headers
+apk update && apk add build-base ccache pkgconfig ncurses-dev ncurses-static libmagic-static libmagic file-dev linux-headers
+apk upgrade musl-dev --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
 chmod 755 upx
 echo -e "${LIME}= Extracting source${NC}"

@@ -27,17 +27,18 @@ run_build_setup "axel" "${AXEL_VERSION}" "${AXEL_TARBALL}" \
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
 set -e
 echo -e "${ORANGE}= Installing dependencies...${NC}"
-apk update && apk add build-base musl-dev ccache openssl-dev zlib-dev libidn2-dev libpsl-dev libidn2-static openssl-libs-static zlib-static libpsl-static libunistring-dev libunistring-static clang
+apk update && apk add build-base ccache openssl-dev zlib-dev libidn2-dev libpsl-dev libidn2-static openssl-libs-static zlib-static libpsl-static libunistring-dev libunistring-static
+apk upgrade musl-dev --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
 chmod 755 upx
 echo -e "${LIME}= Extracting source${NC}"
 tar xf axel-${AXEL_VERSION}.tar.xz
 cd axel-${AXEL_VERSION}/
 echo -e "${PEACH}= Configure source${NC}"
-./configure CC=clang LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
+./configure CC=gcc LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
   CFLAGS='-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie -Wno-unterminated-string-initialization'
 echo -e "${VIOLET}= Building...${NC}"
-CC=clang make -j\$(nproc)
+make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip axel
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
