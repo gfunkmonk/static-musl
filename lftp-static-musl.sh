@@ -31,7 +31,7 @@ echo -e "${ORANGE}= Installing dependencies...${NC}"
 apk update && apk add build-base ccache autoconf automake libtool linux-headers expat-dev \
   expat-static libidn-dev libunistring-dev libunistring-static pkgconfig ncurses-dev \
   ncurses-static openssl-dev openssl-libs-static readline-dev readline-static zlib-dev \
-  zlib-static libstdc++-dev gettext-dev gettext-static libidn2-static libidn2-dev
+  zlib-static libstdc++-dev gettext-dev gettext-static
 apk upgrade musl-dev --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
 chmod 755 upx
@@ -46,15 +46,14 @@ patch -p1 --fuzz=4 < ../lftp-4.9.3-gnulib-stdlib.h.patch
 patch -p1 --fuzz=4 < ../lftp-4.9.3-gnulib.patch
 echo -e "${PEACH}= Configure source${NC}"
 autoreconf -f -i
-./configure CC=gcc CXX=g++ LIBS='-l:libreadline.a -l:libncursesw.a' --with-openssl=yes \
-  --without-gnutls --enable-static --enable-threads=posix --disable-nls --disable-shared \
-  --disable-rpath --disable-silent-rules --disable-ipv6 --enable-year2038 --with-readline=yes \
-  --with-expat=yes --with-libidn2=yes \
-  LDFLAGS='${BASE_LDFLAGS} -w -Wl,-s' PKG_CONFIG='${BASE_PKGCFG}' \
-  CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} ${EXTRA_CFLAGS} ${LTOFLAGS} -std=c17 -Wno-unterminated-string-initialization -Wno-deprecated-declarations' \
+./configure CC=gcc CXX=g++ LIBS='-l:libreadline.a -l:libncursesw.a' --with-openssl=yes --without-gnutls \
+  --enable-static --enable-threads=posix --disable-nls --disable-shared --disable-rpath --disable-silent-rules \
+  --disable-ipv6 --enable-year2038 --with-readline=yes --with-expat=yes  \
+  LDFLAGS='${BASE_LDFLAGS} -static-pie -w -Wl,-s' PKG_CONFIG='${BASE_PKGCFG}' \
+  CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} ${EXTRA_CFLAGS} ${LTOFLAGS} -fPIE -std=c17 -Wno-unterminated-string-initialization -Wno-deprecated-declarations' \
   CXXFLAGS='-Os -static  ${ARCH_FLAGS} -std=c++17 -Wno-deprecated-declarations -Wno-error=template-id-cdtor'
 echo -e "${VIOLET}= Building...${NC}"
-make -j\$(nproc) LDFLAGS='-static -all${BASE_LDFLAGS} -w -Wl,-s -no-pie'
+make -j\$(nproc) LDFLAGS='-static -all${BASE_LDFLAGS} -static-pie -w -Wl,-s'
 echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip src/lftp
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"

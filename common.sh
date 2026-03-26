@@ -15,7 +15,7 @@ CHROOTDIR=${CHROOTDIR:-potato}
 BASE_CFLAGS="-Os -static -ffunction-sections -fdata-sections -fno-stack-protector"
 BASE_LDFLAGS="-static -Wl,--gc-sections"
 BASE_PKGCFG="pkg-config --static"
-EXTRA_CFLAGS="-ftree-vectorize -ffast-math -fno-inline-small-functions -fshort-enums"
+EXTRA_CFLAGS="-ftree-vectorize -ffast-math -fshort-enums"
 EXTREME_CFLAGS="-fno-ident -fno-unwind-tables -fno-asynchronous-unwind-tables"
 LTOFLAGS="-flto=auto -ffat-lto-objects"
 

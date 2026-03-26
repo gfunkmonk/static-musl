@@ -29,9 +29,11 @@ cd nmap-${NMAP_VERSION}/
 echo -e "${LAGOON}= Applying custom patch${NC}"
 patch -p1 --fuzz=4 < ../nmap.patch
 echo -e "${PEACH}= Configure source${NC}"
-./configure CC='gcc -static -fPIC' CXX='g++ -static -static-libstdc++ -fPIC' --without-ndiff --without-zenmap --without-nmap-update \
-  --with-pcap=linux --with-openssl --without-liblua --without-libssh2 --without-nping --without-ncat \
-  LDFLAGS='${BASE_LDFLAGS} -w -Wl,-s' PKG_CONFIG='${BASE_PKGCFG}' CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} ${EXTRA_CFLAGS} ${LTOFLAGS}'
+./configure CC='gcc -static' CXX='g++ -static -static-libstdc++' \
+  --without-ndiff --without-zenmap --without-nmap-update --with-pcap=linux \
+  --with-openssl --without-liblua --without-libssh2 --without-nping --without-ncat \
+  LDFLAGS='${BASE_LDFLAGS} -static-pie -w -Wl,-s' PKG_CONFIG='${BASE_PKGCFG}' \
+  CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} ${EXTRA_CFLAGS} -fPIE'
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"

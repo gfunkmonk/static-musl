@@ -25,27 +25,27 @@ run_build_setup "7zz" "${SEVENZIP_VERSION}" "${SEVENZIP_TARBALL}" \
 
 # Map repo ARCH to 7zip Linux makefile; source extracts flat so we wrap in a versioned dir
 case "${ARCH}" in
-  x86_64|x86-64)
+  x86_64|x86-64|amd64)
      MAKE_OPTS="MY_ASM=/usr/bin/uasm -f ../../cmpl_gcc.mak 7z_asm=uasm"
      PLATFORM="x64"
      ARCH_FLAGS="-march=x86-64 -mtune=generic"
      ;;
-  x86|i386)
+  x86|i*86)
      MAKE_OPTS="MY_ASM=/usr/bin/uasm -f ../../cmpl_gcc.mak 7z_asm=uasm"
      PLATFORM="x86"
      ARCH_FLAGS="-march=i586 -mtune=generic"
      ;;
-  aarch64|arm64)
+  aarch64|arm64|armv8)
      MAKE_OPTS="-f ../../cmpl_gcc_arm64.mak"
      PLATFORM="arm64"
      ARCH_FLAGS="-march=armv8-a"
      ;;
-  armv7)
+  armv7|armv7l)
      MAKE_OPTS="-f ../../cmpl_gcc_arm.mak"
      PLATFORM="arm"
      ARCH_FLAGS="-march=armv7-a -mfpu=neon-vfpv4 -mfloat-abi=hard"
      ;;
-  armhf|arm)
+  armhf|armv6|arm)
      MAKE_OPTS="-f ../../cmpl_gcc_arm.mak"
      PLATFORM="arm"
      ARCH_FLAGS="-march=armv6kz -mfloat-abi=hard -mfpu=vfp"
@@ -73,16 +73,16 @@ echo -e "${LAGOON}= Applying custom patches${NC}"
 patch -p1 --fuzz=4 < ../7z-0003-Disable-local-echo-display-when-in-input-passwords-C.patch
 patch -p1 --fuzz=4 < ../7z-0004-Use-system-locale-to-select-codepage-for-legacy-zip-.patch
 patch -p1 --fuzz=4 < ../7z-0005-Fix-BROTLI_MODEL-attribute-for-loongarch64.patch
-sed -i 's/CFLAGS_BASE = -O2/CFLAGS_BASE = ${BASE_CFLAGS} ${ARCH_FLAGS} ${EXTRA_CFLAGS} ${LTOFLAGS}/g' CPP/7zip/7zip_gcc.mak
-sed -i 's/LDFLAGS = -Wall/LDFLAGS = ${BASE_LDFLAGS} -w -Wl,-s/g' CPP/7zip/7zip_gcc.mak
+sed -i 's/CFLAGS_BASE = -O2/CFLAGS_BASE = ${BASE_CFLAGS} ${ARCH_FLAGS} ${EXTRA_CFLAGS} ${LTOFLAGS} -fPIE/g' CPP/7zip/7zip_gcc.mak
+sed -i 's/LDFLAGS = -Wall/LDFLAGS = ${BASE_LDFLAGS} -w -Wl,-s -static-pie/g' CPP/7zip/7zip_gcc.mak
 cd CPP/7zip/Bundles/Alone2
 mkdir -p b/g
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc) \
   CFLAGS_BASE_LIST='-c -D_7ZIP_AFFINITY_DISABLE=1 -DZ7_AFFINITY_DISABLE=1 -D_GNU_SOURCE=1' \
   CFLAGS_WARN_WALL='-Wall -Wextra' ${MAKE_OPTS} PLATFORM=${PLATFORM} COMPL_STATIC=1 \
-  CC='gcc ${BASE_CFLAGS} ${ARCH_FLAGS} ${EXTRA_CFLAGS} ${LTOFLAGS}' \
-  CXX='g++ ${BASE_CFLAGS} ${ARCH_FLAGS} ${EXTRA_CFLAGS} ${LTOFLAGS}'
+  CC='gcc ${BASE_CFLAGS} ${ARCH_FLAGS} ${EXTRA_CFLAGS} ${LTOFLAGS} -fPIE' \
+  CXX='g++ ${BASE_CFLAGS} ${ARCH_FLAGS} ${EXTRA_CFLAGS} ${LTOFLAGS} -fPIE'
 binary=\$(find . \( -name '7zzs' -o -name '7zz' \) -type f | head -n1)
 [ -n "\$binary" ] || { echo "Error: 7zzs or 7zz binary not found after build" >&2; exit 1; }
 cp -va "\$binary" 7zz
