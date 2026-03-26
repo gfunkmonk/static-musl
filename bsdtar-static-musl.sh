@@ -27,7 +27,7 @@ set -e
 echo -e "${ORANGE}= Installing dependencies...${NC}"
 apk update && apk add build-base ccache make pkgconfig zlib-dev zlib-static xz-dev xz-static \
   zstd-dev zstd-static lz4-dev lz4-static openssl-dev openssl-libs-static libbz2 bzip2-static \
-  libxml2-dev libxml2-static pcre2-dev pcre2-static lzo-dev
+  libxml2-dev libxml2-static lzo-dev
 apk upgrade musl-dev --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
 chmod 755 upx
@@ -38,15 +38,14 @@ echo -e "${PEACH}= Configure source${NC}"
 ./configure CC=gcc --disable-shared --enable-static --enable-bsdtar=static --disable-bsdcat \
   --disable-bsdcpio --with-zlib --disable-maintainer-mode --with-bz2lib --with-lzo2 \
   --disable-dependency-tracking --enable-bsdtar --enable-bsdtar=static --disable-bsdunzip \
-  --disable-rpath --enable-year2038 --enable-posix-regex-lib=libpcre2posix \
+  --disable-rpath --enable-year2038 \
   LDFLAGS='${BASE_LDFLAGS} -static-pie -w -Wl,-s' PKG_CONFIG='${BASE_PKGCFG}' CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} ${EXTRA_CFLAGS} ${LTOFLAGS} -fPIE'
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc)
 gcc -static -o bsdtar tar/bsdtar-bsdtar.o tar/bsdtar-cmdline.o tar/bsdtar-creation_set.o \
   tar/bsdtar-read.o tar/bsdtar-subst.o tar/bsdtar-util.o \
   tar/bsdtar-write.o .libs/libarchive.a .libs/libarchive_fe.a \
-  -lz -lbz2 -llzma -lzstd -llz4 -lxml2 -lcrypto -lssl -llzo2 \
-  -lpcre2-posix -lpcre2-8
+  -lz -lbz2 -llzma -lzstd -llz4 -lxml2 -lcrypto -lssl -llzo2
 echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip bsdtar
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
