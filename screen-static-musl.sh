@@ -2,8 +2,6 @@
 set -euo pipefail
 . "$(dirname "$0")/common.sh"
 
-setup_tools
-
 SCREEN_VERSION="5.0.1"
 PACKAGE_VERSION="${SCREEN_VERSION}"
 SCREEN_TARBALL="screen-${SCREEN_VERSION}.tar.gz"

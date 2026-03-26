@@ -2,8 +2,6 @@
 set -euo pipefail
 . "$(dirname "$0")/common.sh"
 
-setup_tools
-
 OPENSSH_VERSION="10.2p1"
 PACKAGE_VERSION="${OPENSSH_VERSION}"
 OPENSSH_TARBALL="openssh-${OPENSSH_VERSION}.tar.gz"

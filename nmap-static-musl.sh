@@ -2,8 +2,6 @@
 set -euo pipefail
 . "$(dirname "$0")/common.sh"
 
-setup_tools
-
 NMAP_VERSION="7.98"
 PACKAGE_VERSION="${NMAP_VERSION}"
 NMAP_TARBALL="nmap-${NMAP_VERSION}.tar.bz2"

@@ -3,8 +3,6 @@ set -euo pipefail
 
 . "$(dirname "$0")/common.sh"
 
-setup_tools
-
 echo -e "${VIOLET}= fetching latest upx version${NC}"
 UPX_VERSION=$(gh_latest_release "upx/upx" '.tag_name | ltrimstr("v")') || true
 if [ -z "${UPX_VERSION}" ]; then

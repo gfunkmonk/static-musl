@@ -2,8 +2,6 @@
 set -euo pipefail
 . "$(dirname "$0")/common.sh"
 
-setup_tools
-
 echo -e "${VIOLET}= fetching latest curl version${NC}"
 CURL_VERSION=$(gh_latest_release "curl/curl" '.tag_name | ltrimstr("curl-") | gsub("_"; ".")') || true
 if [ -z "${CURL_VERSION}" ]; then

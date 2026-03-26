@@ -2,8 +2,6 @@
 set -euo pipefail
 . "$(dirname "$0")/common.sh"
 
-setup_tools
-
 echo -e "${VIOLET}= fetching latest bsdtar version${NC}"
 BSDTAR_VERSION=$(gh_latest_release "libarchive/libarchive" '.tag_name | ltrimstr("v")') || true
 if [ -z "${BSDTAR_VERSION}" ]; then

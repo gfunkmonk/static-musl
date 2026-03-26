@@ -2,8 +2,6 @@
 set -euo pipefail
 . "$(dirname "$0")/common.sh"
 
-setup_tools
-
 WGET_VERSION="1.25.0"
 PACKAGE_VERSION="${WGET_VERSION}"
 WGET_TARBALL="wget-${WGET_VERSION}.tar.gz"

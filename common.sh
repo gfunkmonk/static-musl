@@ -67,37 +67,42 @@ PURPLE_BLUE="\033[38;2;147;130;255m"
 REBECCA="\033[38;2;102;51;153m"
 TEAL="\033[38;2;0;128;128m"
 TURQUOISE="\033[38;2;64;224;208m"
+BLOOD="\033[38;2;102;6;6m"
 NC="\033[0m"
 
+########################
+# normalize ARCH names #
+########################
 case "${ARCH}" in
   x86-64|amd64) ARCH="x86_64" ;;
   i*86)         ARCH="x86" ;;
   arm64|armv8)  ARCH="aarch64" ;;
   armv7*)       ARCH="armv7" ;;
   armv6|arm)    ARCH="armhf" ;;
-  *)    echo -e "REBECCA${ARCH}${NC}" ;;
+  *)    echo -e "${REBECCA}${ARCH}${NC}" ;;
 esac
 
-setup_tools() {
-  if [[ -x "${JQ}" ]] && "${JQ}" --version >/dev/null 2>&1; then
-    : # use bundled jq
-  elif command -v jq >/dev/null 2>&1; then
-    echo -e "${LEMON}= bundled jq not usable on this arch, falling back to system jq${NC}" >&2
-    JQ="jq"
-  else
-    echo -e "${TOMATO}= ERROR: no jq binary available (checked ${JQ} and PATH)${NC}" >&2
-    exit 1
-  fi
-  if [[ -x "${CURL}" ]] && "${CURL}" --version >/dev/null 2>&1; then
-    : # use bundled curl
-  elif command -v curl >/dev/null 2>&1; then
-    echo -e "${LEMON}= bundled curl not usable on this arch, falling back to system curl${NC}" >&2
-    CURL="curl"
-  else
-    echo -e "${TOMATO}= ERROR: no curl available (checked ${CURL} and PATH)${NC}" >&2
-    exit 1
-  fi
-}
+####################
+#   Setup tools    #
+####################
+if [[ -x "${JQ}" ]] && "${JQ}" --version >/dev/null 2>&1; then
+  : # use bundled jq
+elif command -v jq >/dev/null 2>&1; then
+  echo -e "${LIME}= bundled jq not usable on this arch, falling back to system jq${NC}" >&2
+  JQ="jq"
+else
+  echo -e "${BLOOD}= ERROR: no jq binary available (checked ${JQ} and PATH)${NC}" >&2
+  exit 1
+fi
+if [[ -x "${CURL}" ]] && "${CURL}" --version >/dev/null 2>&1; then
+  : # use bundled curl
+elif command -v curl >/dev/null 2>&1; then
+  echo -e "${LIME}= bundled curl not usable on this arch, falling back to system curl${NC}" >&2
+  CURL="curl"
+else
+  echo -e "${BLOOD}= ERROR: no curl available (checked ${CURL} and PATH)${NC}" >&2
+  exit 1
+fi
 
 # setup_arch: resolve QEMU_ARCH, ALPINE_URL, and TARBALL from ARCH
 setup_arch() {
@@ -246,7 +251,7 @@ setup_alpine_chroot() {
   mkdir -p "${CHROOTDIR}"
   tar xf minirootfs/"${TARBALL}" -C "${CHROOTDIR}"/
   echo -e "${PEACH}= copy resolv.conf and ${tarball} into chroot${NC}"
-  cp /etc/resolv.conf ./${CHROOTDIR}/etc/
+  cp /etc/resolv.conf ./"${CHROOTDIR}"/etc/
   cp distfiles/"${tarball}" "./${CHROOTDIR}/${tarball}"
   if [[ ! -f "tools/7zz/7zz-${ARCH}" ]]; then
     echo -e "${TOMATO}= ERROR: tools/7zz/7zz-${ARCH} not found${NC}" >&2
@@ -301,8 +306,6 @@ setup_qemu() {
 # Validates CCACHE_DIR exists before mounting.
 mount_chroot() {
   echo -e "${VIOLET}= mount, bind and chroot into dir${NC}"
-  #sudo mount --rbind /dev "./${CHROOTDIR}/dev/" && sudo mount --make-rslave "./${CHROOTDIR}/dev/"
-  #sudo mount --rbind /sys "./${CHROOTDIR}/sys/" && sudo mount --make-rslave "./${CHROOTDIR}/sys/"
   sudo mount --rbind /dev "./${CHROOTDIR}/dev/"
   sudo mount --make-rslave "./${CHROOTDIR}/dev/"
   sudo mount --rbind /sys "./${CHROOTDIR}/sys/"
@@ -310,7 +313,6 @@ mount_chroot() {
   sudo mount -t proc none "./${CHROOTDIR}/proc/"
   sudo mount -o bind /tmp "./${CHROOTDIR}/tmp/"
   sudo mount -t tmpfs -o nosuid,nodev,noexec,mode=755 none "./${CHROOTDIR}/run"
-  #sudo mount -t devpts devpts "./${CHROOTDIR}/dev/pts/"
 
   # Mount ccache directories if CCACHE_DIR is set
   if [ -n "${CCACHE_DIR:-}" ]; then

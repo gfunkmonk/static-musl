@@ -2,8 +2,6 @@
 set -euo pipefail
 . "$(dirname "$0")/common.sh"
 
-setup_tools
-
 echo -e "${VIOLET}= fetching latest pigz version${NC}"
 PIGZ_VERSION=$(gh_latest_tag "madler/pigz" '.[0].name | ltrimstr("v")') || true
 if [ -z "${PIGZ_VERSION}" ]; then

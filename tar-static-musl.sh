@@ -2,8 +2,6 @@
 set -euo pipefail
 . "$(dirname "$0")/common.sh"
 
-setup_tools
-
 TAR_VERSION="1.35"
 PACKAGE_VERSION="${TAR_VERSION}"
 TAR_TARBALL="tar-${TAR_VERSION}.tar.xz"

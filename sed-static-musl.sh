@@ -2,8 +2,6 @@
 set -euo pipefail
 . "$(dirname "$0")/common.sh"
 
-setup_tools
-
 SED_VERSION="4.9"
 PACKAGE_VERSION="${SED_VERSION}"
 SED_TARBALL="sed-${SED_VERSION}.tar.xz"

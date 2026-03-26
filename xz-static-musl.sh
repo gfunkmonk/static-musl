@@ -2,8 +2,6 @@
 set -euo pipefail
 . "$(dirname "$0")/common.sh"
 
-setup_tools
-
 echo -e "${VIOLET}= fetching latest xz version${NC}"
 XZ_VERSION=$(gh_latest_release "tukaani-project/xz" '.tag_name | ltrimstr("v")') || true
 if [ -z "${XZ_VERSION}" ]; then

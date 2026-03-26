@@ -2,8 +2,6 @@
 set -euo pipefail
 . "$(dirname "$0")/common.sh"
 
-setup_tools
-
 echo -e "${VIOLET}= fetching latest lftp version${NC}"
 LFTP_VERSION=$(gh_latest_release "lavv17/lftp" '.tag_name | ltrimstr("v")') || true
 if [ -z "${LFTP_VERSION}" ]; then

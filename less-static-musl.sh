@@ -2,8 +2,6 @@
 set -euo pipefail
 . "$(dirname "$0")/common.sh"
 
-setup_tools
-
 echo -e "${VIOLET}= fetching latest less version${NC}"
 LESS_VERSION=$(gh_latest_tag "gwsw/less" '.[0].name | ltrimstr("v")') || true
 if [ -z "${LESS_VERSION}" ]; then

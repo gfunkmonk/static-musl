@@ -2,8 +2,6 @@
 set -euo pipefail
 . "$(dirname "$0")/common.sh"
 
-setup_tools
-
 NANO_VERSION="8.7.1"
 PACKAGE_VERSION="${NANO_VERSION}"
 NANO_TARBALL="nano-${NANO_VERSION}.tar.xz"

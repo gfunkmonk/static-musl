@@ -2,8 +2,6 @@
 set -euo pipefail
 . "$(dirname "$0")/common.sh"
 
-setup_tools
-
 echo -e "${AQUA}= fetching latest aria2 version${NC}"
 ARIA2_VERSION=$(gh_latest_release "aria2/aria2" '.tag_name | ltrimstr("release-")') || true
 if [ -z "${ARIA2_VERSION}" ]; then

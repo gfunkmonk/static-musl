@@ -2,8 +2,6 @@
 set -euo pipefail
 . "$(dirname "$0")/common.sh"
 
-setup_tools
-
 echo -e "${VIOLET}= fetching latest axel version${NC}"
 AXEL_VERSION=$(gh_latest_release "axel-download-accelerator/axel" '.tag_name | ltrimstr("v")') || true
 if [ -z "${AXEL_VERSION}" ]; then

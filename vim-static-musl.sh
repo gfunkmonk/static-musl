@@ -2,8 +2,6 @@
 set -euo pipefail
 . "$(dirname "$0")/common.sh"
 
-setup_tools
-
 echo -e "${VIOLET}= fetching latest vim version${NC}"
 VIM_VERSION=$(gh_latest_tag "vim/vim" '.[0].name | ltrimstr("v")') || true
 if [ -z "${VIM_VERSION}" ]; then

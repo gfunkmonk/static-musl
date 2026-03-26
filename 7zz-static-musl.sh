@@ -3,8 +3,6 @@ set -euo pipefail
 
 . "$(dirname "$0")/common.sh"
 
-setup_tools
-
 echo -e "${VIOLET}= fetching latest 7zip version${NC}"
 SEVENZIP_VERSION=$(gh_latest_release "mcmilk/7-Zip-zstd") || true
 if [ -z "${SEVENZIP_VERSION}" ]; then
