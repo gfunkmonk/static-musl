@@ -43,7 +43,7 @@ case "${ARCH}" in
   armv7|armv7l)
      MAKE_OPTS="-f ../../cmpl_gcc_arm.mak"
      PLATFORM="arm"
-     ARCH_FLAGS="-march=armv7-a -mfpu=neon-vfpv4 -mfloat-abi=hard -marm"
+     ARCH_FLAGS="-march=armv7-a -mfpu=neon-vfpv4 -mfloat-abi=hard -marm -Wno-sign-conversion -Wno-implicit-fallthrough -Wno-unused-macros"
      ;;
   armhf|armv6|arm)
      MAKE_OPTS="-f ../../cmpl_gcc_arm.mak"
