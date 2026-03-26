@@ -40,9 +40,9 @@ patch -p1 --fuzz=4 < ../dash-SHELL-Disable-sh-c-command-sh-c-exec-command.patch
 autoreconf -f -i
 echo -e "${PEACH}= Configure source${NC}"
 ./configure --enable-static \
-  LDFLAGS='${BASE_LDFLAGS} -no-pie' \
+  LDFLAGS='${BASE_LDFLAGS} -w -Wl,-s -no-pie' \
   PKG_CONFIG='${BASE_PKGCFG}' \
-  CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} -fno-pie -fstack-clash-protection -Wno-maybe-uninitialized'
+  CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} ${EXTRA_CFLAGS} ${LTOFLAGS} -fno-pie -fstack-clash-protection -Wno-maybe-uninitialized'
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"

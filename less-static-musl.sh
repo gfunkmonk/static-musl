@@ -37,8 +37,8 @@ make -f Makefile.aut distfiles
 echo -e "${PEACH}= Configure source${NC}"
 ./configure CC=clang --with-regex=pcre2 --enable-year2038 --sysconfdir=/etc \
   --with-editor=/usr/bin/editor \
-  LDFLAGS='${BASE_LDFLAGS}' PKG_CONFIG='${BASE_PKGCFG}' \
-  CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS}'
+  LDFLAGS='${BASE_LDFLAGS} -w -Wl,-s' PKG_CONFIG='${BASE_PKGCFG}' \
+  CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} ${EXTRA_CFLAGS} ${LTOFLAGS}'
 echo -e "${VIOLET}= Building...${NC}"
 CC=clang make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"

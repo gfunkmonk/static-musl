@@ -18,7 +18,6 @@ BASH_MIRRORS=(
   "https://mirrors.kernel.org/gnu/bash/bash-${BASH_VERSION}.tar.gz"
   "https://mirrors.ibiblio.org/pub/mirrors/gnu/bash/bash-${BASH_VERSION}.tar.gz"
   "https://mirror.us-midwest-1.nexcess.net/gnu/bash/bash-${BASH_VERSION}.tar.gz"
-
 )
 
 download_bash_upstream_patches() {
@@ -99,8 +98,8 @@ patch -p1 --fuzz=4 < ../bash_make-the-bash-fc-builtin-more-reliable-for-scriptin
 echo -e "${PEACH}= Configure source${NC}"
 ./configure \
   --disable-nls --without-bash-malloc --with-curses --enable-static-link \
-  LDFLAGS='${BASE_LDFLAGS} -no-pie' PKG_CONFIG='${BASE_PKGCFG}' \
-  CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} -fno-pie -Wno-discarded-qualifiers'
+  LDFLAGS='${BASE_LDFLAGS} -w -Wl,-s -no-pie' PKG_CONFIG='${BASE_PKGCFG}' \
+  CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} ${EXTRA_CFLAGS} ${LTOFLAGS} -fno-pie -Wno-discarded-qualifiers'
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"

@@ -32,8 +32,8 @@ chmod 755 upx
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${PIGZ_TARBALL}
 cd pigz-${PIGZ_VERSION}/
-sed -i 's/CFLAGS=-O3 -Wall -Wextra -Wno-unknown-pragmas -Wcast-qual/CFLAGS=${BASE_CFLAGS} ${ARCH_FLAGS} -fno-pie/g' Makefile
-sed -i 's/LDFLAGS=/LDFLAGS=${BASE_LDFLAGS} -no-pie/g' Makefile
+sed -i 's/CFLAGS=-O3 -Wall -Wextra -Wno-unknown-pragmas -Wcast-qual/CFLAGS=${BASE_CFLAGS} ${ARCH_FLAGS} ${EXTRA_CFLAGS} ${LTOFLAGS} -fno-pie/g' Makefile
+sed -i 's/LDFLAGS=/LDFLAGS=${BASE_LDFLAGS} -w -Wl,-s -no-pie/g' Makefile
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"

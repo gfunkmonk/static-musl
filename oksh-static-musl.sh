@@ -32,7 +32,7 @@ echo -e "${LIME}= Extracting source${NC}"
 tar xf ${OKSH_TARBALL}
 cd oksh-${OKSH_VERSION}/
 echo -e "${PEACH}= Configure source${NC}"
-./configure --cc=clang --cflags="${BASE_CFLAGS} ${ARCH_FLAGS}" \
+./configure --cc=clang --cflags="${BASE_CFLAGS} ${ARCH_FLAGS} ${EXTRA_CFLAGS}" \
   --enable-curses --enable-static --enable-lto \
   LDFLAGS='${BASE_LDFLAGS}' PKG_CONFIG='${BASE_PKGCFG}'
 echo -e "${VIOLET}= Building...${NC}"

@@ -12,12 +12,12 @@ CHROOTDIR=
 CHROOTDIR=${CHROOTDIR:-potato}
 
 # Compiler Flags
-BASE_CFLAGS="-Os -static -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector"
+BASE_CFLAGS="-Os -static -ffunction-sections -fdata-sections -fno-stack-protector"
 BASE_LDFLAGS="-static -Wl,--gc-sections"
 BASE_PKGCFG="pkg-config --static"
-EXTRA_CFLAGS="-ftree-vectorize -ffast-math -momit-leaf-frame-pointer"
+EXTRA_CFLAGS="-ftree-vectorize -ffast-math -momit-leaf-frame-pointer -fno-inline-small-functions -fshort-enums"
 EXTREME_CFLAGS="-fno-ident -fno-unwind-tables -fno-asynchronous-unwind-tables"
-LTO_FLAGS="-flto=auto -ffat-lto-objects"
+LTOFLAGS="-flto=auto -ffat-lto-objects"
 
 # CCACHE_CHROOT_DIR: path inside the chroot where ccache stores its cache.
 # Set this to a host-mounted path (e.g. via CI cache) to persist ccache across

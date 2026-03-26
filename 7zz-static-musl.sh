@@ -75,16 +75,16 @@ echo -e "${LAGOON}= Applying custom patches${NC}"
 patch -p1 --fuzz=4 < ../7z-0003-Disable-local-echo-display-when-in-input-passwords-C.patch
 patch -p1 --fuzz=4 < ../7z-0004-Use-system-locale-to-select-codepage-for-legacy-zip-.patch
 patch -p1 --fuzz=4 < ../7z-0005-Fix-BROTLI_MODEL-attribute-for-loongarch64.patch
-sed -i 's/CFLAGS_BASE = -O2/CFLAGS_BASE = ${ARCH_FLAGS} -Os -static -ffunction-sections -fdata-sections/g' CPP/7zip/7zip_gcc.mak
-sed -i 's/LDFLAGS = -Wall/LDFLAGS = ${BASE_LDFLAGS}/g' CPP/7zip/7zip_gcc.mak
+sed -i 's/CFLAGS_BASE = -O2/CFLAGS_BASE = ${BASE_CFLAGS} ${ARCH_FLAGS} ${EXTRA_CFLAGS} ${LTOFLAGS}/g' CPP/7zip/7zip_gcc.mak
+sed -i 's/LDFLAGS = -Wall/LDFLAGS = ${BASE_LDFLAGS} -w -Wl,-s/g' CPP/7zip/7zip_gcc.mak
 cd CPP/7zip/Bundles/Alone2
 mkdir -p b/g
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc) \
   CFLAGS_BASE_LIST='-c -D_7ZIP_AFFINITY_DISABLE=1 -DZ7_AFFINITY_DISABLE=1 -D_GNU_SOURCE=1' \
   CFLAGS_WARN_WALL='-Wall -Wextra' ${MAKE_OPTS} PLATFORM=${PLATFORM} COMPL_STATIC=1 \
-  CC='gcc ${BASE_CFLAGS} $ARCH_FLAGS' \
-  CXX='g++ ${BASE_CFLAGS} $ARCH_FLAGS'
+  CC='gcc ${BASE_CFLAGS} ${ARCH_FLAGS} ${EXTRA_CFLAGS} ${LTOFLAGS}' \
+  CXX='g++ ${BASE_CFLAGS} ${ARCH_FLAGS} ${EXTRA_CFLAGS} ${LTOFLAGS}'
 binary=\$(find . \( -name '7zzs' -o -name '7zz' \) -type f | head -n1)
 [ -n "\$binary" ] || { echo "Error: 7zzs or 7zz binary not found after build" >&2; exit 1; }
 cp -va "\$binary" 7zz
