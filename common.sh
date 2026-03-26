@@ -298,7 +298,7 @@ setup_qemu() {
       exit 1
     fi
     sudo mkdir -p "./${CHROOTDIR}/usr/bin/"
-    sudo cp "${qemu_bin}" "./${CHROOTDIR}/usr/bin/${qemu_bin}-static"
+    sudo cp "${qemu_bin}" "./${CHROOTDIR}/${qemu_bin}-static"
     fi
   fi
 }
