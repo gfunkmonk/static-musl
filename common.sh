@@ -75,7 +75,7 @@ case "${ARCH}" in
   arm64|armv8)  ARCH="aarch64" ;;
   armv7*)       ARCH="armv7" ;;
   armv6|arm)    ARCH="armhf" ;;
-  *)            ARCH="unknown" ;;
+  *)    echo -e "REBECCA${ARCH}${NC}" ;;
 esac
 
 setup_tools() {
