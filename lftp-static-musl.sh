@@ -50,8 +50,8 @@ autoreconf -f -i
   --without-gnutls --enable-static --enable-threads=posix --disable-nls --disable-shared \
   --disable-rpath --disable-silent-rules --disable-ipv6 --enable-year2038 --with-readline=yes \
   --with-expat=yes --with-libidn2=yes \
-  LDFLAGS='${BASE_LDFLAGS} -w -Wl,-s -no-pie' PKG_CONFIG='${BASE_PKGCFG}' \
-  CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} ${EXTRA_CFLAGS} ${LTOFLAGS} -std=c17 -Wno-unterminated-string-initialization -Wno-deprecated-declarations -fno-pie' \
+  LDFLAGS='${BASE_LDFLAGS} -w -Wl,-s' PKG_CONFIG='${BASE_PKGCFG}' \
+  CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} ${EXTRA_CFLAGS} ${LTOFLAGS} -std=c17 -Wno-unterminated-string-initialization -Wno-deprecated-declarations' \
   CXXFLAGS='-Os -static  ${ARCH_FLAGS} -std=c++17 -Wno-deprecated-declarations -Wno-error=template-id-cdtor'
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc) LDFLAGS='-static -all${BASE_LDFLAGS} -w -Wl,-s -no-pie'

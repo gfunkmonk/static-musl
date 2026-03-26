@@ -41,8 +41,8 @@ echo -e "${PEACH}= Configure source${NC}"
 ./configure CC=gcc ARIA2_STATIC=yes --with-ca-bundle=/etc/ssl/certs/ca-certificates.crt \
   --without-gnutls --with-openssl --with-libcares --disable-bittorrent --with-sqlite3 \
   --enable-static --disable-shared --disable-nls --disable-rpath \
-  LDFLAGS='${BASE_LDFLAGS} -w -Wl,-s -no-pie' PKG_CONFIG='${BASE_PKGCFG}' \
-  CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} ${EXTRA_CFLAGS} ${LTOFLAGS} -fno-pie -Wno-unterminated-string-initialization'
+  LDFLAGS='${BASE_LDFLAGS} -w -Wl,-s' PKG_CONFIG='${BASE_PKGCFG}' \
+  CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} ${EXTRA_CFLAGS} ${LTOFLAGS} -Wno-unterminated-string-initialization'
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"

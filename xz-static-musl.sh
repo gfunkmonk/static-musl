@@ -34,7 +34,7 @@ cd xz-${XZ_VERSION}/
 echo -e "${PEACH}= Configure source${NC}"
 ./configure CC=clang --enable-static --disable-shared --disable-nls --enable-small \
   --enable-lzip-decoder --enable-threads=yes --disable-silent-rules --disable-rpath \
-  --enable-largefile --enable-year2038 --disable-werror \
+  --enable-largefile --enable-year2038 \
   LDFLAGS='${BASE_LDFLAGS} -w -Wl,-s' PKG_CONFIG='${BASE_PKGCFG}' \
   CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} ${EXTRA_CFLAGS} ${LTOFLAGS} -Wno-unterminated-string-initialization'
 echo -e "${VIOLET}= Building...${NC}"

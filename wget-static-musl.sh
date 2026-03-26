@@ -34,8 +34,8 @@ patch -p1 --fuzz=4 < ../wget-passive-ftp.patch
 echo -e "${PEACH}= Configure source${NC}"
 ./configure CC=gcc --with-ssl=openssl --disable-nls --disable-rpath --sysconfdir=/etc --disable-silent-rules  \
   --disable-ipv6 --enable-year2038  --with-ssl=openssl --with-cares --with-openssl=yes \
-  LDFLAGS='${BASE_LDFLAGS} -w -Wl,-s -no-pie -lidn2 -lunistring' PKG_CONFIG='${BASE_PKGCFG}' \
-  CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} ${EXTRA_CFLAGS} ${LTOFLAGS} -fno-pie -Wno-unterminated-string-initialization' \
+  LDFLAGS='${BASE_LDFLAGS} -w -Wl,-s -lidn2 -lunistring' PKG_CONFIG='${BASE_PKGCFG}' \
+  CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} ${EXTRA_CFLAGS} ${LTOFLAGS} -Wno-unterminated-string-initialization' \
   PERL=/usr/bin/perl
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc)

@@ -33,7 +33,7 @@ echo -e "${PEACH}= Configure source${NC}"
 ./configure CC='gcc' \
   --sysconfdir=/etc --disable-nls --disable-utf8 --disable-tiny --enable-nanorc --enable-color \
   --enable-extra --enable-largefile --enable-libmagic --disable-justify \
-  LDFLAGS='${BASE_LDFLAGS} -w -Wl,-s -no-pie' PKG_CONFIG='${BASE_PKGCFG}' CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} ${EXTRA_CFLAGS} ${LTOFLAGS} -fno-pie'
+  LDFLAGS='${BASE_LDFLAGS} -w -Wl,-s' PKG_CONFIG='${BASE_PKGCFG}' CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} ${EXTRA_CFLAGS} ${LTOFLAGS}'
 echo -e "${VIOLET}= Building...${NC}"
 CC='gcc' make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"

@@ -36,8 +36,8 @@ cd axel-${AXEL_VERSION}/
 echo -e "${PEACH}= Configure source${NC}"
 ./configure CC=gcc --disable-nls --enable-compile-warnings=no --disable-Werror \
   --with-ssl=openssl --enable-year2038 --disable-silent-rules
-  LDFLAGS='${BASE_LDFLAGS} -w -Wl,-s -no-pie' PKG_CONFIG='${BASE_PKGCFG}' \
-  CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} ${EXTRA_CFLAGS} ${LTOFLAGS} -fno-pie -Wno-unterminated-string-initialization'
+  LDFLAGS='${BASE_LDFLAGS} -w -Wl,-s' PKG_CONFIG='${BASE_PKGCFG}' \
+  CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} ${EXTRA_CFLAGS} ${LTOFLAGS} -Wno-unterminated-string-initialization'
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"

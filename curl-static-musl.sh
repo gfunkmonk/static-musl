@@ -40,8 +40,8 @@ patch -p1 --fuzz=4 < ../curl.patch
 echo -e "${PEACH}= Configure source${NC}"
 ./configure CC=clang --disable-shared --enable-static --disable-ldap --disable-ipv6 --enable-unix-sockets \
   --with-ssl --with-libssh2 --disable-docs --disable-manual --without-libpsl \
-  LDFLAGS='${BASE_LDFLAGS} -w -Wl,-s -no-pie' PKG_CONFIG='${BASE_PKGCFG}' \
-  CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} ${EXTRA_CFLAGS} ${LTOFLAGS} -fno-pie -Wno-unterminated-string-initialization'
+  LDFLAGS='${BASE_LDFLAGS} -w -Wl,-s' PKG_CONFIG='${BASE_PKGCFG}' \
+  CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} ${EXTRA_CFLAGS} ${LTOFLAGS} -Wno-unterminated-string-initialization'
 echo -e "${VIOLET}= Building...${NC}"
 CC=clang make -j\$(nproc) V=1 LDFLAGS='-static -all-static'
 echo -e "${CHARTREUSE}= Stripping binary${NC}"
