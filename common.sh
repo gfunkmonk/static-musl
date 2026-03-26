@@ -13,11 +13,11 @@ CHROOTDIR=${CHROOTDIR:-potato}
 
 # Compiler Flags
 BASE_CFLAGS="-Os -static -ffunction-sections -fdata-sections -fno-stack-protector"
-BASE_LDFLAGS="-static -Wl,--gc-sections"
+BASE_LDFLAGS="-fuse-ld=mold -static -Wl,--gc-sections"
 BASE_PKGCFG="pkg-config --static"
 EXTRA_CFLAGS="-fshort-enums -fno-ident -fno-unwind-tables -fno-asynchronous-unwind-tables"
 LTOFLAGS="-flto=auto -ffat-lto-objects"
-#MOLD="-fuse-ld=mold"
+MOLD="-fuse-ld=mold"
 
 # CCACHE_CHROOT_DIR: path inside the chroot where ccache stores its cache.
 # Set this to a host-mounted path (e.g. via CI cache) to persist ccache across
@@ -104,7 +104,9 @@ else
   exit 1
 fi
 
-# setup_arch: resolve QEMU_ARCH & ARCH_FLAGS from ARCH
+########################################################
+# setup_arch: resolve QEMU_ARCH & ARCH_FLAGS from ARCH #
+########################################################
 setup_arch() {
   case "${ARCH}" in
     x86_64)
@@ -135,11 +137,13 @@ setup_arch() {
   ALPINE_URL="https://dl-cdn.alpinelinux.org/alpine/v${ALPINE_MAJOR_MINOR}/releases/${ARCH}/alpine-minirootfs-${ALPINE_VERSION}-${ARCH}.tar.gz"
   TARBALL="${ALPINE_URL##*/}"
 }
-
-# gh_latest_release REPO [JQ_FILTER]
-# Fetches .tag_name from the GitHub releases/latest API, applies optional jq filter.
-# Defaults to returning .tag_name as-is.
-gh_latest_release() {
+###########################################
+# gh_latest_release REPO [JQ_FILTER]      #
+# Fetches .tag_name from the GitHub       #
+# releases/latest API, applies optional   #
+# jq filter. Default:--> .tag_name as-is. #
+###########################################
+latest_release() {
     local repo="$1" filter="${2:-.tag_name}"
     "${CURL}" -fsSL --connect-timeout 10 --max-time 30 \
         ${GITHUB_TOKEN:+-H "Authorization: Bearer ${GITHUB_TOKEN}"} \
@@ -147,8 +151,12 @@ gh_latest_release() {
         | "${JQ}" -r "${filter} // empty"
 }
 
-# gh_latest_tag REPO [JQ_FILTER]
-# Fetches the first entry from the GitHub tags API, applies optional jq filter.
+#####################################
+# gh_latest_tag REPO [JQ_FILTER]    #
+# Fetches the first entry from the  #
+# GitHub tags API, applies optional #
+# jq filter.                        #
+#####################################
 gh_latest_tag() {
     local repo="$1" filter="${2:-.[0].name}"
     "${CURL}" -fsSL --connect-timeout 10 --max-time 30 \
@@ -157,7 +165,9 @@ gh_latest_tag() {
         | "${JQ}" -r "${filter} // empty"
 }
 
-# setup_cleanup: register unmount trap for chroot bind mounts
+###############################################################
+# setup_cleanup: register unmount trap for chroot bind mounts #
+###############################################################
 setup_cleanup() {
   cleanup() {
     echo -e "${CAMEL}Unmounting filesystems from chroot -- ${CHROOTDIR}${NC}"
@@ -166,8 +176,9 @@ setup_cleanup() {
   }
   trap cleanup EXIT
 }
-
-# install_host_deps: install required packages on the Ubuntu runner
+#####################################################################
+# install_host_deps: install required packages on the Ubuntu runner #
+#####################################################################
 install_host_deps() {
   echo -e "${AQUA}= install dependencies${NC}"
   local DEBIAN_DEPS=(binutils)
@@ -175,10 +186,11 @@ install_host_deps() {
   sudo apt-get update -qy && sudo apt-get install -qy --no-install-recommends "${DEBIAN_DEPS[@]}"
 }
 
-# download_source LABEL VERSION TARBALL mirror1 [mirror2 ...]
-# Downloads TARBALL from the first mirror that succeeds.
-# Skips the download if TARBALL already exists (e.g. restored from cache).
-# Validates downloaded file is not empty.
+####################################################################
+# download_source LABEL VERSION TARBALL mirror1 [mirror2 ...]      #
+# Downloads TARBALL from the first mirror that succeeds.           #
+# Skips the download if it exists and validates file is not empty. #
+####################################################################
 download_source() {
   local label="$1" version="$2" tarball="$3"
   shift 3
@@ -220,9 +232,11 @@ download_source() {
     exit 1
   fi
 }
-
-# setup_alpine_chroot TARBALL
-# Downloads Alpine rootfs, extracts it, and copies resolv.conf + source tarball inside.
+#####################################################
+# setup_alpine_chroot TARBALL                       #
+# Downloads Alpine rootfs, extracts it, and copies  #
+# resolv.conf + source tarball inside.              #
+#####################################################
 setup_alpine_chroot() {
   local tarball="$1"
   if [ -d "./${CHROOTDIR}/" ] && [ "${KEEP_CHROOT}" = "false" ]; then
@@ -264,8 +278,10 @@ setup_alpine_chroot() {
   done
 }
 
-# copy_patches patch1 [patch2 ...]
-# Copies named patch files from the local patches/ directory into the chroot root.
+#############################################################
+# copy_patches patch1 [patch2 ...]                          #
+# Copies named patch files from local into the chroot root. #
+#############################################################
 copy_patches() {
   for patch in "$@"; do
     if [ ! -f "patches/${tool}/${patch}" ]; then
@@ -276,8 +292,10 @@ copy_patches() {
   done
 }
 
-# setup_qemu: copy qemu static binary into chroot for cross-arch builds
-# Validates QEMU binary exists before copying.
+############################################################
+# setup_qemu: copy qemu into chroot for cross-arch builds  #
+# Validates QEMU binary exists before copying.             #
+############################################################
 setup_qemu() {
   if [ -n "${QEMU_ARCH}" ]; then
     echo -e "${OCHRE}= setup QEMU for cross-arch builds${NC}"
@@ -303,8 +321,10 @@ setup_qemu() {
   fi
 }
 
-# mount_chroot: bind-mount proc/dev/sys into the chroot directory
-# Validates CCACHE_DIR exists before mounting.
+##########################################################
+# mount_chroot: bind-mount proc/dev/sys into the chroot  #
+# Validates CCACHE_DIR exists before mounting.           #
+##########################################################
 mount_chroot() {
   echo -e "${VIOLET}= mount, bind and chroot into dir${NC}"
   sudo mount --rbind /dev "./${CHROOTDIR}/dev/"
@@ -314,7 +334,6 @@ mount_chroot() {
   sudo mount -t proc none "./${CHROOTDIR}/proc/"
   sudo mount -o bind /tmp "./${CHROOTDIR}/tmp/"
   sudo mount -t tmpfs -o nosuid,nodev,noexec,mode=755 none "./${CHROOTDIR}/run"
-
   # Mount ccache directories if CCACHE_DIR is set
   if [ -n "${CCACHE_DIR:-}" ]; then
     if [ ! -d "${CCACHE_DIR}" ]; then
@@ -329,10 +348,14 @@ mount_chroot() {
   fi
 }
 
-# run_build_setup TOOL VERSION TARBALL [PATCH...] -- MIRROR [MIRROR...]
-# Runs the full pre-chroot setup sequence. Patches and mirrors are separated by --.
-# Usage: run_build_setup "curl" "8.19.0" "curl-8.19.0.tar.xz" -- "https://..." [...]
-# Usage (with patches): run_build_setup "wget" "1.25.0" "wget.tar.gz" "wget.patch" -- "https://..." [...]
+######################################################################################
+# run_build_setup TOOL VERSION TARBALL [PATCH...] -- MIRROR [MIRROR...]              #
+# Runs the full pre-chroot setup sequence. Patches and mirrors are separated by --.  #
+# Usage: run_build_setup:
+# "curl" "8.19.0" "curl-8.19.0.tar.xz" -- "https://..." [...] #
+# Usage (with patches):                                                              #
+# run_build_setup "wget" "1.25.0" "wget.tar.gz" "wget.patch" -- "https://..." [...]  #
+######################################################################################
 run_build_setup() {
   local tool="$1" version="$2" tarball="$3"
   shift 3
@@ -353,8 +376,11 @@ run_build_setup() {
   mount_chroot
 }
 
-# package_output TOOL BINARY
-# Copies the built binary to dist/, creates a tar.xz archive, and prints info.
+#########################################
+# package_output TOOL BINARY            #
+# Copies the built binary to dist/,     #
+# creates an archive, and prints info.  #
+#########################################
 package_output() {
   local tool="$1" binary="$2"
   if [ ! -f "${binary}" ]; then
