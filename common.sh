@@ -15,7 +15,7 @@ CHROOTDIR=${CHROOTDIR:-potato}
 BASE_CFLAGS="-Os -static -ffunction-sections -fdata-sections -fno-stack-protector"
 BASE_LDFLAGS="-static -Wl,--gc-sections"
 BASE_PKGCFG="pkg-config --static"
-EXTRA_CFLAGS="-ftree-vectorize -ffast-math -momit-leaf-frame-pointer -fno-inline-small-functions -fshort-enums"
+EXTRA_CFLAGS="-ftree-vectorize -ffast-math -fno-inline-small-functions -fshort-enums"
 EXTREME_CFLAGS="-fno-ident -fno-unwind-tables -fno-asynchronous-unwind-tables"
 LTOFLAGS="-flto=auto -ffat-lto-objects"
 
@@ -70,12 +70,12 @@ TURQUOISE="\033[38;2;64;224;208m"
 NC="\033[0m"
 
 case "${ARCH}" in
-  x86_64|x86-64|amd64) ARCH="x86_64";;
-  x86|i386|i586|i686) ARCH="x86";;
-  aarch64|arm64|armv8) ARCH="aarch64";;
-  armv7|armv7l) ARCH="armv7";;
-  armhf|armv6|arm) ARCH="armhf";;
-  *) echo -e "${ARCH}";;
+  x86-64|amd64) ARCH="x86_64" ;;
+  i*86)         ARCH="x86" ;;
+  arm64|armv8)  ARCH="aarch64" ;;
+  armv7*)       ARCH="armv7" ;;
+  armv6|arm)    ARCH="armhf" ;;
+  *)            ARCH="unknown" ;;
 esac
 
 setup_tools() {
@@ -221,6 +221,7 @@ download_source() {
 setup_alpine_chroot() {
   local tarball="$1"
   if [ -d "./${CHROOTDIR}/" ] && [ "${KEEP_CHROOT}" = "false" ]; then
+    setup_cleanup
     echo -e "${CORAL}chroot dir exist! Removing it now.${NC}"
     rm -fr "./${CHROOTDIR}/"
   fi
