@@ -281,16 +281,25 @@ copy_patches() {
 setup_qemu() {
   if [ -n "${QEMU_ARCH}" ]; then
     echo -e "${OCHRE}= setup QEMU for cross-arch builds${NC}"
-    local qemu_bin="/usr/bin/qemu-${QEMU_ARCH}"
+    if command -v qemu-"${QEMU_ARCH}"-static >/dev/null 2>&1; then
+      local qemu_bin="/usr/bin/qemu-${QEMU_ARCH}-static"
+      if [ ! -f "${qemu_bin}" ]; then
+        echo -e "${TOMATO}= ERROR: QEMU binary not found: ${qemu_bin}${NC}" >&2
+        echo -e "${HELIOTROPE}= Install it with:${NC} ${TEAL}sudo apt-get install qemu-user-static${NC}" >&2
+        exit 1
+      fi
+      sudo mkdir -p "./${CHROOTDIR}/usr/bin/"
+      sudo cp "${qemu_bin}" "./${CHROOTDIR}/usr/bin/"
+    elif command -v qemu-"${QEMU_ARCH}" >/dev/null 2>&1; then
+      local qemu_bin="/usr/bin/qemu-${QEMU_ARCH}"
     if [ ! -f "${qemu_bin}" ]; then
       echo -e "${TOMATO}= ERROR: QEMU binary not found: ${qemu_bin}${NC}" >&2
       echo -e "${HELIOTROPE}= Install it with:${NC} ${TEAL}sudo apt-get install qemu-user-binfmt${NC}" >&2
       exit 1
     fi
     sudo mkdir -p "./${CHROOTDIR}/usr/bin/"
-    sudo cp "${qemu_bin}" "./${CHROOTDIR}/usr/bin/"
-    sudo echo "#!/bin/sh\n\nexec /usr/bin/${qemu_bin}\n" > "./${CHROOTDIR}"/usr/bin/"${qemu_bin}"-static
-    sudo chmod 755 "./${CHROOTDIR}/usr/bin/${qemu_bin}"-static
+    sudo cp "${qemu_bin}" "./${CHROOTDIR}/usr/bin/${qemu_bin}-static"
+    fi
   fi
 }
 
