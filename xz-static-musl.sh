@@ -34,9 +34,11 @@ echo -e "${LIME}= Extracting source${NC}"
 tar xf ${XZ_TARBALL}
 cd xz-${XZ_VERSION}/
 echo -e "${PEACH}= Configure source${NC}"
-./configure CC=clang --enable-static --disable-shared --disable-nls \
+./configure CC=clang --enable-static --disable-shared --disable-nls --enable-small \
+  --enable-lzip-decoder --enable-threads=yes --disable-silent-rules --disable-rpath \
+  --enable-largefile --enable-year2038 --disable-werror \
   LDFLAGS='${BASE_LDFLAGS}' PKG_CONFIG='${BASE_PKGCFG}' \
-  CFLAGS='-Os  ${ARCH_FLAGS} -ffunction-sections -fdata-sections -Wno-unterminated-string-initialization'
+  CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} -Wno-unterminated-string-initialization'
 echo -e "${VIOLET}= Building...${NC}"
 CC=clang LDFLAGS='${BASE_LDFLAGS}' make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"

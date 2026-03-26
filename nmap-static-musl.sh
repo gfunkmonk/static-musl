@@ -33,7 +33,7 @@ patch -p1 --fuzz=4 < ../nmap.patch
 echo -e "${PEACH}= Configure source${NC}"
 ./configure CC='gcc -static -fPIC' CXX='g++ -static -static-libstdc++ -fPIC' --without-ndiff --without-zenmap --without-nmap-update \
   --with-pcap=linux --with-openssl --without-liblua --without-libssh2 --without-nping --without-ncat \
-  LDFLAGS='${BASE_LDFLAGS}' PKG_CONFIG='${BASE_PKGCFG}' CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} -no-pie'
+  LDFLAGS='${BASE_LDFLAGS} -no-pie' PKG_CONFIG='${BASE_PKGCFG}' CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} -fno-pie'
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"

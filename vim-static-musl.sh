@@ -25,7 +25,7 @@ run_build_setup "vim" "${VIM_VERSION}" "${VIM_TARBALL}" \
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
 set -e
 echo -e "${ORANGE}= Installing dependencies...${NC}"
-apk update && apk add build-base ccache sed patch pkgconfig ncurses-dev ncurses-static
+apk update && apk add build-base ccache sed patch pkgconfig ncurses-dev ncurses-static ncurses-terminfo
 apk upgrade musl-dev --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
 chmod 755 upx
@@ -36,15 +36,14 @@ echo -e "${LAGOON}= Applying custom patch${NC}"
 patch -p1 --fuzz=4 < ../vim.patch
 sed -i 's#emsg(_(e_failed_to_source_defaults));#(void)0;#g' src/main.c
 echo -e "${PEACH}= Configure source${NC}"
-./configure CC='gcc' \
-  --disable-channel --disable-gpm --disable-gtktest --disable-gui \
-  --disable-netbeans --disable-nls --disable-selinux --disable-smack \
-  --disable-sysmouse --disable-xsmp --enable-multibyte \
-  --with-features=huge --with-tlib=ncursesw --without-x \
-  LDFLAGS='${BASE_LDFLAGS}' PKG_CONFIG='${BASE_PKGCFG}' \
-  CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} -no-pie'
+./configure --disable-arabic --disable-canberra --disable-channel --disable-darwin --disable-farsi --disable-gpm \
+  --disable-gtktest --disable-gui --disable-libsodium --disable-netbeans --disable-nls --disable-rightleft --disable-selinux \
+  --disable-smack --disable-sysmouse --disable-xsmp --enable-largefile --enable-multibyte --enable-terminal --enable-year2038 \
+  --with-features=huge --with-tlib=ncursesw  --without-gnome --without-x --without-wayland
+  LDFLAGS='${BASE_LDFLAGS} -no-pie' PKG_CONFIG='${BASE_PKGCFG}' \
+  CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} -fno-pie '
 echo -e "${VIOLET}= Building...${NC}"
-CC='gcc' make -j\$(nproc)
+make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip src/vim
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"

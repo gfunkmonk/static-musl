@@ -23,7 +23,8 @@ run_build_setup "wget" "${WGET_VERSION}" "${WGET_TARBALL}" \
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
 set -e
 echo -e "${ORANGE}= Installing dependencies...${NC}"
-apk update && apk add build-base ccache openssl-dev zlib-dev libidn2-dev libpsl-dev libidn2-static openssl-libs-static zlib-static libpsl-static libunistring-dev libunistring-static patch texinfo pcre2-dev pcre2-static perl
+apk update && apk add build-base ccache openssl-dev zlib-dev libidn2-dev libpsl-dev libidn2-static openssl-libs-static \
+  zlib-static libpsl-static libunistring-dev libunistring-static patch texinfo pcre2-dev pcre2-static perl c-ares-dev
 apk upgrade musl-dev --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
 chmod 755 upx
@@ -33,9 +34,10 @@ cd wget-${WGET_VERSION}/
 echo -e "${LAGOON}= Applying custom patch${NC}"
 patch -p1 --fuzz=4 < ../wget-passive-ftp.patch
 echo -e "${PEACH}= Configure source${NC}"
-./configure CC=gcc --with-ssl=openssl --with-libidn --disable-nls --disable-rpath --sysconfdir=/etc \
-  LDFLAGS='${BASE_LDFLAGS} -lidn2 -lunistring' PKG_CONFIG='${BASE_PKGCFG}' \
-  CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} -no-pie -Wno-unterminated-string-initialization' \
+./configure CC=gcc --with-ssl=openssl --disable-nls --disable-rpath --sysconfdir=/etc --disable-silent-rules  \
+  --disable-ipv6 --enable-year2038  --with-ssl=openssl --with-cares --with-openssl=yes \
+  LDFLAGS='${BASE_LDFLAGS} -no-pie -lidn2 -lunistring' PKG_CONFIG='${BASE_PKGCFG}' \
+  CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} -fno-pie -Wno-unterminated-string-initialization' \
   PERL=/usr/bin/perl
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc)

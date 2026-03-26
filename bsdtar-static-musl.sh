@@ -27,7 +27,9 @@ run_build_setup "libarchive" "${BSDTAR_VERSION}" "${BSDTAR_TARBALL}" \
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
 set -e
 echo -e "${ORANGE}= Installing dependencies...${NC}"
-apk update && apk add build-base ccache make pkgconfig zlib-dev zlib-static xz-dev xz-static zstd-dev zstd-static lz4-dev lz4-static openssl-dev openssl-libs-static libbz2 bzip2-static libxml2-dev libxml2-static
+apk update && apk add build-base ccache make pkgconfig zlib-dev zlib-static xz-dev xz-static \
+  zstd-dev zstd-static lz4-dev lz4-static openssl-dev openssl-libs-static libbz2 bzip2-static \
+  libxml2-dev libxml2-static pcre2-dev pcre2-static lzo-dev
 apk upgrade musl-dev --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
 chmod 755 upx
@@ -36,14 +38,16 @@ tar xf ${BSDTAR_TARBALL}
 cd libarchive-${BSDTAR_VERSION}/
 echo -e "${PEACH}= Configure source${NC}"
 ./configure CC=gcc --disable-shared --enable-static --enable-bsdtar=static --disable-bsdcat \
-  --disable-bsdcpio --with-zlib --disable-maintainer-mode --with-bz2lib --disable-dependency-tracking \
-  LDFLAGS='${BASE_LDFLAGS}' PKG_CONFIG='${BASE_PKGCFG}' CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} -no-pie'
+  --disable-bsdcpio --with-zlib --disable-maintainer-mode --with-bz2lib --with-lzo2 \
+  --enable-posix-regex-lib=libpcre2posix --disable-dependency-tracking --enable-bsdtar \
+  --enable-bsdtar=static --disable-bsdunzip --disable-rpath --enable-year2038 \
+  LDFLAGS='${BASE_LDFLAGS} -no-pie' PKG_CONFIG='${BASE_PKGCFG}' CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} -fno-pie'
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc)
 gcc -static -o bsdtar tar/bsdtar-bsdtar.o tar/bsdtar-cmdline.o tar/bsdtar-creation_set.o \
   tar/bsdtar-read.o tar/bsdtar-subst.o tar/bsdtar-util.o \
   tar/bsdtar-write.o .libs/libarchive.a .libs/libarchive_fe.a \
-  -lz -lbz2 -llzma -lzstd -llz4 -lxml2 -lcrypto -lssl
+  -lz -lbz2 -llzma -lzstd -llz4 -lxml2 -lcrypto -lssl -lzo2
 echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip bsdtar
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"

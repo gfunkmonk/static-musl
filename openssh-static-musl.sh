@@ -28,8 +28,8 @@ tar xf ${OPENSSH_TARBALL}
 cd openssh-${OPENSSH_VERSION}/
 echo -e "${PEACH}= Configure source${NC}"
 ./configure --with-privsep-user=nobody \
-  LIBS='-pthread' LDFLAGS='${BASE_LDFLAGS}' PKG_CONFIG='${BASE_PKGCFG}' \
-  CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} -no-pie -Wno-unterminated-string-initialization'
+  LIBS='-pthread' LDFLAGS='${BASE_LDFLAGS} -no-pie' PKG_CONFIG='${BASE_PKGCFG}' \
+  CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} -fno-pie -Wno-unterminated-string-initialization'
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"

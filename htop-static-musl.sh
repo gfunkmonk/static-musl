@@ -38,8 +38,8 @@ patch -p1 --fuzz=4 < ../htop.patch
 echo -e "${PEACH}= Configure source${NC}"
 ./configure CC='gcc' \
   --enable-unicode --enable-static --enable-affinity --enable-delayacct \
-  LDFLAGS='${BASE_LDFLAGS}' PKG_CONFIG='${BASE_PKGCFG}' \
-  CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} -no-pie'
+  LDFLAGS='${BASE_LDFLAGS} -no-pie' PKG_CONFIG='${BASE_PKGCFG}' \
+  CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} -fno-pie'
 echo -e "${VIOLET}= Building...${NC}"
 CC='gcc' make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"

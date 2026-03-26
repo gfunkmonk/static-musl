@@ -36,10 +36,11 @@ patch -p1 --fuzz=4 < ../sed-covscan-annotations.patch
 patch -p1 --fuzz=4 < ../sed-regexp-cache-size.patch
 echo -e "${PEACH}= Configure source${NC}"
 ./configure --enable-threads=posix --disable-nls --disable-i18n --disable-rpath \
-  LDFLAGS='${BASE_LDFLAGS}' PKG_CONFIG='${BASE_PKGCFG}' \
-  CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} -no-pie'
+  --disable-silent-rules --disable-gcc-warnings --without-selinux \
+  LDFLAGS='${BASE_LDFLAGS} -no-pie' PKG_CONFIG='${BASE_PKGCFG}' \
+  CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} -fno-pie'
 echo -e "${VIOLET}= Building...${NC}"
-LDFLAGS='${BASE_LDFLAGS}' CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} -no-pie' make -j\$(nproc)
+LDFLAGS='${BASE_LDFLAGS} -no-pie' CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} -fno-pie' make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip sed/sed
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
