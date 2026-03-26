@@ -11,7 +11,6 @@ fi
 
 echo -e "${MINT}= building aria2 version: ${ARIA2_VERSION}${NC}"
 PACKAGE_VERSION="${ARIA2_VERSION}"
-
 ARIA2_TARBALL="aria2-${ARIA2_VERSION}.tar.gz"
 ARIA2_MIRRORS=(
   "https://github.com/aria2/aria2/releases/download/release-${ARIA2_VERSION}/aria2-${ARIA2_VERSION}.tar.gz"

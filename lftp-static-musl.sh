@@ -50,7 +50,7 @@ autoreconf -f -i
   --disable-ipv6 --enable-year2038 --with-readline=yes --with-expat=yes  \
   LDFLAGS='${BASE_LDFLAGS} -static-pie -w -Wl,-s' PKG_CONFIG='${BASE_PKGCFG}' \
   CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} ${EXTRA_CFLAGS} ${LTOFLAGS} -fPIE -std=c17 -Wno-unterminated-string-initialization -Wno-deprecated-declarations' \
-  CXXFLAGS='-Os -static  ${ARCH_FLAGS} -std=c++17 -Wno-deprecated-declarations -Wno-error=template-id-cdtor'
+  CXXFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} ${EXTRA_CFLAGS} -fPIE -std=c++17 -Wno-deprecated-declarations -Wno-error=template-id-cdtor'
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc) LDFLAGS='-static -all${BASE_LDFLAGS} -static-pie -w -Wl,-s'
 echo -e "${CHARTREUSE}= Stripping binary${NC}"

@@ -17,7 +17,7 @@ BASE_LDFLAGS="-static -Wl,--gc-sections"
 BASE_PKGCFG="pkg-config --static"
 EXTRA_CFLAGS="-fshort-enums -fno-ident -fno-unwind-tables -fno-asynchronous-unwind-tables"
 LTOFLAGS="-flto=auto -ffat-lto-objects"
-MOLD="-fuse-ld=mold"
+#MOLD="-fuse-ld=mold"
 
 # CCACHE_CHROOT_DIR: path inside the chroot where ccache stores its cache.
 # Set this to a host-mounted path (e.g. via CI cache) to persist ccache across
@@ -33,7 +33,7 @@ CCACHE_LOG_DIR="${CCACHE_LOG_DIR:-/var/log/ccache}"
 
 # Set KEEP_CHROOT=true via environment to preserve chroot after failed
 # builds (for debugging)
-KEEP_CHROOT="false"
+KEEP_CHROOT="true"
 KEEP_CHROOT=${KEEP_CHROOT:-false}
 
 ###### Bundled tools #########
@@ -171,7 +171,7 @@ setup_cleanup() {
 install_host_deps() {
   echo -e "${AQUA}= install dependencies${NC}"
   local DEBIAN_DEPS=(binutils)
-  [ -n "${QEMU_ARCH}" ] && DEBIAN_DEPS+=(qemu-user-binfmt)
+  [ -n "${QEMU_ARCH}" ] && DEBIAN_DEPS+=(qemu-user-static)
   sudo apt-get update -qy && sudo apt-get install -qy --no-install-recommends "${DEBIAN_DEPS[@]}"
 }
 
@@ -253,13 +253,14 @@ setup_alpine_chroot() {
   echo -e "${PEACH}= copy resolv.conf and ${tarball} into chroot${NC}"
   cp /etc/resolv.conf ./"${CHROOTDIR}"/etc/
   cp distfiles/"${tarball}" "./${CHROOTDIR}/${tarball}"
-  for tool in 7zz upx uasm envx curl jq mold; do
-    src="tools/${tool}/${tool}-${ARCH}"
+  # bundled tools
+  for toolz in 7zz upx uasm envx curl jq mold; do
+    src="tools/${toolz}/${toolz}-${ARCH}"
     if [[ ! -f "$src" ]]; then
       echo -e "${TOMATO}= ERROR: ${src} not found${NC}" >&2
       exit 1
     fi
-    cp "$src" "./${CHROOTDIR}/usr/local/bin/${tool}"
+    cp "$src" "./${CHROOTDIR}/usr/local/bin/${toolz}"
   done
 }
 
@@ -267,11 +268,11 @@ setup_alpine_chroot() {
 # Copies named patch files from the local patches/ directory into the chroot root.
 copy_patches() {
   for patch in "$@"; do
-    if [ ! -f "patches/${patch}" ]; then
-      echo -e "${TOMATO}= ERROR: patch file not found: patches/${patch}${NC}" >&2
+    if [ ! -f "patches/${tool}/${patch}" ]; then
+      echo -e "${TOMATO}= ERROR: patch file not found: patches/${tool}/${patch}${NC}" >&2
       exit 1
     fi
-    cp "patches/${patch}" "./${CHROOTDIR}/${patch}"
+    cp "patches/${tool}/${patch}" "./${CHROOTDIR}/${patch}"
   done
 }
 
@@ -288,6 +289,8 @@ setup_qemu() {
     fi
     sudo mkdir -p "./${CHROOTDIR}/usr/bin/"
     sudo cp "${qemu_bin}" "./${CHROOTDIR}/usr/bin/"
+    sudo echo -e "#!/bin/sh\n\nexec /usr/bin/${qemu_bin}\n" > "./${CHROOTDIR}/usr/bin/${qemu_bin}"-static
+    sudo chmod 755 "./${CHROOTDIR}/usr/bin/${qemu_bin}"-static
   fi
 }
 
