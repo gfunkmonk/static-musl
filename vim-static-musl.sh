@@ -36,7 +36,7 @@ echo -e "${LAGOON}= Applying custom patch${NC}"
 patch -p1 --fuzz=4 < ../vim.patch
 sed -i 's#emsg(_(e_failed_to_source_defaults));#(void)0;#g' src/main.c
 echo -e "${PEACH}= Configure source${NC}"
-./configure --disable-arabic --disable-canberra --disable-channel --disable-darwin --disable-farsi --disable-gpm \
+./configure --disable-arabic --disable-canberra --disable-darwin --disable-farsi --disable-gpm \
   --disable-gtktest --disable-gui --disable-libsodium --disable-netbeans --disable-nls --disable-rightleft --disable-selinux \
   --disable-smack --disable-sysmouse --disable-xsmp --enable-largefile --enable-multibyte --enable-terminal --enable-year2038 \
   --with-features=huge --with-tlib=ncursesw  --without-gnome --without-x --without-wayland
