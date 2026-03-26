@@ -43,7 +43,7 @@ case "${ARCH}" in
   armv7|armv7l)
      MAKE_OPTS="-f ../../cmpl_gcc_arm.mak"
      PLATFORM="arm"
-     ARCH_FLAGS="-march=armv7-a -mfpu=neon-vfpv4 -mfloat-abi=hard"
+     ARCH_FLAGS="-march=armv7-a -mfpu=neon-vfpv4 -mfloat-abi=hard -marm"
      ;;
   armhf|armv6|arm)
      MAKE_OPTS="-f ../../cmpl_gcc_arm.mak"
@@ -73,7 +73,7 @@ echo -e "${LAGOON}= Applying custom patches${NC}"
 patch -p1 --fuzz=4 < ../7z-0003-Disable-local-echo-display-when-in-input-passwords-C.patch
 patch -p1 --fuzz=4 < ../7z-0004-Use-system-locale-to-select-codepage-for-legacy-zip-.patch
 patch -p1 --fuzz=4 < ../7z-0005-Fix-BROTLI_MODEL-attribute-for-loongarch64.patch
-sed -i 's/CFLAGS_BASE = -O2/CFLAGS_BASE = ${BASE_CFLAGS} ${ARCH_FLAGS} ${EXTRA_CFLAGS} ${LTOFLAGS} -fPIE/g' CPP/7zip/7zip_gcc.mak
+sed -i 's/CFLAGS_BASE = -O2/CFLAGS_BASE = ${BASE_CFLAGS} ${ARCH_FLAGS} ${EXTRA_CFLAGS} ${LTOFLAGS} -fPIE -Wno-sign-conversion/g' CPP/7zip/7zip_gcc.mak
 sed -i 's/LDFLAGS = -Wall/LDFLAGS = ${BASE_LDFLAGS} -w -Wl,-s -static-pie/g' CPP/7zip/7zip_gcc.mak
 cd CPP/7zip/Bundles/Alone2
 mkdir -p b/g
@@ -81,8 +81,8 @@ echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc) \
   CFLAGS_BASE_LIST='-c -D_7ZIP_AFFINITY_DISABLE=1 -DZ7_AFFINITY_DISABLE=1 -D_GNU_SOURCE=1' \
   CFLAGS_WARN_WALL='-Wall -Wextra' ${MAKE_OPTS} PLATFORM=${PLATFORM} COMPL_STATIC=1 \
-  CC='gcc ${BASE_CFLAGS} ${ARCH_FLAGS} ${EXTRA_CFLAGS} ${LTOFLAGS} -fPIE' \
-  CXX='g++ ${BASE_CFLAGS} ${ARCH_FLAGS} ${EXTRA_CFLAGS} ${LTOFLAGS} -fPIE'
+  CC='gcc ${BASE_CFLAGS} ${ARCH_FLAGS} ${EXTRA_CFLAGS} ${LTOFLAGS} -fPIE -Wno-sign-conversion' \
+  CXX='g++ ${BASE_CFLAGS} ${ARCH_FLAGS} ${EXTRA_CFLAGS} ${LTOFLAGS} -fPIE -Wno-sign-conversion'
 binary=\$(find . \( -name '7zzs' -o -name '7zz' \) -type f | head -n1)
 [ -n "\$binary" ] || { echo "Error: 7zzs or 7zz binary not found after build" >&2; exit 1; }
 cp -va "\$binary" 7zz

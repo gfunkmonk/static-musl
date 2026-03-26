@@ -19,7 +19,7 @@ sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
 set -e
 echo -e "${ORANGE}= Installing dependencies...${NC}"
 apk update && apk add build-base ccache bash make python3 perl linux-headers openssl-libs-static openssl-dev libpcap-dev \
-  autoconf automake libtool
+  autoconf automake libtool zlib-dev zlib-static
 apk upgrade musl-dev --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
 chmod 755 upx
@@ -33,7 +33,7 @@ echo -e "${PEACH}= Configure source${NC}"
   --without-ndiff --without-zenmap --without-nmap-update --with-pcap=linux \
   --with-openssl --without-liblua --without-libssh2 --without-nping --without-ncat \
   LDFLAGS='${BASE_LDFLAGS} -static-pie -w -Wl,-s' PKG_CONFIG='${BASE_PKGCFG}' \
-  CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} ${EXTRA_CFLAGS} -fPIE'
+  CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} ${EXTRA_CFLAGS} ${LTOFLAGS} -fPIE'
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"
