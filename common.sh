@@ -33,7 +33,7 @@ CCACHE_LOG_DIR="${CCACHE_LOG_DIR:-/var/log/ccache}"
 
 # Set KEEP_CHROOT=true via environment to preserve chroot after failed
 # builds (for debugging)
-KEEP_CHROOT="true"
+KEEP_CHROOT="false"
 KEEP_CHROOT=${KEEP_CHROOT:-false}
 
 ###### Bundled tools #########
@@ -289,7 +289,7 @@ setup_qemu() {
     fi
     sudo mkdir -p "./${CHROOTDIR}/usr/bin/"
     sudo cp "${qemu_bin}" "./${CHROOTDIR}/usr/bin/"
-    sudo echo -e "#!/bin/sh\n\nexec /usr/bin/${qemu_bin}\n" > "./${CHROOTDIR}/usr/bin/${qemu_bin}"-static
+    sudo echo "#!/bin/sh\n\nexec /usr/bin/${qemu_bin}\n" > "./${CHROOTDIR}"/usr/bin/"${qemu_bin}"-static
     sudo chmod 755 "./${CHROOTDIR}/usr/bin/${qemu_bin}"-static
   fi
 }
