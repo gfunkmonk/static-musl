@@ -31,7 +31,6 @@ echo -e "${ORANGE}= Installing dependencies...${NC}"
 apk update && apk add build-base ccache openssl-dev openssl-libs-static nghttp2-dev nghttp2-static libssh2-dev libssh2-static zlib-dev zlib-static zstd-dev zstd-static autoconf automake libunistring-static libunistring-dev libidn2-static libidn2-dev libpsl-static libpsl-dev clang
 apk upgrade musl-dev --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
-chmod 755 upx
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${CURL_TARBALL}
 cd curl-${CURL_VERSION}/
@@ -47,7 +46,7 @@ CC=clang make -j\$(nproc) V=1 LDFLAGS='-static -all-static'
 echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip src/curl
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
-../upx --lzma src/curl
+upx --lzma src/curl
 EOF
 
 package_output "curl" "./${CHROOTDIR}/curl-${CURL_VERSION}/src/curl"

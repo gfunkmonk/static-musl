@@ -26,7 +26,6 @@ apk update && apk add build-base ccache pkgconfig pcre2-static pcre2-dev ncurses
   ncurses-static perl autoconf automake gpg groff clang
 apk upgrade musl-dev --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
-chmod 755 upx
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${LESS_TARBALL}
 cd less-${LESS_VERSION}/
@@ -42,7 +41,7 @@ CC=clang make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip less
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
-../upx --lzma less
+upx --lzma less
 EOF
 
 package_output "less" "./${CHROOTDIR}/less-${LESS_VERSION}/less"

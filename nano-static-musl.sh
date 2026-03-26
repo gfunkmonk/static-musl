@@ -23,7 +23,6 @@ echo -e "${ORANGE}= Installing dependencies...${NC}"
 apk update && apk add build-base ccache pkgconfig ncurses-dev ncurses-static libmagic-static libmagic file-dev linux-headers
 apk upgrade musl-dev --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
-chmod 755 upx
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${NANO_TARBALL}
 cd nano-${NANO_VERSION}/
@@ -39,7 +38,7 @@ CC='gcc' make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip src/nano
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
-../upx --lzma src/nano
+upx --lzma src/nano
 EOF
 
 package_output "nano" "./${CHROOTDIR}/nano-${NANO_VERSION}/src/nano"

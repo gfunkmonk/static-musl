@@ -20,7 +20,6 @@ echo -e "${ORANGE}= Installing dependencies...${NC}"
 apk update && apk add build-base ccache openssl-dev openssl-libs-static zlib-dev zlib-static autoconf automake
 apk upgrade musl-dev --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
-chmod 755 upx
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${OPENSSH_TARBALL}
 cd openssh-${OPENSSH_VERSION}/
@@ -33,7 +32,7 @@ make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip ssh
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
-../upx --lzma ssh
+upx --lzma ssh
 EOF
 
 package_output "openssh" "./${CHROOTDIR}/openssh-${OPENSSH_VERSION}/ssh"

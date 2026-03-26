@@ -25,7 +25,6 @@ apk update && apk add build-base ccache openssl-dev zlib-dev libidn2-dev libpsl-
   zlib-static libpsl-static libunistring-dev libunistring-static patch texinfo pcre2-dev pcre2-static perl c-ares-dev
 apk upgrade musl-dev --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
-chmod 755 upx
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${WGET_TARBALL}
 cd wget-${WGET_VERSION}/
@@ -42,7 +41,7 @@ make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip src/wget
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
-../upx --lzma src/wget
+upx --lzma src/wget
 EOF
 
 package_output "wget" "./${CHROOTDIR}/wget-${WGET_VERSION}/src/wget"

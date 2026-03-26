@@ -28,7 +28,6 @@ echo -e "${ORANGE}= Installing dependencies...${NC}"
 apk update && apk add build-base ccache automake libtool bison flex pkgconfig readline-dev readline-static ncurses-dev ncurses-static autoconf patch libedit-dev libedit-static
 apk upgrade musl-dev --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
-chmod 755 upx
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${DASH_TARBALL}
 cd dash-${DASH_VERSION}/
@@ -48,7 +47,7 @@ make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip src/dash
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
-../upx --lzma src/dash
+upx --lzma src/dash
 EOF
 
 package_output "dash" "./${CHROOTDIR}/dash-${DASH_VERSION}/src/dash"

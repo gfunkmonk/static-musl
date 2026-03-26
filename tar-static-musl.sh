@@ -30,7 +30,6 @@ apk update && apk add build-base ccache automake autoconf pkgconfig zlib-dev zli
 lz4-static libbz2 bzip2-static gettext-dev gettext-static texinfo linux-headers
 apk upgrade musl-dev --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
-chmod 755 upx
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${TAR_TARBALL}
 cd tar-${TAR_VERSION}/
@@ -55,7 +54,7 @@ make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip src/tar
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
-../upx --lzma src/tar
+upx --lzma src/tar
 EOF
 
 package_output "tar" "./${CHROOTDIR}/tar-${TAR_VERSION}/src/tar"

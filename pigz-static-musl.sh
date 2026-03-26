@@ -26,7 +26,6 @@ echo -e "${ORANGE}= Installing dependencies...${NC}"
 apk update && apk add build-base ccache sed zlib-dev zlib-static
 apk upgrade musl-dev --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
-chmod 755 upx
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${PIGZ_TARBALL}
 cd pigz-${PIGZ_VERSION}/
@@ -37,7 +36,7 @@ make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip pigz
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
-../upx --lzma pigz
+upx --lzma pigz
 EOF
 
 package_output "pigz" "./${CHROOTDIR}/pigz-${PIGZ_VERSION}/pigz"

@@ -22,7 +22,6 @@ apk update && apk add build-base ccache bash make python3 perl linux-headers ope
   autoconf automake libtool zlib-dev zlib-static
 apk upgrade musl-dev --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
-chmod 755 upx
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${NMAP_TARBALL}
 cd nmap-${NMAP_VERSION}/
@@ -39,7 +38,7 @@ make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip nmap
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
-../upx --lzma nmap
+upx --lzma nmap
 EOF
 
 package_output "nmap" "./${CHROOTDIR}/nmap-${NMAP_VERSION}/nmap"

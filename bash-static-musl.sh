@@ -76,7 +76,6 @@ apk add build-base ccache sed automake autoconf pkgconfig ncurses-dev ncurses-st
 apk upgrade musl-dev --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
 mkdir -p /ccache
 export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
-chmod 755 upx
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${BASH_TARBALL}
 cd bash-${BASH_VERSION}/
@@ -103,7 +102,7 @@ make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip bash
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
-../upx --lzma bash
+upx --lzma bash
 EOF
 
 package_output "bash" "${CHROOTDIR}/bash-${BASH_VERSION}/bash"

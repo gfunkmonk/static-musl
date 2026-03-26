@@ -27,7 +27,6 @@ apk update && apk add build-base ccache pkgconfig ncurses-dev \
   ncurses-static python3 lm-sensors-dev libnl3-dev libnl3-static linux-headers
 apk upgrade musl-dev --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
-chmod 755 upx
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${HTOP_TARBALL}
 cd htop-${HTOP_VERSION}/
@@ -43,7 +42,7 @@ CC='gcc' make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip htop
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
-../upx --lzma htop
+upx --lzma htop
 EOF
 
 package_output "htop" "./${CHROOTDIR}/htop-${HTOP_VERSION}/htop"

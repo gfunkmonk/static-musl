@@ -21,7 +21,6 @@ echo -e "${ORANGE}= Installing dependencies...${NC}"
 apk update && apk add build-base ccache ncurses-dev ncurses-static openssl-dev openssl-libs-static
 apk upgrade musl-dev --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
-chmod 755 upx
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${SCREEN_TARBALL}
 cd screen-${SCREEN_VERSION}/
@@ -38,7 +37,7 @@ make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip screen
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
-../upx --lzma screen
+upx --lzma screen
 EOF
 
 package_output "screen" "./${CHROOTDIR}/screen-${SCREEN_VERSION}/screen"

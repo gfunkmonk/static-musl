@@ -29,7 +29,6 @@ echo -e "${ORANGE}= Installing dependencies...${NC}"
 apk update && apk add build-base ccache openssl-dev zlib-dev libidn2-dev libpsl-dev libidn2-static openssl-libs-static zlib-static libpsl-static libunistring-dev libunistring-static
 apk upgrade musl-dev --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
-chmod 755 upx
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${AXEL_TARBALL}
 cd axel-${AXEL_VERSION}/
@@ -43,7 +42,7 @@ make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip axel
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
-../upx --lzma axel
+upx --lzma axel
 EOF
 
 package_output "axel" "./${CHROOTDIR}/axel-${AXEL_VERSION}/axel"

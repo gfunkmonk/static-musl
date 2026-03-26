@@ -23,7 +23,6 @@ echo -e "${ORANGE}= Installing dependencies...${NC}"
 apk update && apk add build-base ccache pkgconfig perl gettext-dev gettext-static
 apk upgrade musl-dev --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
-chmod 755 upx
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${SED_TARBALL}
 cd sed-${SED_VERSION}/
@@ -42,7 +41,7 @@ LDFLAGS='${BASE_LDFLAGS} -static-pie -w -Wl,-s' CFLAGS='${BASE_CFLAGS} ${ARCH_FL
 echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip sed/sed
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
-../upx --lzma sed/sed
+upx --lzma sed/sed
 EOF
 
 package_output "sed" "./${CHROOTDIR}/sed-${SED_VERSION}/sed/sed"

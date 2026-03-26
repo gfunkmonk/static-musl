@@ -25,7 +25,6 @@ echo -e "${ORANGE}= Installing dependencies...${NC}"
 apk update && apk add build-base ccache pkgconfig ncurses-dev ncurses-static clang
 apk upgrade musl-dev --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
-chmod 755 upx
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${OKSH_TARBALL}
 cd oksh-${OKSH_VERSION}/
@@ -38,7 +37,7 @@ make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip oksh
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
-../upx --lzma oksh
+upx --lzma oksh
 EOF
 
 package_output "oksh" "./${CHROOTDIR}/oksh-${OKSH_VERSION}/oksh"

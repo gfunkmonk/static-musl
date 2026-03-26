@@ -30,7 +30,6 @@ apk update && apk add build-base ccache make pkgconfig zlib-dev zlib-static xz-d
   libxml2-dev libxml2-static lzo-dev
 apk upgrade musl-dev --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
-chmod 755 upx
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${BSDTAR_TARBALL}
 cd libarchive-${BSDTAR_VERSION}/
@@ -49,7 +48,7 @@ gcc -static -o bsdtar tar/bsdtar-bsdtar.o tar/bsdtar-cmdline.o tar/bsdtar-creati
 echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip bsdtar
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
-../upx --lzma bsdtar
+upx --lzma bsdtar
 EOF
 
 package_output "bsdtar" "./${CHROOTDIR}/libarchive-${BSDTAR_VERSION}/bsdtar"

@@ -15,9 +15,9 @@ CHROOTDIR=${CHROOTDIR:-potato}
 BASE_CFLAGS="-Os -static -ffunction-sections -fdata-sections -fno-stack-protector"
 BASE_LDFLAGS="-static -Wl,--gc-sections"
 BASE_PKGCFG="pkg-config --static"
-EXTRA_CFLAGS="-ftree-vectorize -fshort-enums"
-EXTREME_CFLAGS="-fno-ident -fno-unwind-tables -fno-asynchronous-unwind-tables"
+EXTRA_CFLAGS="-fshort-enums -fno-ident -fno-unwind-tables -fno-asynchronous-unwind-tables"
 LTOFLAGS="-flto=auto -ffat-lto-objects"
+MOLD="-fuse-ld=mold"
 
 # CCACHE_CHROOT_DIR: path inside the chroot where ccache stores its cache.
 # Set this to a host-mounted path (e.g. via CI cache) to persist ccache across
@@ -104,7 +104,7 @@ else
   exit 1
 fi
 
-# setup_arch: resolve QEMU_ARCH, ALPINE_URL, and TARBALL from ARCH
+# setup_arch: resolve QEMU_ARCH & ARCH_FLAGS from ARCH
 setup_arch() {
   case "${ARCH}" in
     x86_64)
@@ -171,7 +171,7 @@ setup_cleanup() {
 install_host_deps() {
   echo -e "${AQUA}= install dependencies${NC}"
   local DEBIAN_DEPS=(binutils)
-  [ -n "${QEMU_ARCH}" ] && DEBIAN_DEPS+=(qemu-user-static)
+  [ -n "${QEMU_ARCH}" ] && DEBIAN_DEPS+=(qemu-user-binfmt)
   sudo apt-get update -qy && sudo apt-get install -qy --no-install-recommends "${DEBIAN_DEPS[@]}"
 }
 
@@ -253,18 +253,14 @@ setup_alpine_chroot() {
   echo -e "${PEACH}= copy resolv.conf and ${tarball} into chroot${NC}"
   cp /etc/resolv.conf ./"${CHROOTDIR}"/etc/
   cp distfiles/"${tarball}" "./${CHROOTDIR}/${tarball}"
-  if [[ ! -f "tools/7zz/7zz-${ARCH}" ]]; then
-    echo -e "${TOMATO}= ERROR: tools/7zz/7zz-${ARCH} not found${NC}" >&2
-    exit 1
-  else
-    cp "tools/7zz/7zz-${ARCH}" "./${CHROOTDIR}/7zz"
-  fi
-  if [[ ! -f "tools/upx/upx-${ARCH}" ]]; then
-    echo -e "${TOMATO}= ERROR: tools/upx/upx-${ARCH} not found${NC}" >&2
-    exit 1
-  else
-    cp "tools/upx/upx-${ARCH}" "./${CHROOTDIR}/upx"
-  fi
+  for tool in 7zz upx uasm envx curl jq mold; do
+    src="tools/${tool}/${tool}-${ARCH}"
+    if [[ ! -f "$src" ]]; then
+      echo -e "${TOMATO}= ERROR: ${src} not found${NC}" >&2
+      exit 1
+    fi
+    cp "$src" "./${CHROOTDIR}/usr/local/bin/${tool}"
+  done
 }
 
 # copy_patches patch1 [patch2 ...]
@@ -284,17 +280,10 @@ copy_patches() {
 setup_qemu() {
   if [ -n "${QEMU_ARCH}" ]; then
     echo -e "${OCHRE}= setup QEMU for cross-arch builds${NC}"
-    if [[ -f /etc/os-release ]]; then
-        source /etc/os-release
-        if [[ "$ID" == "ubuntu" ]]; then
-            local qemu_bin="/usr/bin/qemu-${QEMU_ARCH}-static"
-        elif [[ "$ID" == "debian" || "$ID_LIKE" == "debian" ]]; then
-            local qemu_bin="/usr/bin/qemu-${QEMU_ARCH}"
-        fi
-    fi
+    local qemu_bin="/usr/bin/qemu-${QEMU_ARCH}"
     if [ ! -f "${qemu_bin}" ]; then
       echo -e "${TOMATO}= ERROR: QEMU binary not found: ${qemu_bin}${NC}" >&2
-      echo -e "${HELIOTROPE}= Install it with: sudo apt-get install qemu-user-static${NC}" >&2
+      echo -e "${HELIOTROPE}= Install it with:${NC} ${TEAL}sudo apt-get install qemu-user-binfmt${NC}" >&2
       exit 1
     fi
     sudo mkdir -p "./${CHROOTDIR}/usr/bin/"

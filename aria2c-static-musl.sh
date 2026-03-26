@@ -31,7 +31,6 @@ apk update && apk add build-base ccache openssl-dev openssl-libs-static zlib-dev
   libssh2-dev libssh2-static sqlite-dev sqlite-static libxml2-dev libxml2-static util-linux-static xz-dev xz-static patch pkgconfig
 apk upgrade musl-dev --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
-chmod 755 upx
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${ARIA2_TARBALL}
 cd aria2-${ARIA2_VERSION}/
@@ -48,7 +47,7 @@ make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip src/aria2c
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
-../upx --lzma src/aria2c
+upx --lzma src/aria2c
 EOF
 
 package_output "aria2c" "./${CHROOTDIR}/aria2-${ARIA2_VERSION}/src/aria2c"

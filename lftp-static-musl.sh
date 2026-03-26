@@ -34,7 +34,6 @@ apk update && apk add build-base ccache autoconf automake libtool linux-headers 
   zlib-static libstdc++-dev gettext-dev gettext-static
 apk upgrade musl-dev --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
-chmod 755 upx
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${LFTP_TARBALL}
 cd lftp-${LFTP_VERSION}/
@@ -57,7 +56,7 @@ make -j\$(nproc) LDFLAGS='-static -all${BASE_LDFLAGS} -static-pie -w -Wl,-s'
 echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip src/lftp
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
-../upx --lzma src/lftp
+upx --lzma src/lftp
 EOF
 
 package_output "lftp" "./${CHROOTDIR}/lftp-${LFTP_VERSION}/src/lftp"

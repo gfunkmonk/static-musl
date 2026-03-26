@@ -65,7 +65,6 @@ apk upgrade musl-dev --repository=https://dl-cdn.alpinelinux.org/alpine/edge/mai
 apk add uasm --repository=https://dl-cdn.alpinelinux.org/alpine/edge/testing
 mkdir -p /ccache
 export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
-cp upx /usr/local/bin
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${SEVENZIP_TARBALL}
 cd 7-Zip-zstd-${SEVENZIP_SHORT}/
@@ -90,7 +89,7 @@ echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip 7zz
 cp 7zz /7-Zip-zstd-${SEVENZIP_SHORT}/7zz
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
-/usr/local/bin/upx --lzma /7-Zip-zstd-${SEVENZIP_SHORT}/7zz
+upx --lzma /7-Zip-zstd-${SEVENZIP_SHORT}/7zz
 EOF
 
 package_output "7zz" "./${CHROOTDIR}/7-Zip-zstd-${SEVENZIP_SHORT}/7zz"
