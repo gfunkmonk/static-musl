@@ -69,6 +69,15 @@ TEAL="\033[38;2;0;128;128m"
 TURQUOISE="\033[38;2;64;224;208m"
 NC="\033[0m"
 
+case "${ARCH}" in
+  x86_64|x86-64|amd64) ARCH="x86_64";;
+  x86|i386|i586|i686) ARCH="x86";;
+  aarch64|arm64|armv8) ARCH="aarch64";;
+  armv7|armv7l) ARCH="armv7";;
+  armhf|armv6|arm) ARCH="armhf";;
+  *) echo -e "${ARCH}";;
+esac
+
 setup_tools() {
   if [[ -x "${JQ}" ]] && "${JQ}" --version >/dev/null 2>&1; then
     : # use bundled jq

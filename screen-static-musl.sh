@@ -31,7 +31,7 @@ echo -e "${LAGOON}= Applying custom patch${NC}"
 patch -p1 --fuzz=4 < ../screen-5.0.0-supress_remap.patch
 patch -p1 --fuzz=4 < ../screen-5.0.1-big-endian.patch
 echo -e "${PEACH}= Configure source${NC}"
-./configure CC=gcc --enable-telnet --with-pty-mode=0600  --enable-colors256 --enable-rxvt_osc --with-pty-group=5 \
+./configure CC=gcc --enable-telnet --with-pty-mode=0600 --with-pty-group=5 \
   --enable-socket-dir=/run/screen --disable-pam --enable-utmp \
   LDFLAGS='${BASE_LDFLAGS} -w -Wl,-s -no-pie' PKG_CONFIG='${BASE_PKGCFG}' \
   CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} ${EXTRA_CFLAGS} ${LTOFLAGS} -fno-pie'
