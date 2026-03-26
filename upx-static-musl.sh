@@ -31,7 +31,7 @@ apk upgrade musl-dev --repository=https://dl-cdn.alpinelinux.org/alpine/edge/mai
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
 chmod 755 upx
 echo -e "${LIME}= Extracting source${NC}"
-tar xf upx-${UPX_VERSION}-src.tar.xz
+tar xf ${UPX_TARBALL}
 cd upx-${UPX_VERSION}-src/
 echo -e "${LAGOON}= Applying custom patch${NC}"
 patch -p1 --fuzz=4 < ../upx-mod.patch
@@ -45,9 +45,9 @@ sed -i 's%UPX_VERSION_STRING "5.1.."%UPX_VERSION_STRING "5.1.3"%g' CMakeLists.tx
 mkdir build && cd build/
 echo -e "${PEACH}= Configure source${NC}"
 cmake -G Ninja \
-  -DCMAKE_EXE_LINKER_FLAGS='-Wl,--gc-sections -static' \
-  -DCMAKE_C_FLAGS_RELEASE='-Os  ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector' \
-  -DCMAKE_CXX_FLAGS_RELEASE='-Os  ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector' \
+  -DCMAKE_EXE_LINKER_FLAGS='${BASE_LDFLAGS}' \
+  -DCMAKE_C_FLAGS_RELEASE='${BASE_CFLAGS} ${ARCH_FLAGS}' \
+  -DCMAKE_CXX_FLAGS_RELEASE='${BASE_CFLAGS} ${ARCH_FLAGS}' \
   -DCMAKE_BUILD_TYPE=Release -DUPX_CONFIG_DISABLE_GITREV=ON -DUPX_CONFIG_DISABLE_WSTRICT=ON \
   -DUSE_STRICT_DEFAULTS=OFF -DUPX_CONFIG_REQUIRE_THREADS=ON -S ..
 echo -e "${VIOLET}= Building...${NC}"

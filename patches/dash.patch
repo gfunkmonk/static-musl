@@ -106,27 +106,6 @@ diff -ruN dash-0.5.13.1.orig/src/eval.h dash-0.5.13.1/src/eval.h
  int evalstring(char *, int);
  union node;	/* BLETCH for ansi C */
  int evaltree(union node *, int);
-diff -ruN dash-0.5.13.1.orig/src/expand.c dash-0.5.13.1/src/expand.c
---- dash-0.5.13.1.orig/src/expand.c	2025-10-05 23:00:31.000000000 -0400
-+++ dash-0.5.13.1/src/expand.c	2026-03-17 17:08:01.406509424 -0400
-@@ -1914,7 +1914,7 @@
- 			if (c == '?' || c == '[')
- 				c = CTLESC;
- 			for (;;) {
--				if (c != CTLESC) {
-+				if (c != (char)CTLESC) {
- 					/* Stop should be null-terminated
- 					 * as it is passed as a string to
- 					 * strpbrk(3).
-@@ -1985,7 +1985,7 @@
- 					p++;
- 					if (*p == (char)CTLESC)
- 						p++;
--					else if (*p == CTLMBCHAR) {
-+					else if (*p == (char)CTLMBCHAR) {
- 						mbp = mbnext(p);
- 						p += mbp & 0xff;
- 						p += mbp >> 8;
 diff -ruN dash-0.5.13.1.orig/src/histedit.c dash-0.5.13.1/src/histedit.c
 --- dash-0.5.13.1.orig/src/histedit.c	2025-09-23 07:07:58.000000000 -0400
 +++ dash-0.5.13.1/src/histedit.c	2026-03-17 17:08:01.403974624 -0400
@@ -223,18 +202,6 @@ diff -ruN dash-0.5.13.1.orig/src/options.h dash-0.5.13.1/src/options.h
  
  extern const char optletters[NOPTS];
  extern char optlist[NOPTS];
-diff -ruN dash-0.5.13.1.orig/src/parser.c dash-0.5.13.1/src/parser.c
---- dash-0.5.13.1.orig/src/parser.c	2025-09-23 07:07:58.000000000 -0400
-+++ dash-0.5.13.1/src/parser.c	2026-03-17 17:08:01.406891344 -0400
-@@ -1240,7 +1240,7 @@
- 
- 		markloc = out - (char *)stackblock();
- 		for (p = eofmark; STPUTC(c, out), *p; p++) {
--			if (c != *p)
-+			if (c != (signed char)*p)
- 				goto more_heredoc;
- 
- 			c = pgetc();
 diff -ruN dash-0.5.13.1.orig/src/priv.c dash-0.5.13.1/src/priv.c
 --- dash-0.5.13.1.orig/src/priv.c	1969-12-31 19:00:00.000000000 -0500
 +++ dash-0.5.13.1/src/priv.c	2026-03-17 17:08:01.405531424 -0400

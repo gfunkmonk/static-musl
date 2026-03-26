@@ -20,21 +20,20 @@ run_build_setup "nmap" "${NMAP_VERSION}" "${NMAP_TARBALL}" \
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
 set -e
 echo -e "${ORANGE}= Installing dependencies...${NC}"
-apk update && apk add build-base ccache bash make python3 perl linux-headers openssl-libs-static openssl-dev libpcap-dev autoconf automake libtool
+apk update && apk add build-base ccache bash make python3 perl linux-headers openssl-libs-static openssl-dev libpcap-dev \
+  autoconf automake libtool
 apk upgrade musl-dev --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
 chmod 755 upx
 echo -e "${LIME}= Extracting source${NC}"
-tar xf nmap-${NMAP_VERSION}.tar.bz2
+tar xf ${NMAP_TARBALL}
 cd nmap-${NMAP_VERSION}/
 echo -e "${LAGOON}= Applying custom patch${NC}"
 patch -p1 --fuzz=4 < ../nmap.patch
 echo -e "${PEACH}= Configure source${NC}"
-./configure CC='gcc -static -fPIC' CXX='g++ -static -static-libstdc++ -fPIC' \
-  --without-ndiff --without-zenmap --without-nmap-update --with-pcap=linux \
-  --with-openssl --without-liblua --without-libssh2 --without-nping --without-ncat \
-  LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
-  CFLAGS='-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie'
+./configure CC='gcc -static -fPIC' CXX='g++ -static -static-libstdc++ -fPIC' --without-ndiff --without-zenmap --without-nmap-update \
+  --with-pcap=linux --with-openssl --without-liblua --without-libssh2 --without-nping --without-ncat \
+  LDFLAGS='${BASE_LDFLAGS}' PKG_CONFIG='${BASE_PKGCFG}' CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} -no-pie'
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"

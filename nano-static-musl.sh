@@ -33,11 +33,9 @@ echo -e "${LAGOON}= Applying custom patch${NC}"
 patch -p1 --fuzz=4 < ../nano-colors.patch
 echo -e "${PEACH}= Configure source${NC}"
 ./configure CC='gcc' \
-  --sysconfdir=/etc --disable-nls --disable-utf8 --disable-tiny \
-  --enable-nanorc --enable-color --enable-extra --enable-largefile \
-  --enable-libmagic --disable-justify \
-  LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
-  CFLAGS='-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie'
+  --sysconfdir=/etc --disable-nls --disable-utf8 --disable-tiny --enable-nanorc --enable-color \
+  --enable-extra --enable-largefile --enable-libmagic --disable-justify \
+  LDFLAGS='${BASE_LDFLAGS}' PKG_CONFIG='${BASE_PKGCFG}' CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} -no-pie'
 echo -e "${VIOLET}= Building...${NC}"
 CC='gcc' make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"

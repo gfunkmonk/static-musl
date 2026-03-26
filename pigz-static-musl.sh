@@ -30,10 +30,10 @@ apk upgrade musl-dev --repository=https://dl-cdn.alpinelinux.org/alpine/edge/mai
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
 chmod 755 upx
 echo -e "${LIME}= Extracting source${NC}"
-tar xf pigz-${PIGZ_VERSION}.tar.gz
+tar xf ${PIGZ_TARBALL}
 cd pigz-${PIGZ_VERSION}/
-sed -i 's/CFLAGS=-O3 -Wall -Wextra -Wno-unknown-pragmas -Wcast-qual/CFLAGS=-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie/g' Makefile
-sed -i 's/LDFLAGS=/LDFLAGS=-static -Wl,--gc-sections/g' Makefile
+sed -i 's/CFLAGS=-O3 -Wall -Wextra -Wno-unknown-pragmas -Wcast-qual/CFLAGS=${BASE_CFLAGS} ${ARCH_FLAGS} -no-pie/g' Makefile
+sed -i 's/LDFLAGS=/LDFLAGS=${BASE_LDFLAGS}/g' Makefile
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"

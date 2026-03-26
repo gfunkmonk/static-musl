@@ -29,12 +29,12 @@ apk upgrade musl-dev --repository=https://dl-cdn.alpinelinux.org/alpine/edge/mai
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
 chmod 755 upx
 echo -e "${LIME}= Extracting source${NC}"
-tar xf oksh-${OKSH_VERSION}.tar.gz
+tar xf ${OKSH_TARBALL}
 cd oksh-${OKSH_VERSION}/
 echo -e "${PEACH}= Configure source${NC}"
-./configure --cc=clang --cflags="-Os ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer" \
+./configure --cc=clang --cflags="${BASE_CFLAGS} ${ARCH_FLAGS}" \
   --enable-curses --enable-static --enable-lto \
-  LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static'
+  LDFLAGS='${BASE_LDFLAGS}' PKG_CONFIG='${BASE_PKGCFG}'
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"

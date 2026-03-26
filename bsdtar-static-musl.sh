@@ -32,19 +32,15 @@ apk upgrade musl-dev --repository=https://dl-cdn.alpinelinux.org/alpine/edge/mai
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
 chmod 755 upx
 echo -e "${LIME}= Extracting source${NC}"
-tar xf libarchive-${BSDTAR_VERSION}.tar.xz
+tar xf ${BSDTAR_TARBALL}
 cd libarchive-${BSDTAR_VERSION}/
 echo -e "${PEACH}= Configure source${NC}"
-./configure CC=gcc \
-  --disable-shared --enable-static --enable-bsdtar=static \
-  --disable-bsdcat --disable-bsdcpio --with-zlib \
-  --disable-maintainer-mode --with-bz2lib --disable-dependency-tracking \
-  LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
-  CFLAGS='-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie'
+./configure CC=gcc --disable-shared --enable-static --enable-bsdtar=static --disable-bsdcat \
+  --disable-bsdcpio --with-zlib --disable-maintainer-mode --with-bz2lib --disable-dependency-tracking \
+  LDFLAGS='${BASE_LDFLAGS}' PKG_CONFIG='${BASE_PKGCFG}' CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} -no-pie'
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc)
-gcc -static -o bsdtar tar/bsdtar-bsdtar.o \
-  tar/bsdtar-cmdline.o tar/bsdtar-creation_set.o \
+gcc -static -o bsdtar tar/bsdtar-bsdtar.o tar/bsdtar-cmdline.o tar/bsdtar-creation_set.o \
   tar/bsdtar-read.o tar/bsdtar-subst.o tar/bsdtar-util.o \
   tar/bsdtar-write.o .libs/libarchive.a .libs/libarchive_fe.a \
   -lz -lbz2 -llzma -lzstd -llz4 -lxml2 -lcrypto -lssl

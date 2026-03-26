@@ -25,7 +25,7 @@ apk upgrade musl-dev --repository=https://dl-cdn.alpinelinux.org/alpine/edge/mai
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
 chmod 755 upx
 echo -e "${LIME}= Extracting source${NC}"
-tar xf screen-${SCREEN_VERSION}.tar.gz
+tar xf ${SCREEN_TARBALL}
 cd screen-${SCREEN_VERSION}/
 echo -e "${LAGOON}= Applying custom patch${NC}"
 patch -p1 --fuzz=4 < ../screen-5.0.0-supress_remap.patch
@@ -33,8 +33,8 @@ patch -p1 --fuzz=4 < ../screen-5.0.1-big-endian.patch
 echo -e "${PEACH}= Configure source${NC}"
 ./configure CC=gcc --enable-telnet --with-pty-mode=0600  --enable-colors256 --enable-rxvt_osc --with-pty-group=5 \
   --enable-socket-dir=/run/screen --disable-pam --enable-utmp \
-  LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
-  CFLAGS='-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie'
+  LDFLAGS='${BASE_LDFLAGS}' PKG_CONFIG='${BASE_PKGCFG}' \
+  CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} -no-pie'
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"

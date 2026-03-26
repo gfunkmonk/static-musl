@@ -99,8 +99,8 @@ patch -p1 --fuzz=4 < ../bash_make-the-bash-fc-builtin-more-reliable-for-scriptin
 echo -e "${PEACH}= Configure source${NC}"
 ./configure \
   --disable-nls --without-bash-malloc --with-curses --enable-static-link \
-  LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
-  CFLAGS='-Os -static $ARCH_FLAGS -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie -Wno-discarded-qualifiers'
+  LDFLAGS='${BASE_LDFLAGS}' PKG_CONFIG='${BASE_PKGCFG}' \
+  CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} -no-pie -Wno-discarded-qualifiers'
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"

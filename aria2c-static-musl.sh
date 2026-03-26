@@ -29,23 +29,21 @@ run_build_setup "aria2" "${ARIA2_VERSION}" "${ARIA2_TARBALL}" \
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
 set -e
 echo -e "${ORANGE}= Installing dependencies...${NC}"
-apk update && apk add build-base ccache openssl-dev openssl-libs-static zlib-dev zlib-static libpsl-dev libpsl-static libidn2-static c-ares-dev libssh2-dev libssh2-static sqlite-dev sqlite-static libxml2-dev libxml2-static util-linux-static xz-dev xz-static patch pkgconfig
+apk update && apk add build-base ccache openssl-dev openssl-libs-static zlib-dev zlib-static libpsl-dev libpsl-static libidn2-static c-ares-dev \
+  libssh2-dev libssh2-static sqlite-dev sqlite-static libxml2-dev libxml2-static util-linux-static xz-dev xz-static patch pkgconfig
 apk upgrade musl-dev --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
 chmod 755 upx
 echo -e "${LIME}= Extracting source${NC}"
-tar xf aria2-${ARIA2_VERSION}.tar.gz
+tar xf ${ARIA2_TARBALL}
 cd aria2-${ARIA2_VERSION}/
 echo -e "${LAGOON}= Applying custom patch(es)${NC}"
 patch -p1 --fuzz=4 < ../aria2.patch
 echo -e "${PEACH}= Configure source${NC}"
-./configure CC=gcc ARIA2_STATIC=yes \
-  --with-ca-bundle=/etc/ssl/certs/ca-certificates.crt \
-  --without-gnutls --with-openssl --with-libcares \
-  --disable-bittorrent --with-sqlite3 \
-  --enable-static --disable-shared \
-  LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
-  CFLAGS='-Os -static $ARCH_FLAGS -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie -Wno-unterminated-string-initialization'
+./configure CC=gcc ARIA2_STATIC=yes --with-ca-bundle=/etc/ssl/certs/ca-certificates.crt \
+  --without-gnutls --with-openssl --with-libcares --disable-bittorrent --with-sqlite3 \
+  --enable-static --disable-shared LDFLAGS='${BASE_LDFLAGS}' PKG_CONFIG='${BASE_PKGCFG}' \
+  CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} -no-pie -Wno-unterminated-string-initialization'
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"

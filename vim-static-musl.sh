@@ -39,11 +39,10 @@ echo -e "${PEACH}= Configure source${NC}"
 ./configure CC='gcc' \
   --disable-channel --disable-gpm --disable-gtktest --disable-gui \
   --disable-netbeans --disable-nls --disable-selinux --disable-smack \
-  --disable-sysmouse --disable-xsmp \
-  --enable-multibyte \
+  --disable-sysmouse --disable-xsmp --enable-multibyte \
   --with-features=huge --with-tlib=ncursesw --without-x \
-  LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
-  CFLAGS='-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie'
+  LDFLAGS='${BASE_LDFLAGS}' PKG_CONFIG='${BASE_PKGCFG}' \
+  CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} -no-pie'
 echo -e "${VIOLET}= Building...${NC}"
 CC='gcc' make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"

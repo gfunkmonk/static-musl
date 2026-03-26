@@ -12,7 +12,7 @@ Build scripts that produce fully static, multi-architecture binaries using musl 
 | bash | 5.3 | Bash (Bourne Again SHell) |
 | bsdtar | latest | Archive tool (libarchive) |
 | curl | latest | Data transfer tool |
-| dash | 0.5.13.1 | POSIX shell |
+| dash | 0.5.13.2 | POSIX shell |
 | htop | latest | Interactive process viewer |
 | less | latest | pager program similar to more |
 | lftp | latest | Command line ftp client |

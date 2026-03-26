@@ -11,6 +11,11 @@ ALPINE_MAJOR_MINOR="${ALPINE_VERSION%.*}"
 CHROOTDIR=
 CHROOTDIR=${CHROOTDIR:-potato}
 
+# Compiler Flags
+BASE_CFLAGS="-Os -static -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector"
+BASE_LDFLAGS="-static -Wl,--gc-sections"
+BASE_PKGCFG="pkg-config --static"
+
 # CCACHE_CHROOT_DIR: path inside the chroot where ccache stores its cache.
 # Set this to a host-mounted path (e.g. via CI cache) to persist ccache across
 # builds.
@@ -56,6 +61,9 @@ CAMEL="\033[38;2;193;154;107m"
 INDIGO="\033[38;2;111;0;255m"
 CHARTREUSE="\033[38;2;127;255;0m"
 PURPLE_BLUE="\033[38;2;147;130;255m"
+REBECCA="\033[38;2;102;51;153m"
+TEAL="\033[38;2;0;128;128m"
+TURQUOISE="\033[38;2;64;224;208m"
 NC="\033[0m"
 
 setup_tools() {
@@ -137,7 +145,7 @@ setup_cleanup() {
   cleanup() {
     echo -e "${CAMEL}Unmounting filesystems from chroot -- ${CHROOTDIR}${NC}"
     # Use -F for literal string matching (no regex), quote variables for safety
-    grep -F "$(pwd)/${CHROOTDIR}" /proc/mounts | cut -f2 -d" " | sort -r | xargs -r sudo umount -n || true
+    grep -F "$(pwd)/${CHROOTDIR}" /proc/mounts | cut -f2 -d" " | sort -r | xargs -r sudo umount -nR || true
   }
   trap cleanup EXIT
 }

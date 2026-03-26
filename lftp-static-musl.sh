@@ -30,12 +30,14 @@ run_build_setup "lftp" "${LFTP_VERSION}" "${LFTP_TARBALL}" \
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
 set -e
 echo -e "${ORANGE}= Installing dependencies...${NC}"
-apk update && apk add build-base ccache autoconf automake libtool linux-headers expat-dev expat-static libidn-dev libunistring-dev libunistring-static pkgconfig ncurses-dev ncurses-static openssl-dev openssl-libs-static readline-dev readline-static zlib-dev zlib-static libstdc++-dev gettext-dev gettext-static
+apk update && apk add build-base ccache autoconf automake libtool linux-headers expat-dev expat-static libidn-dev \
+  libunistring-dev libunistring-static pkgconfig ncurses-dev ncurses-static openssl-dev openssl-libs-static readline-dev \
+  readline-static zlib-dev zlib-static libstdc++-dev gettext-dev gettext-static
 apk upgrade musl-dev --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
 chmod 755 upx
 echo -e "${LIME}= Extracting source${NC}"
-tar xf lftp-${LFTP_VERSION}.tar.gz
+tar xf ${LFTP_TARBALL}
 cd lftp-${LFTP_VERSION}/
 echo -e "${LAGOON}= Applying custom patch${NC}"
 patch -p1 --fuzz=4 < ../lftp.patch
@@ -45,13 +47,12 @@ patch -p1 --fuzz=4 < ../lftp-4.9.3-gnulib-stdlib.h.patch
 patch -p1 --fuzz=4 < ../lftp-4.9.3-gnulib.patch
 echo -e "${PEACH}= Configure source${NC}"
 autoreconf -f -i
-./configure CC=gcc CXX=g++ LIBS='-l:libreadline.a -l:libncursesw.a' \
-  --with-openssl --without-gnutls --enable-static --enable-threads=posix --disable-nls --disable-shared \
-  LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
-  CFLAGS='-Os -static  ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -std=c17 -Wno-unterminated-string-initialization -Wno-deprecated-declarations -no-pie' \
-  CXXFLAGS='-Os -static  ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -std=c++14 -Wno-deprecated-declarations -Wno-error=template-id-cdtor'
+./configure CC=gcc CXX=g++ LIBS='-l:libreadline.a -l:libncursesw.a' --with-openssl --without-gnutls --enable-static \
+  --enable-threads=posix --disable-nls --disable-shared LDFLAGS='${BASE_LDFLAGS}' PKG_CONFIG='${BASE_PKGCFG}' \
+  CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} -std=c17 -Wno-unterminated-string-initialization -Wno-deprecated-declarations -no-pie' \
+  CXXFLAGS='-Os -static  ${ARCH_FLAGS} -std=c++17 -Wno-deprecated-declarations -Wno-error=template-id-cdtor'
 echo -e "${VIOLET}= Building...${NC}"
-make -j\$(nproc) LDFLAGS='-static -all-static -Wl,--gc-sections'
+make -j\$(nproc) LDFLAGS='-static -all${BASE_LDFLAGS}'
 echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip src/lftp
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"

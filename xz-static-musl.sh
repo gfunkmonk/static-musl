@@ -31,15 +31,14 @@ apk upgrade musl-dev --repository=https://dl-cdn.alpinelinux.org/alpine/edge/mai
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
 chmod 755 upx
 echo -e "${LIME}= Extracting source${NC}"
-tar xf xz-${XZ_VERSION}.tar.xz
+tar xf ${XZ_TARBALL}
 cd xz-${XZ_VERSION}/
 echo -e "${PEACH}= Configure source${NC}"
-./configure CC=clang \
-  --enable-static --disable-shared --disable-nls \
-  LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
+./configure CC=clang --enable-static --disable-shared --disable-nls \
+  LDFLAGS='${BASE_LDFLAGS}' PKG_CONFIG='${BASE_PKGCFG}' \
   CFLAGS='-Os  ${ARCH_FLAGS} -ffunction-sections -fdata-sections -Wno-unterminated-string-initialization'
 echo -e "${VIOLET}= Building...${NC}"
-CC=clang LDFLAGS='-static -Wl,--gc-sections' make -j\$(nproc)
+CC=clang LDFLAGS='${BASE_LDFLAGS}' make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip src/xz/xz
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"

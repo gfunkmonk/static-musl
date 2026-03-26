@@ -24,7 +24,8 @@ run_build_setup "less" "${LESS_VERSION}" "${LESS_TARBALL}" \
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
 set -e
 echo -e "${ORANGE}= Installing dependencies...${NC}"
-apk update && apk add build-base ccache pkgconfig pcre2-static pcre2-dev ncurses-dev ncurses-static perl autoconf automake gpg groff clang
+apk update && apk add build-base ccache pkgconfig pcre2-static pcre2-dev ncurses-dev \
+  ncurses-static perl autoconf automake gpg groff clang
 apk upgrade musl-dev --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
 chmod 755 upx
@@ -34,9 +35,10 @@ cd less-${LESS_VERSION}/
 echo -e "${HOTPINK}= Generating files${NC}"
 make -f Makefile.aut distfiles
 echo -e "${PEACH}= Configure source${NC}"
-./configure CC=clang --with-regex=pcre2 --enable-year2038 --sysconfdir=/etc --with-editor=/usr/bin/editor \
-  LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
-  CFLAGS='-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector'
+./configure CC=clang --with-regex=pcre2 --enable-year2038 --sysconfdir=/etc \
+  --with-editor=/usr/bin/editor \
+  LDFLAGS='${BASE_LDFLAGS}' PKG_CONFIG='${BASE_PKGCFG}' \
+  CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS}'
 echo -e "${VIOLET}= Building...${NC}"
 CC=clang make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"

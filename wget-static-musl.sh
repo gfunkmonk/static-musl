@@ -28,16 +28,14 @@ apk upgrade musl-dev --repository=https://dl-cdn.alpinelinux.org/alpine/edge/mai
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
 chmod 755 upx
 echo -e "${LIME}= Extracting source${NC}"
-tar xf wget-${WGET_VERSION}.tar.gz
+tar xf ${WGET_TARBALL}
 cd wget-${WGET_VERSION}/
 echo -e "${LAGOON}= Applying custom patch${NC}"
 patch -p1 --fuzz=4 < ../wget-passive-ftp.patch
 echo -e "${PEACH}= Configure source${NC}"
-./configure CC=gcc --with-ssl=openssl --with-libidn --disable-nls \
-  --disable-rpath --sysconfdir=/etc \
-  LDFLAGS='-static -lidn2 -lunistring -Wl,--gc-sections' \
-  PKG_CONFIG='pkg-config --static' \
-  CFLAGS='-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie -Wno-unterminated-string-initialization' \
+./configure CC=gcc --with-ssl=openssl --with-libidn --disable-nls --disable-rpath --sysconfdir=/etc \
+  LDFLAGS='${BASE_LDFLAGS} -lidn2 -lunistring' PKG_CONFIG='${BASE_PKGCFG}' \
+  CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} -no-pie -Wno-unterminated-string-initialization' \
   PERL=/usr/bin/perl
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc)

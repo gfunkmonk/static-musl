@@ -35,17 +35,15 @@ apk upgrade musl-dev --repository=https://dl-cdn.alpinelinux.org/alpine/edge/mai
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
 chmod 755 upx
 echo -e "${LIME}= Extracting source${NC}"
-tar xf curl-${CURL_VERSION}.tar.xz
+tar xf ${CURL_TARBALL}
 cd curl-${CURL_VERSION}/
 echo -e "${LAGOON}= Applying custom patch${NC}"
 patch -p1 --fuzz=4 < ../curl.patch
 echo -e "${PEACH}= Configure source${NC}"
-./configure CC=clang \
-  --disable-shared --enable-static --disable-ldap --enable-ipv6 \
-  --enable-unix-sockets --with-ssl --with-libssh2 --disable-docs \
-  --disable-manual --without-libpsl \
-  LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
-  CFLAGS='-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie -Wno-unterminated-string-initialization'
+./configure CC=clang --disable-shared --enable-static --disable-ldap --disable-ipv6 --enable-unix-sockets \
+  --with-ssl --with-libssh2 --disable-docs --disable-manual --without-libpsl \
+  LDFLAGS='${BASE_LDFLAGS}' PKG_CONFIG='${BASE_PKGCFG}' \
+  CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} -no-pie -Wno-unterminated-string-initialization'
 echo -e "${VIOLET}= Building...${NC}"
 CC=clang make -j\$(nproc) V=1 LDFLAGS='-static -all-static'
 echo -e "${CHARTREUSE}= Stripping binary${NC}"
