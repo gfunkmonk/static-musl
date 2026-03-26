@@ -3,7 +3,7 @@
 # Source this file at the top of each build script: . "$(dirname "$0")/common.sh"
 
 ######### Variables ###########
-ARCH=${ARCH:-x86_64}
+ARCH=${ARCH:-$(uname -m)}
 ALPINE_VERSION="3.23.3"
 ALPINE_MAJOR_MINOR="${ALPINE_VERSION%.*}"
 
@@ -15,7 +15,7 @@ CHROOTDIR=${CHROOTDIR:-potato}
 BASE_CFLAGS="-Os -static -ffunction-sections -fdata-sections -fno-stack-protector"
 BASE_LDFLAGS="-static -Wl,--gc-sections"
 BASE_PKGCFG="pkg-config --static"
-EXTRA_CFLAGS="-ftree-vectorize -ffast-math -fno-inline-small-functions -fshort-enums"
+EXTRA_CFLAGS="-ftree-vectorize -ffast-math -momit-leaf-frame-pointer -fno-inline-small-functions -fshort-enums"
 EXTREME_CFLAGS="-fno-ident -fno-unwind-tables -fno-asynchronous-unwind-tables"
 LTOFLAGS="-flto=auto -ffat-lto-objects"
 
@@ -269,7 +269,14 @@ copy_patches() {
 setup_qemu() {
   if [ -n "${QEMU_ARCH}" ]; then
     echo -e "${OCHRE}= setup QEMU for cross-arch builds${NC}"
-    local qemu_bin="/usr/bin/qemu-${QEMU_ARCH}-static"
+    if [[ -f /etc/os-release ]]; then
+        source /etc/os-release
+        if [[ "$ID" == "ubuntu" ]]; then
+            local qemu_bin="/usr/bin/qemu-${QEMU_ARCH}-static"
+        elif [[ "$ID" == "debian" || "$ID_LIKE" == "debian" ]]; then
+            local qemu_bin="/usr/bin/qemu-${QEMU_ARCH}"
+        fi
+    fi
     if [ ! -f "${qemu_bin}" ]; then
       echo -e "${TOMATO}= ERROR: QEMU binary not found: ${qemu_bin}${NC}" >&2
       echo -e "${HELIOTROPE}= Install it with: sudo apt-get install qemu-user-static${NC}" >&2
