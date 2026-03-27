@@ -32,6 +32,7 @@ Build scripts that produce fully static, multi-architecture binaries using musl 
 | upx | latest | UPX w/ custom patch & zstd support |
 | vim | latest | Text editor |
 | wget | 1.25.0 | File downloader |
+| wget2 | 2.2.1 | The successor of GNU Wget. |
 | xz | latest | XZ/LZMA compression |
 | zstd | latest | Fast real-time compression algorithm |
 
