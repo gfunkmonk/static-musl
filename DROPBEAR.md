@@ -1,8 +1,9 @@
+_***DROPBEAR INSTALL***_
+
 Manual installation
 1. copy dropbearmultin in /usr/sbin
 2. create dropbearmulti aliases (call ./dropbearmulti)
 
-_***DROPBEAR INSTALL***_
 Dropbear multi-purpose version 0.51
   Make a symlink pointing at this binary with one of the following names:
   'dropbear' - the Dropbear server
