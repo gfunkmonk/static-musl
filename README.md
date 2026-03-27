@@ -27,6 +27,7 @@ Build scripts that produce fully static, multi-architecture binaries using musl 
 | screen | 5.0.1 | Screen is a mature terminal multiplexer |
 | socat | 1.8.1.1 | Socat is a flexible, multi-purpose relay tool |
 | tar | 1.35 | GNU tar archive utility |
+| tnftp | latest | a port of the NetBSD FTP client |
 | tmux | latest | Tmux is a terminal multiplexer |
 | upx | latest | UPX w/ custom patch & zstd support |
 | vim | latest | Text editor |

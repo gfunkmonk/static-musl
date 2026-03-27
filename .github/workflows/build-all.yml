@@ -36,10 +36,12 @@ on:
           - socat
           - tar
           - tmux
+          - tnftp
           - upx
           - vim
           - wget
           - xz
+          - zstd
 
 env:
   ALPINE_VERSION: "3.23.3"
@@ -57,7 +59,7 @@ jobs:
         id: set-matrix
         run: |
           if [[ "${{ github.event_name }}" == "schedule" || "${{ inputs.tool }}" == "all" || "${{ inputs.tool }}" == "" ]]; then
-            echo 'matrix=["7zz","aria2c","axel","bash","bsdtar","curl","dash","dropbear","gawk","htop","less","lftp","nano","nmap","oksh","openssh","pigz","sed","screen","socat","tar","tmux","upx","vim","wget","xz"]' >> "$GITHUB_OUTPUT"
+            echo 'matrix=["7zz","aria2c","axel","bash","bsdtar","curl","dash","dropbear","gawk","htop","less","lftp","nano","nmap","oksh","openssh","pigz","sed","screen","socat","tar","tmux","tnftp","upx","vim","wget","xz","zstd"]' >> "$GITHUB_OUTPUT"
           else
             echo 'matrix=["${{ inputs.tool }}"]' >> "$GITHUB_OUTPUT"
           fi
@@ -128,7 +130,8 @@ jobs:
         update_packager_index: true
         install_ccache: true
         prepend_symlinks_to_path: true
-        override_cache_key: ccache-${{ steps.alpine-version.outputs.version }}-${{ matrix.arch }}-${{ matrix.tool }}-${{ hashFiles(format('{0}-static-musl.sh', matrix.tool)) }}
+        # Include common.sh in the hash so flag changes invalidate the cache
+        override_cache_key: ccache-${{ steps.alpine-version.outputs.version }}-${{ matrix.arch }}-${{ matrix.tool }}-${{ hashFiles(format('{0}-static-musl.sh', matrix.tool), 'common.sh') }}
         override_cache_key_fallback: |
           ccache-${{ steps.alpine-version.outputs.version }}-${{ matrix.arch }}-${{ matrix.tool }}-
           ccache-${{ steps.alpine-version.outputs.version }}-${{ matrix.arch }}-

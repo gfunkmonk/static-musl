@@ -143,6 +143,7 @@ setup_arch() {
   ALPINE_URL="https://dl-cdn.alpinelinux.org/alpine/v${ALPINE_MAJOR_MINOR}/releases/${ARCH}/alpine-minirootfs-${ALPINE_VERSION}-${ARCH}.tar.gz"
   TARBALL="${ALPINE_URL##*/}"
 }
+
 ###########################################
 # gh_latest_release REPO [JQ_FILTER]      #
 # Fetches .tag_name from the GitHub       #
@@ -182,6 +183,7 @@ setup_cleanup() {
   }
   trap cleanup EXIT
 }
+
 #####################################################################
 # install_host_deps: install required packages on the Ubuntu runner #
 #####################################################################
@@ -196,6 +198,7 @@ install_host_deps() {
 # download_source LABEL VERSION TARBALL mirror1 [mirror2 ...]      #
 # Downloads TARBALL from the first mirror that succeeds.           #
 # Skips the download if it exists and validates file is not empty. #
+# Uses a .tmp file to avoid leaving corrupt partial downloads.     #
 ####################################################################
 download_source() {
   local label="$1" version="$2" tarball="$3"
@@ -214,23 +217,25 @@ download_source() {
     return 0
   fi
   echo -e "${AQUA}= downloading ${label}-${version} tarball${NC}"
+  local tmp_file="distfiles/${tarball}.tmp"
   local downloaded=false
   for mirror in "$@"; do
     echo -e "${TAWNY}= trying mirror: ${mirror}${NC}"
     if "${CURL}" -fsSL --retry 3 --retry-delay 2 --connect-timeout 10 --max-time 120 \
-        -o distfiles/"${tarball}" "${mirror}"; then
+        -o "${tmp_file}" "${mirror}"; then
       # Verify downloaded file is not empty
-      if [ ! -s distfiles/"${tarball}" ]; then
+      if [ ! -s "${tmp_file}" ]; then
         echo -e "${LEMON}= downloaded file is empty, trying next mirror${NC}"
-        rm -f distfiles/"${tarball}"
+        rm -f "${tmp_file}"
         continue
       fi
+      mv "${tmp_file}" "distfiles/${tarball}"
       echo -e "${MINT}= downloaded from: ${mirror}${NC}"
       downloaded=true
       break
     else
       echo -e "${LEMON}= failed: ${mirror}${NC}"
-      rm -f distfiles/"${tarball}"
+      rm -f "${tmp_file}"
     fi
   done
   if [ "${downloaded}" = false ]; then
@@ -238,6 +243,7 @@ download_source() {
     exit 1
   fi
 }
+
 #####################################################
 # setup_alpine_chroot TARBALL                       #
 # Downloads Alpine rootfs, extracts it, and copies  #
@@ -271,7 +277,8 @@ setup_alpine_chroot() {
   mkdir -p "${CHROOTDIR}"
   tar xf minirootfs/"${TARBALL}" -C "${CHROOTDIR}"/
   echo -e "${PEACH}= copy resolv.conf and ${tarball} into chroot${NC}"
-  cp /etc/resolv.conf ./"${CHROOTDIR}"/etc/
+  cp /etc/resolv.conf "./${CHROOTDIR}/etc/" || \
+    echo -e "${TAWNY}= WARNING: failed to copy resolv.conf — DNS may not work inside chroot${NC}"
   cp distfiles/"${tarball}" "./${CHROOTDIR}/${tarball}"
   # bundled tools
   for prebuilt in 7zz upx uasm envx curl jq mold; do
@@ -285,10 +292,11 @@ setup_alpine_chroot() {
 }
 
 #############################################################
-# copy_patches patch1 [patch2 ...]                          #
-# Copies named patch files from local into the chroot root. #
+# copy_patches TOOL patch1 [patch2 ...]                     #
+# Copies named patch files from patches/TOOL/ into chroot.  #
 #############################################################
 copy_patches() {
+  local tool="$1"; shift
   for patch in "$@"; do
     if [ ! -f "patches/${tool}/${patch}" ]; then
       echo -e "${TOMATO}= ERROR: patch file not found: patches/${tool}/${patch}${NC}" >&2
@@ -304,9 +312,10 @@ copy_patches() {
 ############################################################
 setup_qemu() {
   if [ -n "${QEMU_ARCH}" ]; then
-    echo -e "${OCHRE}= setup QEMU for cross-arch builds${NC}"
+    echo -e "${TURQUOISE}= setup QEMU for cross-arch builds${NC}"
+    local qemu_bin
     if command -v qemu-"${QEMU_ARCH}"-static >/dev/null 2>&1; then
-      local qemu_bin="/usr/bin/qemu-${QEMU_ARCH}-static"
+      qemu_bin="/usr/bin/qemu-${QEMU_ARCH}-static"
       if [ ! -f "${qemu_bin}" ]; then
         echo -e "${TOMATO}= ERROR: QEMU binary not found: ${qemu_bin}${NC}" >&2
         echo -e "${HELIOTROPE}= Install it with:${NC} ${TEAL}sudo apt-get install qemu-user-static${NC}" >&2
@@ -315,14 +324,14 @@ setup_qemu() {
       sudo mkdir -p "./${CHROOTDIR}/usr/bin/"
       sudo cp "${qemu_bin}" "./${CHROOTDIR}/usr/bin/"
     elif command -v qemu-"${QEMU_ARCH}" >/dev/null 2>&1; then
-      local qemu_bin="/usr/bin/qemu-${QEMU_ARCH}"
-    if [ ! -f "${qemu_bin}" ]; then
-      echo -e "${TOMATO}= ERROR: QEMU binary not found: ${qemu_bin}${NC}" >&2
-      echo -e "${HELIOTROPE}= Install it with:${NC} ${TEAL}sudo apt-get install qemu-user-binfmt${NC}" >&2
-      exit 1
-    fi
-    sudo mkdir -p "./${CHROOTDIR}/usr/bin/"
-    sudo cp "${qemu_bin}" "./${CHROOTDIR}/${qemu_bin}-static"
+      qemu_bin="/usr/bin/qemu-${QEMU_ARCH}"
+      if [ ! -f "${qemu_bin}" ]; then
+        echo -e "${TOMATO}= ERROR: QEMU binary not found: ${qemu_bin}${NC}" >&2
+        echo -e "${HELIOTROPE}= Install it with:${NC} ${TEAL}sudo apt-get install qemu-user-binfmt${NC}" >&2
+        exit 1
+      fi
+      sudo mkdir -p "./${CHROOTDIR}/usr/bin/"
+      sudo cp "${qemu_bin}" "./${CHROOTDIR}/usr/bin/qemu-${QEMU_ARCH}-static"
     fi
   fi
 }
@@ -357,10 +366,10 @@ mount_chroot() {
 ######################################################################################
 # run_build_setup TOOL VERSION TARBALL [PATCH...] -- MIRROR [MIRROR...]              #
 # Runs the full pre-chroot setup sequence. Patches and mirrors are separated by --.  #
-# Usage: run_build_setup:
-# "curl" "8.19.0" "curl-8.19.0.tar.xz" -- "https://..." [...] #
+# Usage (no patches):                                                                #
+#   run_build_setup "curl" "8.19.0" "curl-8.19.0.tar.xz" -- "https://..." [...]     #
 # Usage (with patches):                                                              #
-# run_build_setup "wget" "1.25.0" "wget.tar.gz" "wget.patch" -- "https://..." [...]  #
+#   run_build_setup "wget" "1.25.0" "wget.tar.gz" "wget.patch" -- "https://..." [...]#
 ######################################################################################
 run_build_setup() {
   local tool="$1" version="$2" tarball="$3"
@@ -377,7 +386,7 @@ run_build_setup() {
   install_host_deps
   download_source "${tool}" "${version}" "${tarball}" "${mirrors[@]}"
   setup_alpine_chroot "${tarball}"
-  [[ ${#patches[@]} -gt 0 ]] && copy_patches "${patches[@]}"
+  [[ ${#patches[@]} -gt 0 ]] && copy_patches "${tool}" "${patches[@]}"
   setup_qemu
   mount_chroot
 }
@@ -396,8 +405,8 @@ package_output() {
   local version_suffix=""
   [ -n "${PACKAGE_VERSION:-}" ] && version_suffix="-${PACKAGE_VERSION}"
   local filename="${tool}${version_suffix}-${ARCH}"
-  mkdir -p dist
-  cp "${binary}" "dist/${filename}"
+  # install -D is atomic and handles directory creation safely under parallel builds
+  install -D -m 755 "${binary}" "dist/${filename}"
   if command -v file >/dev/null 2>&1; then
     echo -e "${ORANGE} File Info:  $(file "dist/${filename}" | cut -d: -f2-)${NC}"
   fi

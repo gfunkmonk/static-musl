@@ -33,8 +33,9 @@ echo -e "${LIME}= Extracting source${NC}"
 tar xf ${AXEL_TARBALL}
 cd axel-${AXEL_VERSION}/
 echo -e "${PEACH}= Configure source${NC}"
-./configure CC=gcc --disable-nls --enable-compile-warnings=no --disable-Werror \
-  --with-ssl=openssl --enable-year2038 --disable-silent-rules
+./configure CC=gcc \
+  --disable-nls --enable-compile-warnings=no --disable-Werror \
+  --with-ssl=openssl --enable-year2038 --disable-silent-rules \
   LDFLAGS='${BLDFLAGS} ${MOLD} -no-pie -w -Wl,-s' PKG_CONFIG='${PKGCFG}' \
   CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fno-PIE -Wno-unterminated-string-initialization'
 echo -e "${VIOLET}= Building...${NC}"

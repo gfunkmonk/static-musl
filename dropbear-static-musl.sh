@@ -20,6 +20,7 @@ run_build_setup "dropbear" "${DROPBEAR_VERSION}" "${DROPBEAR_TARBALL}" \
   "dropbear-options_keepalive.patch" \
   "dropbear-options_sftp-server_path.patch" \
   "dropbear-options_ssh_config.patch" \
+  "dropbear-scp.patch" \
   -- "${DROPBEAR_MIRRORS[@]}"
 
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
@@ -35,16 +36,16 @@ echo -e "${LAGOON}= Applying custom patch(es)${NC}"
 patch -p1 --fuzz=4 < ../dropbear-options_ssh_config.patch
 patch -p1 --fuzz=4 < ../dropbear-options_sftp-server_path.patch
 patch -p1 --fuzz=4 < ../dropbear-options_keepalive.patch
-sed -i 's|dropbear dbclient dropbearkey dropbearconvert|dropbear dbclient dropbearkey dropbearconvert scp|g' Makefile.in
+patch -p1 --fuzz=4 < ../dropbear-scp.patch
 echo -e "${CHARTREUSE}= Configure source${NC}"
 ./configure CC=gcc \
   --disable-lastlog --disable-utmp --disable-utmpx --disable-wtmp --disable-wtmpx \
   --disable-pututline --disable-pututxline --enable-bundled-libtom --disable-pam \
-  --disable-zlib --enable-static \
+  --enable-zlib --enable-static \
   CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -Wno-incompatible-pointer-types -Wno-undef' \
   LDFLAGS='${BLDFLAGS} ${MOLD}' PKG_CONFIG='${PKGCFG}'
 echo -e "${PURPLE_BLUE}= Building...${NC}"
-CC=gcc make -j\$(nproc) MULTI=1
+CC=gcc make -j\$(nproc) MULTI=1 STATIC=1
 cp dropbearmulti dropbear
 echo -e "${INDIGO}= Stripping binary${NC}"
 strip dropbear

@@ -19,6 +19,7 @@ TOMATO="\033[38;2;255;99;71m"
 CHARTREUSE="\033[38;2;127;255;0m"
 PEACH="\033[38;2;246;161;146m"
 LAGOON="\033[38;2;142;235;236m"
+NC="\033[0m"
 
 # Counters for success and failure
 success_count=0

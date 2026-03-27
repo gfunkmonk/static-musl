@@ -84,7 +84,6 @@ while read -r patch; do
   patch -p0 < ../${BASH_PATCH_DIR}/"\$patch"
 done < ../${BASH_PATCH_DIR}/.patch-list
 echo -e "${BOYSENBERRY}= applying custom patch${NC}"
-#patch -p1 --fuzz=4 < ../bash.patch
 patch -p1 --fuzz=4 < ../bash-aliases-repeat.patch
 patch -p1 --fuzz=4 < ../bash-bash-config.patch
 patch -p1 --fuzz=4 < ../bash-bashansi-bool-c23.patch
