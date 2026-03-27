@@ -5,7 +5,7 @@ Build scripts that produce fully static, multi-architecture binaries using musl 
 ## Tools
 
 | Tool | Version | Description |
-|------|---------|-------------|
+|:-----:|:---------:|:-------------|
 | 7zz | v1.5.7-R4 | CLI 7zip built from 7-Zip-zstd |
 | aria2c | latest | Multi-protocol download utility |
 | axel | latest | Parallel download accelerator |
