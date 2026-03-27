@@ -121,7 +121,7 @@ setup_arch() {
       ;;
     x86)
       QEMU_ARCH="i386"
-      ARCH_FLAGS="-march=pentium -mtune=generic -msse -m32"
+      ARCH_FLAGS="-march=pentium-m -mtune=generic"
       ;;
     aarch64)
       QEMU_ARCH="aarch64"
@@ -129,11 +129,11 @@ setup_arch() {
       ;;
     armv7)
       QEMU_ARCH="arm"
-      ARCH_FLAGS="-march=armv7-a -mfpu=neon-vfpv4 -mfloat-abi=hard"
+      ARCH_FLAGS="-march=armv7-a -mfpu=neon-vfpv4 -mfloat-abi=hard -marm"
       ;;
     armhf)
       QEMU_ARCH="arm"
-      ARCH_FLAGS="-march=armv6kz -mfloat-abi=hard -mfpu=vfp"
+      ARCH_FLAGS="-march=armv6kz -mfloat-abi=hard -mfpu=vfp -marm"
       ;;
     *)
       echo -e "${LAGOON}Unknown architecture: ${HOTPINK}${ARCH}${NC}" >&2
@@ -246,7 +246,7 @@ download_source() {
 setup_alpine_chroot() {
   local tarball="$1"
   if [ -d "./${CHROOTDIR}/" ] && [ "${KEEP_CHROOT}" = "false" ]; then
-    setup_cleanup
+    grep -F "$(pwd)/${CHROOTDIR}" /proc/mounts | cut -f2 -d" " | sort -r | xargs -r sudo umount -nR || true
     echo -e "${CORAL}chroot dir exist! Removing it now.${NC}"
     rm -fr "./${CHROOTDIR}/"
   fi

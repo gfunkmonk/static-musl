@@ -17,6 +17,9 @@ DROPBEAR_MIRRORS=(
 )
 
 run_build_setup "dropbear" "${DROPBEAR_VERSION}" "${DROPBEAR_TARBALL}" \
+  "dropbear-options_keepalive.patch" \
+  "dropbear-options_sftp-server_path.patch" \
+  "dropbear-options_ssh_config.patch" \
   -- "${DROPBEAR_MIRRORS[@]}"
 
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
@@ -28,6 +31,10 @@ mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH
 echo -e "${LEMON}= Extracting source${NC}"
 tar xf ${DROPBEAR_TARBALL}
 cd dropbear-${DROPBEAR_VERSION}/
+echo -e "${LAGOON}= Applying custom patch(es)${NC}"
+patch -p1 --fuzz=4 < ../dropbear-options_ssh_config.patch
+patch -p1 --fuzz=4 < ../dropbear-options_sftp-server_path.patch
+patch -p1 --fuzz=4 < ../dropbear-options_keepalive.patch
 sed -i 's|dropbear dbclient dropbearkey dropbearconvert|dropbear dbclient dropbearkey dropbearconvert scp|g' Makefile.in
 echo -e "${CHARTREUSE}= Configure source${NC}"
 ./configure CC=gcc \

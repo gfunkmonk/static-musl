@@ -34,14 +34,16 @@ tar xf ${LFTP_TARBALL}
 cd lftp-${LFTP_VERSION}/
 echo -e "${LAGOON}= Applying custom patch${NC}"
 patch -p1 --fuzz=4 < ../lftp.patch
+sed -i 's/-lreadline/-lreadline -lncurses/g' m4/lftp_lib_readline.m4
 echo -e "${PEACH}= Configure source${NC}"
 autoreconf -f -i
+autoupdate
 ./configure CC=gcc CXX=g++ LIBS='-l:libreadline.a -l:libncursesw.a' --with-openssl=yes --without-gnutls \
   --enable-static --enable-threads=posix --disable-nls --disable-shared --disable-rpath --disable-silent-rules \
   --disable-ipv6 --enable-year2038 --with-readline=yes --with-expat=yes  \
   LDFLAGS='${BLDFLAGS} ${MOLD} -static-pie -w -Wl,-s' PKG_CONFIG='${PKGCFG}' \
   CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fPIE -std=c17 -Wno-unterminated-string-initialization -Wno-deprecated-declarations' \
-  CXXFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fPIE -std=c++17 -Wno-deprecated-declarations -Wno-error=template-id-cdtor'
+  CXXFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fPIE -std=c++20 -Wno-deprecated-declarations -Wno-error=template-id-cdtor'
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc) LDFLAGS='-static -all-static'
 echo -e "${CHARTREUSE}= Stripping binary${NC}"
