@@ -274,13 +274,13 @@ setup_alpine_chroot() {
   cp /etc/resolv.conf ./"${CHROOTDIR}"/etc/
   cp distfiles/"${tarball}" "./${CHROOTDIR}/${tarball}"
   # bundled tools
-  for toolz in 7zz upx uasm envx curl jq mold; do
-    src="tools/${toolz}/${toolz}-${ARCH}"
+  for prebuilt in 7zz upx uasm envx curl jq mold; do
+    src="tools/${prebuilt}/${prebuilt}-${ARCH}"
     if [[ ! -f "$src" ]]; then
       echo -e "${TOMATO}= ERROR: ${src} not found${NC}" >&2
       exit 1
     fi
-    cp "$src" "./${CHROOTDIR}/usr/local/bin/${toolz}"
+    cp "$src" "./${CHROOTDIR}/usr/local/bin/${prebuilt}"
   done
 }
 

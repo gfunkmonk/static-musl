@@ -1,5 +1,12 @@
 #!/bin/bash
 
+LOG_DIR=${PWD}/logs
+
+if [ ! -d "$LOG_DIR" ]; then
+  echo "Directory $LOG_DIR does not exist. Creating it now..."
+  mkdir -p "$LOG_DIR"
+fi
+
 LOG_FILE="build_log_$(date +%Y%m%d_%H%M%S).txt"
 
 JUNEBUD="\033[38;2;189;218;87m"
