@@ -26,12 +26,12 @@ run_build_setup "7zz" "${SEVENZIP_VERSION}" "${SEVENZIP_TARBALL}" \
 # Map repo ARCH to 7zip Linux makefile; source extracts flat so we wrap in a versioned dir
 case "${ARCH}" in
   x86_64|x86-64|amd64)
-     MAKE_OPTS="MY_ASM=/usr/local/bin/uasm -f ../../cmpl_gcc.mak 7z_asm=uasm"
+     MAKE_OPTS="MY_ASM=uasm -f ../../cmpl_gcc.mak 7z_asm=uasm"
      PLATFORM="x64"
      ARCH_FLAGS="-march=x86-64 -mtune=generic"
      ;;
   x86|i*86)
-     MAKE_OPTS="MY_ASM=/usr/local/bin/uasm -f ../../cmpl_gcc.mak 7z_asm=uasm"
+     MAKE_OPTS="MY_ASM=uasm -f ../../cmpl_gcc.mak 7z_asm=uasm"
      PLATFORM="x86"
      ARCH_FLAGS="-march=i586 -mtune=generic"
      ;;

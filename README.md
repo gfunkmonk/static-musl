@@ -24,11 +24,14 @@ Build scripts that produce fully static, multi-architecture binaries using musl 
 | pigz | latest | Parallel implementation of GZip |
 | sed | 4.9 | Stream editor for filtering/transforming text |
 | screen | 5.0.1 | Screen is a mature terminal multiplexer |
+| socat | 1.8.1.1 | Socat is a flexible, multi-purpose relay tool |
 | tar | 1.35 | GNU tar archive utility |
+| tmux | latest | Tmux is a terminal multiplexer |
 | upx | latest | UPX w/ custom patch & zstd support |
 | vim | latest | Text editor |
 | wget | 1.25.0 | File downloader |
 | xz | latest | XZ/LZMA compression |
+| zstd | latest | Fast real-time compression algorithm |
 
 ## Architectures
 

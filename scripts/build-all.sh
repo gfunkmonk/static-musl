@@ -1,6 +1,6 @@
 #!/bin/bash
 
-LOG_FILE="build_log.txt"
+LOG_FILE="build_log_$(date +%Y%m%d_%H%M%S).txt"
 
 JUNEBUD="\033[38;2;189;218;87m"
 SKY="\033[38;2;135;206;250m"
