@@ -8,7 +8,6 @@ ALPINE_VERSION="3.23.3"
 ALPINE_MAJOR_MINOR="${ALPINE_VERSION%.*}"
 
 # Set directory name for the target chroot
-CHROOTDIR=
 CHROOTDIR=${CHROOTDIR:-potato}
 
 # Compiler Flags
@@ -38,7 +37,6 @@ CCACHE_LOG_DIR="${CCACHE_LOG_DIR:-/var/log/ccache}"
 
 # Set KEEP_CHROOT=true via environment to preserve chroot after failed
 # builds (for debugging)
-KEEP_CHROOT="false"
 KEEP_CHROOT=${KEEP_CHROOT:-false}
 
 ###### Bundled tools #########

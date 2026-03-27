@@ -12,9 +12,9 @@ fi
 PACKAGE_VERSION="${ZSTD_VERSION}"
 ZSTD_TARBALL="zstd-${ZSTD_VERSION}.tar.zst"
 ZSTD_MIRRORS=(
-https://github.com/facebook/zstd/releases/download/v"${ZSTD_VERSION}"/zstd-"${ZSTD_VERSION}".tar.zst
-https://www.paldo.org/paldo/sources/zstd/zstd-"${ZSTD_VERSION}".tar.zst
-https://master.dl.sourceforge.net/project/zstandard.mirror/v"${ZSTD_VERSION}"/zstd-"${ZSTD_VERSION}".tar.zst
+  "https://github.com/facebook/zstd/releases/download/v${ZSTD_VERSION}/zstd-${ZSTD_VERSION}.tar.zst"
+  "https://www.paldo.org/paldo/sources/zstd/zstd-${ZSTD_VERSION}.tar.zst"
+  "https://master.dl.sourceforge.net/project/zstandard.mirror/v${ZSTD_VERSION}/zstd-${ZSTD_VERSION}.tar.zst"
 )
 
 run_build_setup "zstd" "${ZSTD_VERSION}" "${ZSTD_TARBALL}" \
