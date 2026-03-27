@@ -7,7 +7,7 @@ if [ ! -d "$LOG_DIR" ]; then
   mkdir -p "$LOG_DIR"
 fi
 
-LOG_FILE="build_log_$(date +%Y%m%d_%H%M%S).txt"
+LOG_FILE="${LOG_DIR}/build_log_$(date +%Y%m%d_%H%M%S).txt"
 
 JUNEBUD="\033[38;2;189;218;87m"
 SKY="\033[38;2;135;206;250m"
