@@ -23,8 +23,8 @@ run_build_setup "vim" "${VIM_VERSION}" "${VIM_TARBALL}" \
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
 set -e
 echo -e "${ORANGE}= Installing dependencies...${NC}"
-apk update && apk add build-base ccache sed patch pkgconfig ncurses-dev ncurses-static ncurses-terminfo
-apk upgrade musl-dev --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
+apk update && apk add build-base mold ccache sed patch pkgconfig ncurses-dev ncurses-static ncurses-terminfo
+apk upgrade musl-dev mold --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${VIM_TARBALL}
@@ -36,11 +36,11 @@ echo -e "${PEACH}= Configure source${NC}"
 ./configure CC=gcc --disable-arabic --disable-canberra --disable-darwin --disable-farsi --disable-gpm --disable-gtktest \
   --disable-gui --disable-libsodium --disable-netbeans --disable-nls --disable-rightleft --disable-selinux \
   --disable-smack --disable-sysmouse --disable-xsmp --enable-largefile --enable-multibyte --enable-terminal \
-  --enable-year2038 --with-features=huge --with-tlib=ncursesw  --without-gnome --without-x --without-wayland
-  LDFLAGS='${BASE_LDFLAGS} -static-pie -w -Wl,-s' PKG_CONFIG='${BASE_PKGCFG}' \
-  CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} ${EXTRA_CFLAGS} ${LTOFLAGS} -fPIE'
+  --enable-year2038 --with-features=huge --with-tlib=ncursesw  --without-gnome --without-x --without-wayland \
+  LDFLAGS='${BLDFLAGS} -static-pie -w -Wl,-s' PKG_CONFIG='${PKGCFG}' \
+  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fPIE'
 echo -e "${VIOLET}= Building...${NC}"
-CC=gcc LDFLAGS='${BASE_LDFLAGS} -static-pie -w -Wl,-s' PKG_CONFIG='${BASE_PKGCFG}' CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} ${EXTRA_CFLAGS} ${LTOFLAGS} -fPIE' make -j\$(nproc)
+CC=gcc make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip src/vim
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"

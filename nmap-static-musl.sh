@@ -18,9 +18,9 @@ run_build_setup "nmap" "${NMAP_VERSION}" "${NMAP_TARBALL}" \
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
 set -e
 echo -e "${ORANGE}= Installing dependencies...${NC}"
-apk update && apk add build-base ccache bash make python3 perl linux-headers openssl-libs-static openssl-dev libpcap-dev \
+apk update && apk add build-base mold ccache bash make python3 perl linux-headers openssl-libs-static openssl-dev libpcap-dev \
   autoconf automake libtool zlib-dev zlib-static
-apk upgrade musl-dev --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
+apk upgrade musl-dev mold --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${NMAP_TARBALL}
@@ -31,8 +31,8 @@ echo -e "${PEACH}= Configure source${NC}"
 ./configure CC='gcc -static' CXX='g++ -static -static-libstdc++' \
   --without-ndiff --without-zenmap --without-nmap-update --with-pcap=linux \
   --with-openssl --without-liblua --without-libssh2 --without-nping --without-ncat \
-  LDFLAGS='${BASE_LDFLAGS} -static-pie -w -Wl,-s' PKG_CONFIG='${BASE_PKGCFG}' \
-  CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} ${EXTRA_CFLAGS} ${LTOFLAGS} -fPIE'
+  LDFLAGS='${BLDFLAGS} -static-pie -w -Wl,-s' PKG_CONFIG='${PKGCFG}' \
+  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fPIE'
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"

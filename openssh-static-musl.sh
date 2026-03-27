@@ -17,16 +17,16 @@ run_build_setup "openssh" "${OPENSSH_VERSION}" "${OPENSSH_TARBALL}" \
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
 set -e
 echo -e "${ORANGE}= Installing dependencies...${NC}"
-apk update && apk add build-base ccache openssl-dev openssl-libs-static zlib-dev zlib-static autoconf automake
-apk upgrade musl-dev --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
+apk update && apk add build-base mold ccache openssl-dev openssl-libs-static zlib-dev zlib-static autoconf automake
+apk upgrade musl-dev mold --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${OPENSSH_TARBALL}
 cd openssh-${OPENSSH_VERSION}/
 echo -e "${PEACH}= Configure source${NC}"
 ./configure --with-privsep-user=nobody \
-  LIBS='-pthread' LDFLAGS='${BASE_LDFLAGS} -static-pie -w -Wl,-s' PKG_CONFIG='${BASE_PKGCFG}' \
-  CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} ${EXTRA_CFLAGS} ${LTOFLAGS} -fPIE -Wno-unterminated-string-initialization'
+  LIBS='-pthread' LDFLAGS='${BLDFLAGS} -static-pie -w -Wl,-s' PKG_CONFIG='${PKGCFG}' \
+  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fPIE -Wno-unterminated-string-initialization'
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"

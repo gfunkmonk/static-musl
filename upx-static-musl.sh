@@ -24,10 +24,9 @@ run_build_setup "upx" "${UPX_VERSION}" "${UPX_TARBALL}" \
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
 set -e
 echo -e "${ORANGE}= Installing dependencies...${NC}"
-apk update && apk add build-base ccache zlib-dev zlib-static zstd-dev zstd-static cmake samurai
-apk upgrade musl-dev --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
+apk update && apk add build-base mold ccache zlib-dev zlib-static zstd-dev zstd-static cmake samurai
+apk upgrade musl-dev mold --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
-chmod 755 upx
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${UPX_TARBALL}
 cd upx-${UPX_VERSION}-src/
@@ -43,9 +42,9 @@ sed -i 's%UPX_VERSION_STRING "5.1.."%UPX_VERSION_STRING "5.1.3"%g' CMakeLists.tx
 mkdir build && cd build/
 echo -e "${PEACH}= Configure source${NC}"
 cmake -G Ninja \
-  -DCMAKE_EXE_LINKER_FLAGS='${BASE_LDFLAGS} -static-pie -w -Wl,-s' \
-  -DCMAKE_C_FLAGS_RELEASE='${BASE_CFLAGS} ${ARCH_FLAGS} ${EXTRA_CFLAGS} ${LTOFLAGS} -fPIE' \
-  -DCMAKE_CXX_FLAGS_RELEASE='${BASE_CFLAGS} ${ARCH_FLAGS} ${EXTRA_CFLAGS} ${LTOFLAGS} -fPIE' \
+  -DCMAKE_EXE_LINKER_FLAGS='${BLDFLAGS} -static-pie -w -Wl,-s' \
+  -DCMAKE_C_FLAGS_RELEASE='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fPIE' \
+  -DCMAKE_CXX_FLAGS_RELEASE='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fPIE' \
   -DCMAKE_BUILD_TYPE=Release -DUPX_CONFIG_DISABLE_GITREV=ON -DUPX_CONFIG_DISABLE_WSTRICT=ON \
   -DUSE_STRICT_DEFAULTS=OFF -DUPX_CONFIG_REQUIRE_THREADS=ON -S ..
 echo -e "${VIOLET}= Building...${NC}"

@@ -20,8 +20,8 @@ run_build_setup "nano" "${NANO_VERSION}" "${NANO_TARBALL}" \
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
 set -e
 echo -e "${ORANGE}= Installing dependencies...${NC}"
-apk update && apk add build-base ccache pkgconfig ncurses-dev ncurses-static libmagic-static libmagic file-dev linux-headers
-apk upgrade musl-dev --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
+apk update && apk add build-base mold ccache pkgconfig ncurses-dev ncurses-static libmagic-static libmagic file-dev linux-headers
+apk upgrade musl-dev mold --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${NANO_TARBALL}
@@ -32,7 +32,7 @@ echo -e "${PEACH}= Configure source${NC}"
 ./configure CC='gcc' \
   --sysconfdir=/etc --disable-nls --disable-utf8 --disable-tiny --enable-nanorc --enable-color \
   --enable-extra --enable-largefile --enable-libmagic --disable-justify \
-  LDFLAGS='${BASE_LDFLAGS} -static-pie -w -Wl,-s' PKG_CONFIG='${BASE_PKGCFG}' CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} ${EXTRA_CFLAGS} ${LTOFLAGS} -fPIE'
+  LDFLAGS='${BLDFLAGS} -static-pie -w -Wl,-s' PKG_CONFIG='${PKGCFG}' CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fPIE'
 echo -e "${VIOLET}= Building...${NC}"
 CC='gcc' make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"

@@ -72,8 +72,8 @@ cp -r distfiles/"${BASH_PATCH_DIR}" "./${CHROOTDIR}/"
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
 set -e
 apk update
-apk add build-base ccache sed automake autoconf pkgconfig ncurses-dev ncurses-static perl gettext-dev gettext-static readline readline-static
-apk upgrade musl-dev --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
+apk add build-base mold ccache sed automake autoconf pkgconfig ncurses-dev ncurses-static perl gettext-dev gettext-static readline readline-static
+apk upgrade musl-dev mold --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
 mkdir -p /ccache
 export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
 echo -e "${LIME}= Extracting source${NC}"
@@ -95,8 +95,8 @@ patch -p1 --fuzz=4 < ../bash_make-the-bash-fc-builtin-more-reliable-for-scriptin
 echo -e "${PEACH}= Configure source${NC}"
 ./configure \
   --disable-nls --without-bash-malloc --with-curses --enable-static-link \
-  LDFLAGS='${BASE_LDFLAGS} -static-pie -w -Wl,-s' PKG_CONFIG='${BASE_PKGCFG}' \
-  CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} ${EXTRA_CFLAGS} ${LTOFLAGS} -fPIE -Wno-discarded-qualifiers'
+  LDFLAGS='${BLDFLAGS} -static-pie -w -Wl,-s' PKG_CONFIG='${PKGCFG}' \
+  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fPIE -Wno-discarded-qualifiers'
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"

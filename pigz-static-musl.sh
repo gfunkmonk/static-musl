@@ -23,14 +23,14 @@ run_build_setup "pigz" "${PIGZ_VERSION}" "${PIGZ_TARBALL}" \
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
 set -e
 echo -e "${ORANGE}= Installing dependencies...${NC}"
-apk update && apk add build-base ccache sed zlib-dev zlib-static
-apk upgrade musl-dev --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
+apk update && apk add build-base mold ccache sed zlib-dev zlib-static
+apk upgrade musl-dev mold --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${PIGZ_TARBALL}
 cd pigz-${PIGZ_VERSION}/
-sed -i 's/CFLAGS=-O3 -Wall -Wextra -Wno-unknown-pragmas -Wcast-qual/CFLAGS=${BASE_CFLAGS} ${ARCH_FLAGS} ${EXTRA_CFLAGS} ${LTOFLAGS} -fPIE/g' Makefile
-sed -i 's/LDFLAGS=/LDFLAGS=${BASE_LDFLAGS} -static-pie -w -Wl,-s/g' Makefile
+sed -i 's/CFLAGS=-O3 -Wall -Wextra -Wno-unknown-pragmas -Wcast-qual/CFLAGS=${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fPIE/g' Makefile
+sed -i 's/LDFLAGS=/LDFLAGS=${BLDFLAGS} -static-pie -w -Wl,-s/g' Makefile
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"
