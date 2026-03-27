@@ -73,6 +73,7 @@ REBECCA="\033[38;2;102;51;153m"
 TEAL="\033[38;2;0;128;128m"
 TURQUOISE="\033[38;2;64;224;208m"
 BLOOD="\033[38;2;102;6;6m"
+UGLY="\033[38;2;122;115;115m"
 NC="\033[0m"
 
 ########################
@@ -148,7 +149,7 @@ setup_arch() {
 # releases/latest API, applies optional   #
 # jq filter. Default:--> .tag_name as-is. #
 ###########################################
-latest_release() {
+gh_latest_release() {
     local repo="$1" filter="${2:-.tag_name}"
     "${CURL}" -fsSL --connect-timeout 10 --max-time 30 \
         ${GITHUB_TOKEN:+-H "Authorization: Bearer ${GITHUB_TOKEN}"} \

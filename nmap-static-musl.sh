@@ -31,8 +31,8 @@ echo -e "${PEACH}= Configure source${NC}"
 ./configure CC='gcc -static' CXX='g++ -static -static-libstdc++' \
   --without-ndiff --without-zenmap --without-nmap-update --with-pcap=linux \
   --with-openssl --without-liblua --without-libssh2 --without-nping --without-ncat \
-  LDFLAGS='${BLDFLAGS} ${MOLD} -static-pie -w -Wl,-s' PKG_CONFIG='${PKGCFG}' \
-  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fPIE'
+  LDFLAGS='${BLDFLAGS} ${MOLD} -no-pie -w -Wl,-s' PKG_CONFIG='${PKGCFG}' \
+  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fno-PIE'
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"

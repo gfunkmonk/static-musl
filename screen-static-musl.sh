@@ -30,8 +30,8 @@ patch -p1 --fuzz=4 < ../screen-5.0.1-big-endian.patch
 echo -e "${PEACH}= Configure source${NC}"
 ./configure CC=gcc --enable-telnet --with-pty-mode=0600 --with-pty-group=5 \
   --enable-socket-dir=/run/screen --disable-pam --enable-utmp \
-  LDFLAGS='${BLDFLAGS} ${MOLD} -static-pie -w -Wl,-s' PKG_CONFIG='${PKGCFG}' \
-  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fPIE'
+  LDFLAGS='${BLDFLAGS} ${MOLD} -no-pie -w -Wl,-s' PKG_CONFIG='${PKGCFG}' \
+  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fno-PIE'
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"

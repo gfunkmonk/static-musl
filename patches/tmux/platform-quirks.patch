@@ -1,0 +1,24 @@
+Description: Platform-specific fixes
+ * Define PATH_MAX, MAX_IOV for Hurd.
+Author: Karl Ferdinand Ebert <kfebert@gmail.com>
+Author: Romain Francoise <rfrancoise@debian.org>
+Bug-Debian: http://bugs.debian.org/609333
+Forwarded: not-needed
+
+--- a/compat.h
++++ b/compat.h
+@@ -294,6 +294,14 @@
+ int		 getdtablesize(void);
+ #endif
+ 
++#ifndef PATH_MAX
++#define PATH_MAX 4096
++#endif
++
++#ifndef IOV_MAX
++#define IOV_MAX	1024
++#endif
++
+ #ifndef HAVE_CLOSEFROM
+ /* closefrom.c */
+ void		 closefrom(int);

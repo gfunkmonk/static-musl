@@ -48,11 +48,11 @@ autoreconf -f -i
 ./configure CC=gcc CXX=g++ LIBS='-l:libreadline.a -l:libncursesw.a' --with-openssl=yes --without-gnutls \
   --enable-static --enable-threads=posix --disable-nls --disable-shared --disable-rpath --disable-silent-rules \
   --disable-ipv6 --enable-year2038 --with-readline=yes --with-expat=yes  \
-  LDFLAGS='${BLDFLAGS} ${MOLD} -static-pie -w -Wl,-s' PKG_CONFIG='${PKGCFG}' \
-  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fPIE -std=c17 -Wno-unterminated-string-initialization -Wno-deprecated-declarations' \
-  CXXFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} -fPIE -std=c++17 -Wno-deprecated-declarations -Wno-error=template-id-cdtor'
+  LDFLAGS='${BLDFLAGS} ${MOLD} -no-pie -w -Wl,-s' PKG_CONFIG='${PKGCFG}' \
+  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fno-PIE -std=c17 -Wno-unterminated-string-initialization -Wno-deprecated-declarations' \
+  CXXFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} -fno-PIE -std=c++17 -Wno-deprecated-declarations -Wno-error=template-id-cdtor'
 echo -e "${VIOLET}= Building...${NC}"
-make -j\$(nproc) LDFLAGS='${BLDFLAGS} ${MOLD} -all-static -static-pie -w -Wl,-s'
+make -j\$(nproc) LDFLAGS='-static -all-static''
 echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip src/lftp
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"

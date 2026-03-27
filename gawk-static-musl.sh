@@ -29,8 +29,8 @@ patch -p1 --fuzz=4 < ../gawk-5.4.0-no-assertions-for-pma.patch
 patch -p1 --fuzz=4 < ../gawk-5.4.0-Small-efficiency-fix-in-array.c.patch
 echo -e "${PEACH}= Configure source${NC}"
 ./configure --disable-nls --disable-rpath \
-  LDFLAGS='${BLDFLAGS} ${MOLD} -static-pie -w -Wl,-s' PKG_CONFIG='${PKGCFG}' \
-  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fpie'
+  LDFLAGS='${BLDFLAGS} ${MOLD} -no-pie -w -Wl,-s' PKG_CONFIG='${PKGCFG}' \
+  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fno-pie'
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"

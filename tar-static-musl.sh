@@ -47,8 +47,8 @@ echo -e "${PEACH}= Configure source${NC}"
 FORCE_UNSAFE_CONFIGURE=1 ./configure CC=gcc \
   --without-selinux --disable-nls --disable-rpath --enable-largefile \
   --disable-silent-rules --disable-gcc-warnings --without-selinux \
-  LDFLAGS='${BLDFLAGS} ${MOLD} -static-pie -w -Wl,-s' PKG_CONFIG='${PKGCFG}' \
-  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fPIE'
+  LDFLAGS='${BLDFLAGS} ${MOLD} -no-pie -w -Wl,-s' PKG_CONFIG='${PKGCFG}' \
+  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fno-PIE'
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"
