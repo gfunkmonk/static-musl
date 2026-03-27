@@ -38,12 +38,13 @@ echo -e "${CHARTREUSE}= Configure source${NC}"
   LDFLAGS='${BLDFLAGS} ${MOLD}' PKG_CONFIG='${PKGCFG}'
 echo -e "${PURPLE_BLUE}= Building...${NC}"
 CC=gcc make -j\$(nproc) MULTI=1
+cp dropbearmulti dropbear
 echo -e "${INDIGO}= Stripping binary${NC}"
-strip dropbearmulti
+strip dropbear
 echo -e "${SKY}= Compressing with UPX${NC}"
-upx --lzma dropbearmulti
+upx --lzma dropbear
 EOF
 
-package_output "dropbearmulti" "./${CHROOTDIR}/dropbear-${DROPBEAR_VERSION}/dropbearmulti"
+package_output "dropbear" "./${CHROOTDIR}/dropbear-${DROPBEAR_VERSION}/dropbear"
 
 ## ./configure --disable-syslog --disable-lastlog --disable-utmp --disable-utmpx --disable-wtmp --disable-wtmpx --disable-loginfunc --disable-pututline --disable-pututxline --disable-zlib --enable-static --disable-shadow \
