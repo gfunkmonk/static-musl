@@ -60,8 +60,8 @@ esac
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
 set -e
 echo -e "${ORANGE}= Installing dependencies...${NC}"
-apk update && apk add build-base ccache gcc g++ patch git nasm make
-apk upgrade musl-dev --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
+apk update && apk add build-base mold ccache gcc g++ patch git nasm make
+apk upgrade musl-dev mold --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
 apk add uasm --repository=https://dl-cdn.alpinelinux.org/alpine/edge/testing
 mkdir -p /ccache
 export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
@@ -72,16 +72,16 @@ echo -e "${LAGOON}= Applying custom patches${NC}"
 patch -p1 --fuzz=4 < ../7z-0003-Disable-local-echo-display-when-in-input-passwords-C.patch
 patch -p1 --fuzz=4 < ../7z-0004-Use-system-locale-to-select-codepage-for-legacy-zip-.patch
 patch -p1 --fuzz=4 < ../7z-0005-Fix-BROTLI_MODEL-attribute-for-loongarch64.patch
-sed -i 's/CFLAGS_BASE = -O2/CFLAGS_BASE = ${BASE_CFLAGS} ${ARCH_FLAGS} ${EXTRA_CFLAGS} ${LTOFLAGS} -fPIE -Wno-sign-conversion/g' CPP/7zip/7zip_gcc.mak
-sed -i 's/LDFLAGS = -Wall/LDFLAGS = ${BASE_LDFLAGS} -w -Wl,-s -static-pie/g' CPP/7zip/7zip_gcc.mak
+sed -i 's/CFLAGS_BASE = -O2/CFLAGS_BASE = ${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fPIE -Wno-sign-conversion/g' CPP/7zip/7zip_gcc.mak
+sed -i 's/LDFLAGS = -Wall/LDFLAGS = ${BLDFLAGS} -w -Wl,-s -static-pie/g' CPP/7zip/7zip_gcc.mak
 cd CPP/7zip/Bundles/Alone2
 mkdir -p b/g
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc) \
   CFLAGS_BASE_LIST='-c -D_7ZIP_AFFINITY_DISABLE=1 -DZ7_AFFINITY_DISABLE=1 -D_GNU_SOURCE=1' \
   CFLAGS_WARN_WALL='-Wall -Wextra' ${MAKE_OPTS} PLATFORM=${PLATFORM} COMPL_STATIC=1 \
-  CC='gcc ${BASE_CFLAGS} ${ARCH_FLAGS} ${EXTRA_CFLAGS} ${LTOFLAGS} -fPIE -Wno-sign-conversion' \
-  CXX='g++ ${BASE_CFLAGS} ${ARCH_FLAGS} ${EXTRA_CFLAGS} ${LTOFLAGS} -fPIE -Wno-sign-conversion'
+  CC='gcc ${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fPIE -Wno-sign-conversion' \
+  CXX='g++ ${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fPIE -Wno-sign-conversion'
 binary=\$(find . \( -name '7zzs' -o -name '7zz' \) -type f | head -n1)
 [ -n "\$binary" ] || { echo "Error: 7zzs or 7zz binary not found after build" >&2; exit 1; }
 cp -va "\$binary" 7zz

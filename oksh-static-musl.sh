@@ -22,16 +22,16 @@ run_build_setup "oksh" "${OKSH_VERSION}" "${OKSH_TARBALL}" \
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
 set -e
 echo -e "${ORANGE}= Installing dependencies...${NC}"
-apk update && apk add build-base ccache pkgconfig ncurses-dev ncurses-static clang
-apk upgrade musl-dev --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
+apk update && apk add build-base mold ccache pkgconfig ncurses-dev ncurses-static clang
+apk upgrade musl-dev mold --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${OKSH_TARBALL}
 cd oksh-${OKSH_VERSION}/
 echo -e "${PEACH}= Configure source${NC}"
-./configure --cc=clang --cflags="${BASE_CFLAGS} ${ARCH_FLAGS} ${EXTRA_CFLAGS}" \
+./configure --cc=clang --cflags="${BCFLAGS} ${ARCH_FLAGS} ${EXTRA}" \
   --enable-curses --enable-static --enable-lto \
-  LDFLAGS='${BASE_LDFLAGS}' PKG_CONFIG='${BASE_PKGCFG}'
+  LDFLAGS='${BLDFLAGS}' PKG_CONFIG='${PKGCFG}'
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"

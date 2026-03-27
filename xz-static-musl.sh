@@ -24,8 +24,8 @@ run_build_setup "xz" "${XZ_VERSION}" "${XZ_TARBALL}" \
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
 set -e
 echo -e "${ORANGE}= Installing dependencies...${NC}"
-apk update && apk add build-base ccache pkgconfig clang
-apk upgrade musl-dev --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
+apk update && apk add build-base mold ccache pkgconfig clang
+apk upgrade musl-dev mold --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${XZ_TARBALL}
@@ -34,10 +34,10 @@ echo -e "${PEACH}= Configure source${NC}"
 ./configure CC=clang --enable-static --disable-shared --disable-nls --enable-small \
   --enable-lzip-decoder --enable-threads=yes --disable-silent-rules --disable-rpath \
   --enable-largefile --enable-year2038 \
-  LDFLAGS='${BASE_LDFLAGS} -w -Wl,-s' PKG_CONFIG='${BASE_PKGCFG}' \
-  CFLAGS='${BASE_CFLAGS} ${ARCH_FLAGS} ${EXTRA_CFLAGS} ${LTOFLAGS} -Wno-unterminated-string-initialization'
+  LDFLAGS='${BLDFLAGS} -w -Wl,-s' PKG_CONFIG='${PKGCFG}' \
+  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -Wno-unterminated-string-initialization'
 echo -e "${VIOLET}= Building...${NC}"
-CC=clang LDFLAGS='${BASE_LDFLAGS} -w -Wl,-s' make -j\$(nproc)
+CC=clang LDFLAGS='${BLDFLAGS} -w -Wl,-s' make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip src/xz/xz
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
