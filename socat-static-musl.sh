@@ -6,9 +6,9 @@ SOCAT_VERSION="1.8.1.1"
 PACKAGE_VERSION="${SOCAT_VERSION}"
 SOCAT_TARBALL="socat-${SOCAT_VERSION}.tar.gz"
 SOCAT_MIRRORS=(
-  "http://www.dest-unreach.org/socat/download/socat-1.8.1.1.tar.gz"
-  "https://fossies.org/linux/privat/socat-1.8.1.1.tar.gz"
-  "https://distfiles.alpinelinux.org/distfiles/edge/socat-1.8.1.1.tar.gz"
+  "http://www.dest-unreach.org/socat/download/socat-${SOCAT_VERSION}.tar.gz"
+  "https://fossies.org/linux/privat/socat-${SOCAT_VERSION}.tar.gz"
+  "https://distfiles.alpinelinux.org/distfiles/edge/socat-${SOCAT_VERSION}.tar.gz"
 )
 
 run_build_setup "socat" "${SOCAT_VERSION}" "${SOCAT_TARBALL}" \
@@ -25,7 +25,7 @@ mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${SOCAT_TARBALL}
 cd socat-${SOCAT_VERSION}/
-echo -e "${PEACH}= Configure source${NC}"
+echo -e "${LAGOON}= Applying custom patch${NC}"
 patch -p1 --fuzz=4 < ../hotfix-const-correctness.patch
 echo -e "${PEACH}= Configure source${NC}"
 ./configure --enable-openssl --disable-ip6 --enable-readline --enable-largefile --enable-default-ipv=4 \

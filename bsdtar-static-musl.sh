@@ -36,8 +36,7 @@ cd libarchive-${BSDTAR_VERSION}/
 echo -e "${PEACH}= Configure source${NC}"
 ./configure CC=gcc --disable-shared --enable-static --enable-bsdtar=static --disable-bsdcat \
   --disable-bsdcpio --with-zlib --disable-maintainer-mode --with-bz2lib --with-lzo2 \
-  --disable-dependency-tracking --enable-bsdtar --enable-bsdtar=static --disable-bsdunzip \
-  --disable-rpath --enable-year2038 \
+  --disable-dependency-tracking --disable-bsdunzip --disable-rpath --enable-year2038 \
   LDFLAGS='${BLDFLAGS} -static-pie -w -Wl,-s' PKG_CONFIG='${PKGCFG}' CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fPIE'
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc)

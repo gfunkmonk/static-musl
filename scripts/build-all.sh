@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Change to the repository root so *-static-musl.sh scripts and log output
+# are located relative to the repo regardless of where this script is invoked from.
+cd "$(dirname "$0")/.."
+
 LOG_DIR=${PWD}/logs
 
 if [ ! -d "$LOG_DIR" ]; then

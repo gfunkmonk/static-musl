@@ -281,6 +281,7 @@ setup_alpine_chroot() {
     echo -e "${TAWNY}= WARNING: failed to copy resolv.conf — DNS may not work inside chroot${NC}"
   cp distfiles/"${tarball}" "./${CHROOTDIR}/${tarball}"
   # bundled tools
+  echo -e "${NAVAJO}= install prebuilt tools${NC}"
   for prebuilt in 7zz upx uasm envx curl jq mold; do
     src="tools/${prebuilt}/${prebuilt}-${ARCH}"
     if [[ ! -f "$src" ]]; then
