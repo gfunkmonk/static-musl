@@ -34,10 +34,10 @@ echo -e "${PEACH}= Configure source${NC}"
 ./configure CC=clang --enable-static --disable-shared --disable-nls --enable-small \
   --enable-lzip-decoder --enable-threads=yes --disable-silent-rules --disable-rpath \
   --enable-largefile --enable-year2038 \
-  LDFLAGS='${BLDFLAGS} -w -Wl,-s' PKG_CONFIG='${PKGCFG}' \
+  LDFLAGS='${BLDFLAGS} ${MOLD} -w -Wl,-s' PKG_CONFIG='${PKGCFG}' \
   CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -Wno-unterminated-string-initialization'
 echo -e "${VIOLET}= Building...${NC}"
-CC=clang LDFLAGS='${BLDFLAGS} -w -Wl,-s' make -j\$(nproc)
+CC=clang LDFLAGS='${BLDFLAGS} ${MOLD} -w -Wl,-s' make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip src/xz/xz
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"

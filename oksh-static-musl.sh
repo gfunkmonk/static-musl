@@ -31,7 +31,7 @@ cd oksh-${OKSH_VERSION}/
 echo -e "${PEACH}= Configure source${NC}"
 ./configure --cc=clang --cflags="${BCFLAGS} ${ARCH_FLAGS} ${EXTRA}" \
   --enable-curses --enable-static --enable-lto \
-  LDFLAGS='${BLDFLAGS}' PKG_CONFIG='${PKGCFG}'
+  LDFLAGS='${BLDFLAGS} ${MOLD}' PKG_CONFIG='${PKGCFG}'
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"

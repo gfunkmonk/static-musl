@@ -35,7 +35,7 @@ cd axel-${AXEL_VERSION}/
 echo -e "${PEACH}= Configure source${NC}"
 ./configure CC=gcc --disable-nls --enable-compile-warnings=no --disable-Werror \
   --with-ssl=openssl --enable-year2038 --disable-silent-rules
-  LDFLAGS='${BLDFLAGS} -static-pie -w -Wl,-s' PKG_CONFIG='${PKGCFG}' \
+  LDFLAGS='${BLDFLAGS} ${MOLD} -static-pie -w -Wl,-s' PKG_CONFIG='${PKGCFG}' \
   CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fPIE -Wno-unterminated-string-initialization'
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc)

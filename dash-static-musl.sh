@@ -39,7 +39,7 @@ patch -p1 --fuzz=4 < ../dash-SHELL-Disable-sh-c-command-sh-c-exec-command.patch
 autoreconf -f -i
 echo -e "${PEACH}= Configure source${NC}"
 ./configure --enable-static \
-  LDFLAGS='${BLDFLAGS} -static-pie -w -Wl,-s' \
+  LDFLAGS='${BLDFLAGS} ${MOLD} -static-pie -w -Wl,-s' \
   PKG_CONFIG='${PKGCFG}' \
   CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fPIE -fstack-clash-protection -Wno-maybe-uninitialized'
 echo -e "${VIOLET}= Building...${NC}"

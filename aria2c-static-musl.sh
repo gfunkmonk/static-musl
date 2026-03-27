@@ -39,7 +39,7 @@ echo -e "${PEACH}= Configure source${NC}"
 ./configure CC=gcc ARIA2_STATIC=yes --with-ca-bundle=/etc/ssl/certs/ca-certificates.crt \
   --without-gnutls --with-openssl --with-libcares --disable-bittorrent --with-sqlite3 \
   --enable-static --disable-shared --disable-nls --disable-rpath \
-  LDFLAGS='${BLDFLAGS} -static-pie -w -Wl,-s' PKG_CONFIG='${PKGCFG}' \
+  LDFLAGS='${BLDFLAGS} ${MOLD} -static-pie -w -Wl,-s' PKG_CONFIG='${PKGCFG}' \
   CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fPIE -Wno-unterminated-string-initialization'
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc)

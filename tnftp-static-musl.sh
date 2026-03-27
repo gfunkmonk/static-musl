@@ -23,13 +23,12 @@ echo -e "${LIME}= Extracting source${NC}"
 tar xf ${TNFTP_TARBALL}
 cd tnftp-${TNFTP_VERSION}/
 echo -e "${PEACH}= Configure source${NC}"
-./configure CC=gcc --disable-silent-rules --disable-ipv6 --enable-ssl \
-  --enable-largefile --with-gnu-ld --with-socks=no --enable-editcomplete \
-  --without-local-libedit \
-  LDFLAGS='${BLDFLAGS} -static-pie -w -Wl,-s' PKG_CONFIG='${PKGCFG}' \
+./configure --disable-ipv6 --enable-ssl --with-socks=no --enable-editcomplete \
+  --disable-shared --enable-static \
+  LDFLAGS='${BLDFLAGS} ${MOLD} -static-pie -w -Wl,-s' PKG_CONFIG='${PKGCFG}' \
   CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fpie'
 echo -e "${VIOLET}= Building...${NC}"
-CC=gcc make -j\$(nproc)
+make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip src/tnftp
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"

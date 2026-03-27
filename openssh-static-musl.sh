@@ -25,7 +25,7 @@ tar xf ${OPENSSH_TARBALL}
 cd openssh-${OPENSSH_VERSION}/
 echo -e "${PEACH}= Configure source${NC}"
 ./configure --with-privsep-user=nobody \
-  LIBS='-pthread' LDFLAGS='${BLDFLAGS} -static-pie -w -Wl,-s' PKG_CONFIG='${PKGCFG}' \
+  LIBS='-pthread' LDFLAGS='${BLDFLAGS} ${MOLD} -static-pie -w -Wl,-s' PKG_CONFIG='${PKGCFG}' \
   CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fPIE -Wno-unterminated-string-initialization'
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc)

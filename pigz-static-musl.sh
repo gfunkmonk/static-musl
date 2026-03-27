@@ -30,7 +30,7 @@ echo -e "${LIME}= Extracting source${NC}"
 tar xf ${PIGZ_TARBALL}
 cd pigz-${PIGZ_VERSION}/
 sed -i 's/CFLAGS=-O3 -Wall -Wextra -Wno-unknown-pragmas -Wcast-qual/CFLAGS=${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fPIE/g' Makefile
-sed -i 's/LDFLAGS=/LDFLAGS=${BLDFLAGS} -static-pie -w -Wl,-s/g' Makefile
+sed -i 's/LDFLAGS=/LDFLAGS=${BLDFLAGS} ${MOLD} -static-pie -w -Wl,-s/g' Makefile
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"

@@ -35,10 +35,10 @@ patch -p1 --fuzz=4 < ../sed-regexp-cache-size.patch
 echo -e "${PEACH}= Configure source${NC}"
 ./configure --enable-threads=posix --disable-nls --disable-i18n --disable-rpath \
   --disable-silent-rules --disable-gcc-warnings --without-selinux \
-  LDFLAGS='${BLDFLAGS} -static-pie -w -Wl,-s' PKG_CONFIG='${PKGCFG}' \
+  LDFLAGS='${BLDFLAGS} ${MOLD} -static-pie -w -Wl,-s' PKG_CONFIG='${PKGCFG}' \
   CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fPIE'
 echo -e "${VIOLET}= Building...${NC}"
-LDFLAGS='${BLDFLAGS} -static-pie -w -Wl,-s' CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fPIE' make -j\$(nproc)
+LDFLAGS='${BLDFLAGS} ${MOLD} -static-pie -w -Wl,-s' CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fPIE' make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip sed/sed
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"

@@ -13,6 +13,7 @@ Build scripts that produce fully static, multi-architecture binaries using musl 
 | bsdtar | latest | Archive tool (libarchive) |
 | curl | latest | Data transfer tool |
 | dash | 0.5.13.2 | POSIX shell |
+| gawk | 5.4.0 | a tool for processing text data |
 | htop | latest | Interactive process viewer |
 | less | latest | pager program similar to more |
 | lftp | latest | Command line ftp client |

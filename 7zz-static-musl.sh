@@ -26,12 +26,12 @@ run_build_setup "7zz" "${SEVENZIP_VERSION}" "${SEVENZIP_TARBALL}" \
 # Map repo ARCH to 7zip Linux makefile; source extracts flat so we wrap in a versioned dir
 case "${ARCH}" in
   x86_64|x86-64|amd64)
-     MAKE_OPTS="MY_ASM=/usr/bin/uasm -f ../../cmpl_gcc.mak 7z_asm=uasm"
+     MAKE_OPTS="MY_ASM=/usr/local/bin/uasm -f ../../cmpl_gcc.mak 7z_asm=uasm"
      PLATFORM="x64"
      ARCH_FLAGS="-march=x86-64 -mtune=generic"
      ;;
   x86|i*86)
-     MAKE_OPTS="MY_ASM=/usr/bin/uasm -f ../../cmpl_gcc.mak 7z_asm=uasm"
+     MAKE_OPTS="MY_ASM=/usr/local/bin/uasm -f ../../cmpl_gcc.mak 7z_asm=uasm"
      PLATFORM="x86"
      ARCH_FLAGS="-march=i586 -mtune=generic"
      ;;
@@ -62,7 +62,6 @@ set -e
 echo -e "${ORANGE}= Installing dependencies...${NC}"
 apk update && apk add build-base mold ccache gcc g++ patch git nasm make
 apk upgrade musl-dev mold --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
-apk add uasm --repository=https://dl-cdn.alpinelinux.org/alpine/edge/testing
 mkdir -p /ccache
 export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
 echo -e "${LIME}= Extracting source${NC}"
@@ -73,7 +72,7 @@ patch -p1 --fuzz=4 < ../7z-0003-Disable-local-echo-display-when-in-input-passwor
 patch -p1 --fuzz=4 < ../7z-0004-Use-system-locale-to-select-codepage-for-legacy-zip-.patch
 patch -p1 --fuzz=4 < ../7z-0005-Fix-BROTLI_MODEL-attribute-for-loongarch64.patch
 sed -i 's/CFLAGS_BASE = -O2/CFLAGS_BASE = ${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fPIE -Wno-sign-conversion/g' CPP/7zip/7zip_gcc.mak
-sed -i 's/LDFLAGS = -Wall/LDFLAGS = ${BLDFLAGS} -w -Wl,-s -static-pie/g' CPP/7zip/7zip_gcc.mak
+sed -i 's/LDFLAGS = -Wall/LDFLAGS = ${BLDFLAGS} ${MOLD} -w -Wl,-s -static-pie/g' CPP/7zip/7zip_gcc.mak
 cd CPP/7zip/Bundles/Alone2
 mkdir -p b/g
 echo -e "${VIOLET}= Building...${NC}"

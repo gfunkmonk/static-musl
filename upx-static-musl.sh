@@ -42,7 +42,7 @@ sed -i 's%UPX_VERSION_STRING "5.1.."%UPX_VERSION_STRING "5.1.3"%g' CMakeLists.tx
 mkdir build && cd build/
 echo -e "${PEACH}= Configure source${NC}"
 cmake -G Ninja \
-  -DCMAKE_EXE_LINKER_FLAGS='${BLDFLAGS} -static-pie -w -Wl,-s' \
+  -DCMAKE_EXE_LINKER_FLAGS='${BLDFLAGS} ${MOLD} -static-pie -w -Wl,-s' \
   -DCMAKE_C_FLAGS_RELEASE='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fPIE' \
   -DCMAKE_CXX_FLAGS_RELEASE='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fPIE' \
   -DCMAKE_BUILD_TYPE=Release -DUPX_CONFIG_DISABLE_GITREV=ON -DUPX_CONFIG_DISABLE_WSTRICT=ON \
