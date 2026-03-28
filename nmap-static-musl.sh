@@ -1,6 +1,6 @@
 #!/bin/bash
 set -euo pipefail
-. "$(dirname "$0")/common.sh"
+. $(dirname "${BASH_SOURCE[0]}")/common.sh
 
 NMAP_VERSION="7.98"
 PACKAGE_VERSION="${NMAP_VERSION}"

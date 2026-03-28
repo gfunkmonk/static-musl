@@ -1,6 +1,6 @@
 #!/bin/bash
 set -euo pipefail
-. "$(dirname "$0")/common.sh"
+. $(dirname "${BASH_SOURCE[0]}")/common.sh
 
 SCREEN_VERSION="5.0.1"
 PACKAGE_VERSION="${SCREEN_VERSION}"

@@ -1,6 +1,6 @@
 #!/bin/bash
 set -euo pipefail
-. "$(dirname "$0")/common.sh"
+. $(dirname "${BASH_SOURCE[0]}")/common.sh
 
 echo -e "${SKY= fetching latest xz version${NC}"
 XZ_VERSION=$(get_version release "tukaani-project/xz" ".tag_name | ltrimstr("v")" "5.8.2")

@@ -1,6 +1,6 @@
 #!/bin/bash
 set -euo pipefail
-. "$(dirname "$0")/common.sh"
+. $(dirname "${BASH_SOURCE[0]}")/common.sh
 
 WGET_VERSION="1.25.0"
 PACKAGE_VERSION="${WGET_VERSION}"

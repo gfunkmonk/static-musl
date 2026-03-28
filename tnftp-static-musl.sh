@@ -1,6 +1,6 @@
 #!/bin/bash
 set -euo pipefail
-. "$(dirname "$0")/common.sh"
+. $(dirname "${BASH_SOURCE[0]}")/common.sh
 
 TNFTP_VERSION="20260211"
 PACKAGE_VERSION="${TNFTP_VERSION}"

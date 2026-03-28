@@ -1,6 +1,6 @@
 #!/bin/bash
 set -euo pipefail
-. "$(dirname "$0")/common.sh"
+. $(dirname "${BASH_SOURCE[0]}")/common.sh
 
 DASH_VERSION="0.5.13.1"
 PACKAGE_VERSION="0.5.13.2"

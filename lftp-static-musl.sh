@@ -1,6 +1,6 @@
 #!/bin/bash
 set -euo pipefail
-. "$(dirname "$0")/common.sh"
+. $(dirname "${BASH_SOURCE[0]}")/common.sh
 
 echo -e "${ORANGE}= fetching latest lftp version${NC}"
 LFTP_VERSION=$(get_version release "lavv17/lftp" ".tag_name | ltrimstr("v")" "4.9.3")

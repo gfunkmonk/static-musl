@@ -1,6 +1,6 @@
 #!/bin/bash
 set -euo pipefail
-. "$(dirname "$0")/common.sh"
+. $(dirname "${BASH_SOURCE[0]}")/common.sh
 
 echo -e "${VIOLET}= fetching latest tmux version${NC}"
 TMUX_VERSION=$(get_version release "tmux/tmux" ".tag_name" "3.6")

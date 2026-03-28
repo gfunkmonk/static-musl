@@ -1,6 +1,6 @@
 #!/bin/bash
 set -euo pipefail
-. "$(dirname "$0")/common.sh"
+. $(dirname "${BASH_SOURCE[0]}")/common.sh
 
 echo -e "${VIOLET}= fetching latest bsdtar version${NC}"
 BSDTAR_VERSION=$(get_version release "libarchive/libarchive" ".tag_name | ltrimstr("v")" "3.8.6")

@@ -1,6 +1,6 @@
 #!/bin/bash
 set -euo pipefail
-. "$(dirname "$0")/common.sh"
+. $(dirname "${BASH_SOURCE[0]}")/common.sh
 
 echo -e "${VIOLET}= fetching latest htop version${NC}"
 HTOP_VERSION=$(get_version release "htop-dev/htop" "" "3.4.1")

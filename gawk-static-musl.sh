@@ -1,6 +1,6 @@
 #!/bin/bash
 set -euo pipefail
-. "$(dirname "$0")/common.sh"
+. $(dirname "${BASH_SOURCE[0]}")/common.sh
 
 GAWK_VERSION="5.4.0"
 PACKAGE_VERSION="${GAWK_VERSION}"

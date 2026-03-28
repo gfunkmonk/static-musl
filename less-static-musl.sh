@@ -1,6 +1,6 @@
 #!/bin/bash
 set -euo pipefail
-. "$(dirname "$0")/common.sh"
+. $(dirname "${BASH_SOURCE[0]}")/common.sh
 
 echo -e "${VIOLET}= fetching latest less version${NC}"
 LESS_VERSION=$(get_version tag "gwsw/less" '.[0].name | ltrimstr("v")' "692")

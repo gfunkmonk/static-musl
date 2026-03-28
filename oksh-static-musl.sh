@@ -1,6 +1,6 @@
 #!/bin/bash
 set -euo pipefail
-. "$(dirname "$0")/common.sh"
+. $(dirname "${BASH_SOURCE[0]}")/common.sh
 
 echo -e "${LEMON}= fetching latest oksh version${NC}"
 OKSH_VERSION=$(get_version release "ibara/oksh" ".tag_name | ltrimstr("oksh-")" "7.8")

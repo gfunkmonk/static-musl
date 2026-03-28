@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-. "$(dirname "$0")/common.sh"
+. $(dirname "${BASH_SOURCE[0]}")/common.sh
 
 echo -e "${CHARTREUSE}= fetching latest 7zip version${NC}"
 SEVENZIP_VERSION=$(get_version release "mcmilk/7-Zip-zstd" "" "v25.01-v1.5.7-R4")

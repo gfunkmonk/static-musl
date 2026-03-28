@@ -1,6 +1,6 @@
 #!/bin/bash
 set -euo pipefail
-. "$(dirname "$0")/common.sh"
+. $(dirname "${BASH_SOURCE[0]}")/common.sh
 
 echo -e "${VIOLET}= fetching latest curl version${NC}"
 CURL_VERSION=$(get_version release "curl/curl" ".tag_name | ltrimstr("curl-") | gsub("_"; ".")" "8.19.0")

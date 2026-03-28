@@ -1,6 +1,6 @@
 #!/bin/bash
 set -euo pipefail
-. "$(dirname "$0")/common.sh"
+. $(dirname "${BASH_SOURCE[0]}")/common.sh
 
 TAR_VERSION="1.35"
 PACKAGE_VERSION="${TAR_VERSION}"

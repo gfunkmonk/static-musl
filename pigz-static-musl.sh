@@ -1,6 +1,6 @@
 #!/bin/bash
 set -euo pipefail
-. "$(dirname "$0")/common.sh"
+. $(dirname "${BASH_SOURCE[0]}")/common.sh
 
 echo -e "${VIOLET}= fetching latest pigz version${NC}"
 PIGZ_VERSION=$(get_version tag "madler/pigz" ".[0].name | ltrimstr("v")" "2.8")

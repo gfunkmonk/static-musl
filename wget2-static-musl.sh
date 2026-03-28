@@ -1,6 +1,6 @@
 #!/bin/bash
 set -euo pipefail
-. "$(dirname "$0")/common.sh"
+. $(dirname "${BASH_SOURCE[0]}")/common.sh
 
 echo -e "${OCHRE}= fetching latest wget2 version${NC}"
 WGET2_VERSION=$(get_version release "rockdaboot/wget2" '.tag_name | ltrimstr("v")' "2.2.1")

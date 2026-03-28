@@ -1,6 +1,6 @@
 #!/bin/bash
 set -euo pipefail
-. "$(dirname "$0")/common.sh"
+. $(dirname "${BASH_SOURCE[0]}")/common.sh
 
 NANO_VERSION="8.7.1"
 PACKAGE_VERSION="${NANO_VERSION}"

@@ -1,6 +1,6 @@
 #!/bin/bash
 set -euo pipefail
-. "$(dirname "$0")/common.sh"
+. $(dirname "${BASH_SOURCE[0]}")/common.sh
 
 echo -e "${JUNEBUD}= fetching latest dropbear version${NC}"
 DROPBEAR_VERSION=$(get_version release "mkj/dropbear" '.tag_name | ltrimstr("DROPBEAR_")' "2025.88")

@@ -1,6 +1,6 @@
 #!/bin/bash
 set -euo pipefail
-. "$(dirname "$0")/common.sh"
+. $(dirname "${BASH_SOURCE[0]}")/common.sh
 
 SOCAT_VERSION="1.8.1.1"
 PACKAGE_VERSION="${SOCAT_VERSION}"

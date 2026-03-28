@@ -1,6 +1,6 @@
 #!/bin/bash
 set -euo pipefail
-. "$(dirname "$0")/common.sh"
+. $(dirname "${BASH_SOURCE[0]}")/common.sh
 
 echo -e "${AQUA}= fetching latest zstd version${NC}"
 ZSTD_VERSION=$(get_version release "facebook/zstd" ".tag_name | ltrimstr("v")" "1.5.7")

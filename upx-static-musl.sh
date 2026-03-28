@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-. "$(dirname "$0")/common.sh"
+. $(dirname "${BASH_SOURCE[0]}")/common.sh
 
 echo -e "${VIOLET}= fetching latest upx version${NC}"
 UPX_VERSION=$(get_version release "upx/upx" ".tag_name | ltrimstr("v")" "5.1.1")

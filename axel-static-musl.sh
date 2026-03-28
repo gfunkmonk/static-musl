@@ -1,6 +1,6 @@
 #!/bin/bash
 set -euo pipefail
-. "$(dirname "$0")/common.sh"
+. $(dirname "${BASH_SOURCE[0]}")/common.sh
 
 echo -e "${VIOLET}= fetching latest axel version${NC}"
 AXEL_VERSION=$(get_version release "axel-download-accelerator/axel" ".tag_name | ltrimstr("v")" "2.17.14")
