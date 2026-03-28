@@ -401,9 +401,9 @@ package_output() {
     if grep -qF "$(pwd)/${CHROOTDIR}" /proc/mounts; then
       unmount_chroot
     fi
-    echo -e "${REBECCA}Cleaning up chroot: ${SLATE}${CHROOTDIR}${NC}"
+    echo -e "${REBECCA}Cleaning up chroot: ${ORANGE}${CHROOTDIR}${NC}"
     sudo rm -rf "${CHROOTDIR}"
   else
-    echo -e "${NAVAJO}KEEP_CHROOT is true. ${TEAL}Preserving: ${CHROOTDIR}${NC}"
+    echo -e "${SLATE}KEEP_CHROOT is true. ${NAVAJO}Preserving: ${CHROOTDIR}${NC}"
   fi
 }
