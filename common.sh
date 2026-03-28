@@ -1,31 +1,11 @@
 #!/bin/bash
-# common.sh - Shared functions and variables for all *-static-musl.sh scripts.
-# Source this file at the top of each build script: . "$(dirname "$0")/common.sh"
+
 . "$(dirname "$0")/config.sh"
 
 ######### Variables ###########
 ARCH=${ARCH:-$(uname -m)}
 ALPINE_VERSION="3.23.3"
 ALPINE_MAJOR_MINOR="${ALPINE_VERSION%.*}"
-
-# Set directory name for the target chroot
-: "${CHROOTDIR:=potato}"
-
-# CCACHE_CHROOT_DIR: path inside the chroot where ccache stores its cache.
-# Set this to a host-mounted path (e.g. via CI cache) to persist ccache across
-# builds.
-# Defaults to /ccache (ephemeral, inside the chroot).
-: "${CCACHE_CHROOT_DIR:=/ccache}"
-
-# CCACHE gets its panties in a knot if the host has log_file defined and it doesn't
-# exist in the chroot when the CCACHE directories are bind mounted. This was the best
-# way I could find to get that string to make the directory.
-CCACHE_LOG_DIR=$(ccache -p 2>/dev/null | grep log_file | cut -d "=" -f2 | rev | cut -d'/' -f2- | rev | sed 's/ //g') || true
-: "${CCACHE_LOG_DIR:=/var/log/ccache}"
-
-# Set KEEP_CHROOT=true via environment to preserve chroot after failed
-# builds (for debugging)
-: "${KEEP_CHROOT:=false}"
 
 ###### Bundled tools #########
 JQ="tools/jq/jq-${ARCH}"
@@ -417,4 +397,15 @@ package_output() {
   fi
   tar -C dist -cJf "dist/${filename}.tar.xz" "${filename}"
   echo -e "${JUNEBUD}= All done! Binary: dist/${filename} ($(du -sh "dist/${filename}" | cut -f1))${NC}"
+  if [ "${KEEP_CHROOT}" = "false" ]; then
+    if grep -qF "$(pwd)/${CHROOTDIR}" /proc/mounts; then
+      unmount_chroot
+    else
+      echo -e "${REBECCA}Cleaning up chroot: ${SLATE}${CHROOTDIR}${NC}"
+      # Using the variable we "locked in" with := in common.sh
+      sudo rm -rf "${CHROOTDIR}"
+    fi
+  else
+      echo -e "${NAVAJO}KEEP_CHROOT is true. ${TEAL}Preserving: ${CHROOTDIR}${NC}"
+  fi
 }
