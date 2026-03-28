@@ -1,6 +1,7 @@
 #!/bin/bash
 # common.sh - Shared functions and variables for all *-static-musl.sh scripts.
 # Source this file at the top of each build script: . "$(dirname "$0")/common.sh"
+. "$(dirname "$0")/config.sh"
 
 ######### Variables ###########
 ARCH=${ARCH:-$(uname -m)}
@@ -9,19 +10,6 @@ ALPINE_MAJOR_MINOR="${ALPINE_VERSION%.*}"
 
 # Set directory name for the target chroot
 : "${CHROOTDIR:=potato}"
-
-# Compiler Flags
-BCFLAGS="-Os -static -ffunction-sections -fdata-sections -fno-stack-protector"
-EXTRA="-fshort-enums -fno-ident -fno-unwind-tables -fno-asynchronous-unwind-tables"
-LTO="-flto=auto -ffat-lto-objects"
-
-# Linker Flags
-MOLD="-fuse-ld=mold"
-BFD="-fuse-ld=bfd"
-BLDFLAGS="-static -Wl,--gc-sections"
-
-# Pkg-config
-PKGCFG="pkg-config --static"
 
 # CCACHE_CHROOT_DIR: path inside the chroot where ccache stores its cache.
 # Set this to a host-mounted path (e.g. via CI cache) to persist ccache across
@@ -72,6 +60,7 @@ TEAL="\033[38;2;0;128;128m"
 TURQUOISE="\033[38;2;64;224;208m"
 BLOOD="\033[38;2;102;6;6m"
 UGLY="\033[38;2;122;115;115m"
+CARIBBEAN="\033[38;2;0;204;153m"
 NC="\033[0m"
 
 ########################
@@ -344,6 +333,10 @@ setup_qemu() {
       fi
       sudo mkdir -p "./${CHROOTDIR}/usr/bin/"
       sudo cp "${qemu_bin}" "./${CHROOTDIR}/usr/bin/qemu-${QEMU_ARCH}-static"
+    else
+      echo -e "${TOMATO}= ERROR: no QEMU binary found for ${QEMU_ARCH}${NC}" >&2
+      echo -e "${HELIOTROPE}= Install it with:${NC} ${TEAL}sudo apt-get install qemu-user-static${NC}" >&2
+      exit 1
     fi
   fi
 }
