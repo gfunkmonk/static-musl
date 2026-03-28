@@ -31,8 +31,8 @@ cd wget-${WGET_VERSION}/
 echo -e "${LAGOON}= Applying custom patch${NC}"
 patch -p1 --fuzz=4 < ../wget-passive-ftp.patch
 echo -e "${PEACH}= Configure source${NC}"
-./configure CC=gcc --with-ssl=openssl --disable-nls --disable-rpath --sysconfdir=/etc --disable-silent-rules  \
-  --disable-ipv6 --enable-year2038  --with-ssl=openssl --with-cares --with-openssl=yes \
+./configure CC=gcc --with-ssl=openssl --disable-nls --disable-rpath --sysconfdir=/etc --disable-silent-rules \
+  --disable-ipv6 --enable-year2038 --with-cares --with-openssl=yes \
   LDFLAGS='${BLDFLAGS} -no-pie -w -Wl,-s -lidn2 -lunistring' PKG_CONFIG='${PKGCFG}' \
   CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fno-PIE -Wno-unterminated-string-initialization' \
   PERL=/usr/bin/perl

@@ -28,7 +28,7 @@ apk update && apk add build-base brotli-dev brotli-static bzip2-dev bzip2-static
   pcre2-static xz-dev xz-static zlib-dev zlib-static zstd-dev zstd-static
 apk upgrade musl-dev --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
-echo -e "\033[38;2;0;204;153m= Extracting source${NC}"
+echo -e "${LIME}= Extracting source${NC}"
 7zz x -so ${WGET2_TARBALL} | tar xf - -C /
 cd wget2-${WGET2_VERSION}/
 echo -e "${PEACH}= Configure source${NC}"

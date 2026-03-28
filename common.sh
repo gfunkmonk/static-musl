@@ -344,6 +344,10 @@ setup_qemu() {
       fi
       sudo mkdir -p "./${CHROOTDIR}/usr/bin/"
       sudo cp "${qemu_bin}" "./${CHROOTDIR}/usr/bin/qemu-${QEMU_ARCH}-static"
+    else
+      echo -e "${TOMATO}= ERROR: no QEMU binary found for ${QEMU_ARCH}${NC}" >&2
+      echo -e "${HELIOTROPE}= Install it with:${NC} ${TEAL}sudo apt-get install qemu-user-static${NC}" >&2
+      exit 1
     fi
   fi
 }
