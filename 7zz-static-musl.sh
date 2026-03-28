@@ -3,12 +3,8 @@ set -euo pipefail
 
 . "$(dirname "$0")/common.sh"
 
-echo -e "${VIOLET}= fetching latest 7zip version${NC}"
-SEVENZIP_VERSION=$(gh_latest_release "mcmilk/7-Zip-zstd") || true
-if [ -z "${SEVENZIP_VERSION}" ]; then
-  echo -e "${TAWNY}= GitHub API unavailable, falling back to v25.01-v1.5.7-R4${NC}"
-  SEVENZIP_VERSION="v25.01-v1.5.7-R4"
-fi
+echo -e "${CHARTREUSE}= fetching latest 7zip version${NC}"
+SEVENZIP_VERSION=$(get_version release "mcmilk/7-Zip-zstd" "" "1.37.0")
 
 PACKAGE_VERSION="${SEVENZIP_VERSION}"
 SEVENZIP_SHORT="${SEVENZIP_VERSION#v}"
