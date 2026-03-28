@@ -154,7 +154,7 @@ setup_cleanup() {
     # Fallback for grep
     grep -F "$(pwd)/${CHROOTDIR}" /proc/mounts | cut -f2 -d" " | sort -r | xargs -r sudo umount -nR  2>/dev/null || true
     grep -F "$(pwd)/${CHROOTDIR}" /proc/mounts | cut -f2 -d" " | sort -r | xargs -r sudo umount -nRf 2>/dev/null || true
-    grep -F "$(pwd)/${CHROOTDIR}" /proc/mounts | cut -f2 -d" " | sort -r | xargs -r sudo umount -nxl  2>/dev/null || true
+    grep -F "$(pwd)/${CHROOTDIR}" /proc/mounts | cut -f2 -d" " | sort -r | xargs -r sudo umount -nl  2>/dev/null || true
   fi
   }
   trap unmount_chroot EXIT
@@ -400,12 +400,10 @@ package_output() {
   if [ "${KEEP_CHROOT}" = "false" ]; then
     if grep -qF "$(pwd)/${CHROOTDIR}" /proc/mounts; then
       unmount_chroot
-    else
-      echo -e "${REBECCA}Cleaning up chroot: ${SLATE}${CHROOTDIR}${NC}"
-      # Using the variable we "locked in" with := in common.sh
-      sudo rm -rf "${CHROOTDIR}"
     fi
+    echo -e "${REBECCA}Cleaning up chroot: ${SLATE}${CHROOTDIR}${NC}"
+    sudo rm -rf "${CHROOTDIR}"
   else
-      echo -e "${NAVAJO}KEEP_CHROOT is true. ${TEAL}Preserving: ${CHROOTDIR}${NC}"
+    echo -e "${NAVAJO}KEEP_CHROOT is true. ${TEAL}Preserving: ${CHROOTDIR}${NC}"
   fi
 }

@@ -44,9 +44,6 @@ on:
           - xz
           - zstd
 
-env:
-  ALPINE_VERSION: "3.23.3"
-
 permissions:
   contents: read
 
@@ -207,7 +204,7 @@ jobs:
   release:
     needs: [setup, build]
     runs-on: ubuntu-latest
-    if: ${{ !cancelled() && github.event_name != 'pull_request' }}
+    if: ${{ !cancelled() }}
     permissions:
       contents: write
     strategy:
@@ -216,6 +213,14 @@ jobs:
         tool: ${{ fromJson(needs.setup.outputs.matrix) }}
 
     steps:
+    - uses: actions/checkout@v6
+
+    - name: Read Alpine version
+      id: alpine-version
+      run: |
+        ALPINE_VERSION=$(grep '^ALPINE_VERSION=' common.sh | cut -d= -f2 | tr -d '"')
+        echo "ALPINE_VERSION=${ALPINE_VERSION}" >> "$GITHUB_ENV"
+
     - name: Download artifacts for ${{ matrix.tool }}
       uses: actions/download-artifact@v8
       with:

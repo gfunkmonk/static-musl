@@ -30,7 +30,7 @@ apk update && apk add build-base mold ccache lz4-dev lz4-static zlib-dev zlib-st
 apk upgrade musl-dev mold --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
 echo -e "${LIME}= Extracting source${NC}"
-7zz x -so ${ZSTD_TARBALL} | tar xf - -C /
+7zz x -so ${ZSTD_TARBALL} | tar xf -
 cd zstd-${ZSTD_VERSION}/
 echo -e "${LAGOON}= Applying custom patch${NC}"
 patch -p1 --fuzz=4 < ../i486-no-cpuid.patch

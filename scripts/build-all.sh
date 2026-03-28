@@ -50,10 +50,10 @@ for file in *-static-musl.sh; do
         # Check the exit status (0 usually means success, anything else is failure)
         if [ $exit_status -eq 0 ]; then
             echo -e "${JUNEBUD}SUCCESS: ${VIOLET}$file finished with exit status${SKY} $exit_status${NC}" | tee -a "$LOG_FILE"
-            ((success_count++))
+	  success_count=$((success_count + 1))
         else
             echo -e " ${TOMATO}FAILURE: ${LEMON}$file finished with exit status ${CHARTREUSE}$exit_status${NC}" | tee -a "$LOG_FILE"
-            ((failure_count++))
+            failure_count=$((failure_count + 1))
         fi
         echo "-----------------------------------" | tee -a "$LOG_FILE"
     fi

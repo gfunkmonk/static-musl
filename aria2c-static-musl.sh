@@ -14,9 +14,10 @@ PACKAGE_VERSION="${ARIA2_VERSION}"
 ARIA2_TARBALL="aria2-${ARIA2_VERSION}.tar.gz"
 ARIA2_MIRRORS=(
   "https://github.com/aria2/aria2/releases/download/release-${ARIA2_VERSION}/aria2-${ARIA2_VERSION}.tar.gz"
-  "https://distfiles.alpinelinux.org/distfiles/v3.21/aria2-${ARIA2_VERSION}.tar.gz"
+  "https://fossies.org/linux/www/aria2-${ARIA2_VERSION}.tar.gz"
   "https://sources.voidlinux.org/aria2-${ARIA2_VERSION}/aria2-${ARIA2_VERSION}.tar.gz"
   "https://mirrors.lug.mtu.edu/gentoo/distfiles/aria2-${ARIA2_VERSION}.tar.gz"
+  "https://ftp.fau.de/macports/distfiles/aria2/aria2-${ARIA2_VERSION}.tar.gz"
 )
 
 run_build_setup "aria2" "${ARIA2_VERSION}" "${ARIA2_TARBALL}" \
