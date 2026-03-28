@@ -8,8 +8,7 @@ ALPINE_VERSION="3.23.3"
 ALPINE_MAJOR_MINOR="${ALPINE_VERSION%.*}"
 
 # Set directory name for the target chroot
-CHROOTDIR=
-CHROOTDIR=${CHROOTDIR:-potato}
+: "${CHROOTDIR:=potato}"
 
 # Compiler Flags
 BCFLAGS="-Os -static -ffunction-sections -fdata-sections -fno-stack-protector"
@@ -28,18 +27,17 @@ PKGCFG="pkg-config --static"
 # Set this to a host-mounted path (e.g. via CI cache) to persist ccache across
 # builds.
 # Defaults to /ccache (ephemeral, inside the chroot).
-CCACHE_CHROOT_DIR="${CCACHE_CHROOT_DIR:-/ccache}"
+: "${CCACHE_CHROOT_DIR:=/ccache}"
 
 # CCACHE gets its panties in a knot if the host has log_file defined and it doesn't
 # exist in the chroot when the CCACHE directories are bind mounted. This was the best
 # way I could find to get that string to make the directory.
 CCACHE_LOG_DIR=$(ccache -p 2>/dev/null | grep log_file | cut -d "=" -f2 | rev | cut -d'/' -f2- | rev | sed 's/ //g') || true
-CCACHE_LOG_DIR="${CCACHE_LOG_DIR:-/var/log/ccache}"
+: "${CCACHE_LOG_DIR:=/var/log/ccache}"
 
 # Set KEEP_CHROOT=true via environment to preserve chroot after failed
 # builds (for debugging)
-KEEP_CHROOT="false"
-KEEP_CHROOT=${KEEP_CHROOT:-false}
+: "${KEEP_CHROOT:=false}"
 
 ###### Bundled tools #########
 JQ="tools/jq/jq-${ARCH}"
@@ -176,12 +174,21 @@ gh_latest_tag() {
 # setup_cleanup: register unmount trap for chroot bind mounts #
 ###############################################################
 setup_cleanup() {
-  cleanup() {
-    echo -e "${CAMEL}Unmounting filesystems from chroot -- ${CHROOTDIR}${NC}"
-    # Use -F for literal string matching (no regex), quote variables for safety
-    grep -F "$(pwd)/${CHROOTDIR}" /proc/mounts | cut -f2 -d" " | sort -r | xargs -r sudo umount -nR || true
+  unmount_chroot() {
+  if command -v findmnt >/dev/null 2>&1; then
+    # Use --list and --noheadings to get a clean list of paths
+    # We grep to only get lines that ARE the target or INSIDE it
+    sudo findmnt --list --noheadings --output TARGET | grep -F "$(pwd)/${CHROOTDIR}" | tac | xargs -r sudo umount -nR  2>/dev/null || true
+    sudo findmnt --list --noheadings --output TARGET | grep -F "$(pwd)/${CHROOTDIR}" | tac | xargs -r sudo umount -nRf 2>/dev/null || true
+    sudo findmnt --list --noheadings --output TARGET | grep -F "$(pwd)/${CHROOTDIR}" | tac | xargs -r sudo umount -nl  2>/dev/null || true
+  else
+    # Fallback for grep
+    grep -F "$(pwd)/${CHROOTDIR}" /proc/mounts | cut -f2 -d" " | sort -r | xargs -r sudo umount -nR  2>/dev/null || true
+    grep -F "$(pwd)/${CHROOTDIR}" /proc/mounts | cut -f2 -d" " | sort -r | xargs -r sudo umount -nRf 2>/dev/null || true
+    grep -F "$(pwd)/${CHROOTDIR}" /proc/mounts | cut -f2 -d" " | sort -r | xargs -r sudo umount -nxl  2>/dev/null || true
+  fi
   }
-  trap cleanup EXIT
+  trap unmount_chroot EXIT
 }
 
 #####################################################################
@@ -251,10 +258,14 @@ download_source() {
 #####################################################
 setup_alpine_chroot() {
   local tarball="$1"
-  if [ -d "./${CHROOTDIR}/" ] && [ "${KEEP_CHROOT}" = "false" ]; then
-    grep -F "$(pwd)/${CHROOTDIR}" /proc/mounts | cut -f2 -d" " | sort -r | xargs -r sudo umount -nR || true
-    echo -e "${CORAL}chroot dir exist! Removing it now.${NC}"
-    rm -fr "./${CHROOTDIR}/"
+  if [ -d "./${CHROOTDIR}" ] && [ "${KEEP_CHROOT}" = "false" ]; then
+    unmount_chroot
+    if grep -qF "$(pwd)/${CHROOTDIR}" /proc/mounts; then
+      echo -e "${TOMATO}ERROR: Mounts still active in ${CHROOTDIR}. Deletion ${BLOOD}BLOCKED!${NC}" >&2
+      exit 1
+    fi
+    echo -e "${CORAL}= chroot dir exist! Removing it now.${NC}"
+    rm -fr "./${CHROOTDIR}"
   fi
   if [ ! -d minirootfs/ ]; then
     echo -e "${INDIGO}minirootfs dir does not exist. Creating it now.${NC}"
