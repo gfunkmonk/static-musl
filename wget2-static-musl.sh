@@ -23,22 +23,20 @@ run_build_setup "wget2" "${WGET2_VERSION}" "${WGET2_TARBALL}" \
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
 set -e
 echo -e "${ORANGE}= Installing dependencies...${NC}"
-apk update && apk add build-base ccache openssl-dev zlib-dev libidn2-dev libpsl-dev libidn2-static openssl-libs-static \
-  zlib-static libpsl-static libunistring-dev libunistring-static patch texinfo pcre2-dev pcre2-static perl c-ares-dev \
-  bzip2-dev bzip2-static xz-dev xz-static lz4-dev lz4-static zstd-dev zstd-static libpsl-dev libpsl-static nghttp2-static nghttp2-dev
+apk update && apk add build-base brotli-dev brotli-static bzip2-dev bzip2-static libidn2-dev libidn2-static libpsl-dev \
+  libpsl-static libunistring-dev libunistring-static nghttp2-dev nghttp2-static openssl-dev openssl-libs-static pcre2-dev \
+  pcre2-static xz-dev xz-static zlib-dev zlib-static zstd-dev zstd-static
 apk upgrade musl-dev --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
-echo -e "${LIME}= Extracting source${NC}"
+echo -e "\033[38;2;0;204;153m= Extracting source${NC}"
 7zz x -so ${WGET2_TARBALL} | tar xf - -C /
 cd wget2-${WGET2_VERSION}/
-#echo -e "${LAGOON}= Applying custom patch${NC}"
-#patch -p1 --fuzz=4 < ../wget2-passive-ftp.patch
 echo -e "${PEACH}= Configure source${NC}"
-./configure CC=gcc --with-ssl=openssl --disable-nls --disable-rpath --sysconfdir=/etc --disable-silent-rules  \
-  --disable-ipv6 --enable-year2038  --with-cares --with-openssl=yes --disable-shared --enable-static --disable-doc \
+./configure  CC=gcc --with-ssl=openssl \
+  --disable-nls --disable-rpath --sysconfdir=/etc --disable-silent-rules --disable-ipv6 --enable-year2038 \
+  --disable-shared --enable-static --disable-doc --with-bzip2 --enable-manylibs --with-lzma --with-brotlidec \
   LDFLAGS='${BLDFLAGS} -static-pie -w -Wl,-s -lidn2 -lunistring' PKG_CONFIG='${PKGCFG}' \
-  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fPIE -Wno-unterminated-string-initialization' \
-  PERL=/usr/bin/perl
+  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fPIE -Wno-unterminated-string-initialization'
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc)
 echo -e "${CHARTREUSE}= Stripping binary${NC}"

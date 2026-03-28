@@ -33,7 +33,7 @@ case "${ARCH}" in
   x86|i*86)
      MAKE_OPTS="MY_ASM=uasm -f ../../cmpl_gcc.mak 7z_asm=uasm"
      PLATFORM="x86"
-     ARCH_FLAGS="-march=i586 -mtune=generic"
+     ARCH_FLAGS="-march=march=pentium-m -mtune=generic"
      ;;
   aarch64|arm64|armv8)
      MAKE_OPTS="-f ../../cmpl_gcc_arm64.mak"
@@ -43,12 +43,12 @@ case "${ARCH}" in
   armv7|armv7l)
      MAKE_OPTS="-f ../../cmpl_gcc_arm.mak"
      PLATFORM="arm"
-     ARCH_FLAGS="-march=armv7-a -mfpu=neon-vfpv4 -mfloat-abi=hard -marm -Wno-sign-conversion -Wno-implicit-fallthrough -Wno-unused-macros"
+     ARCH_FLAGS="-march=armv7-a -mfpu=neon-vfpv4 -mfloat-abi=hard -marm	"
      ;;
   armhf|armv6|arm)
      MAKE_OPTS="-f ../../cmpl_gcc_arm.mak"
      PLATFORM="arm"
-     ARCH_FLAGS="-march=armv6kz -mfloat-abi=hard -mfpu=vfp"
+     ARCH_FLAGS="-march=armv6kz -mfloat-abi=hard -mfpu=vfp -marm"
      ;;
   *)
      MAKE_OPTS="-f ../../cmpl_gcc.mak"
