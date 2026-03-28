@@ -1,7 +1,8 @@
 #!/bin/bash
 
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
-source ${SCRIPT_DIR}/config.sh
+CONF_FILE="${SCRIPT_DIR}"/config.sh
+[[ -f "${CONF_FILE}" ]] && source "${CONF_FILE}"
 
 ########################
 # normalize ARCH names #

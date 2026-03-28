@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ################################################################################
 #     .oooooo.     .oooooo.   ooooo      ooo oooooooooooo ooooo   .oooooo.     #
