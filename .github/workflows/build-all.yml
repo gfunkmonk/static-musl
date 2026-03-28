@@ -91,7 +91,7 @@ jobs:
     - name: Read Alpine version
       id: alpine-version
       run: |
-        ALPINE_VERSION=$(grep '^ALPINE_VERSION=' common.sh | cut -d= -f2 | tr -d '"')
+        ALPINE_VERSION=$(grep '^ALPINE_VERSION=' config.sh | cut -d= -f2 | tr -d '"')
         echo "version=${ALPINE_VERSION}" >> "$GITHUB_OUTPUT"
         echo "ALPINE_VERSION=${ALPINE_VERSION}" >> "$GITHUB_ENV"
 

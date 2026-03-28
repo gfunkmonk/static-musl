@@ -2,14 +2,18 @@
 
 . "$(dirname "$0")/config.sh"
 
-######### Variables ###########
+########################
+# normalize ARCH names #
+########################
 ARCH=${ARCH:-$(uname -m)}
-ALPINE_VERSION="3.23.3"
-ALPINE_MAJOR_MINOR="${ALPINE_VERSION%.*}"
-
-###### Bundled tools #########
-JQ="tools/jq/jq-${ARCH}"
-CURL="tools/curl/curl-${ARCH}"
+case "${ARCH}" in
+  x86-64|amd64) ARCH="x86_64" ;;
+  i*86)         ARCH="x86" ;;
+  arm64|armv8)  ARCH="aarch64" ;;
+  armv7*)       ARCH="armv7" ;;
+  armv6|arm)    ARCH="armhf" ;;
+  *)    echo -e "${REBECCA}${ARCH}${NC}" ;;
+esac
 
 ##### Colors ################
 ORANGE="\033[38;2;255;165;0m"
@@ -43,21 +47,11 @@ UGLY="\033[38;2;122;115;115m"
 CARIBBEAN="\033[38;2;0;204;153m"
 NC="\033[0m"
 
-########################
-# normalize ARCH names #
-########################
-case "${ARCH}" in
-  x86-64|amd64) ARCH="x86_64" ;;
-  i*86)         ARCH="x86" ;;
-  arm64|armv8)  ARCH="aarch64" ;;
-  armv7*)       ARCH="armv7" ;;
-  armv6|arm)    ARCH="armhf" ;;
-  *)    echo -e "${REBECCA}${ARCH}${NC}" ;;
-esac
-
 ####################
 #   Setup tools    #
 ####################
+JQ="tools/jq/jq-${ARCH}"
+CURL="tools/curl/curl-${ARCH}"
 if [[ -x "${JQ}" ]] && "${JQ}" --version >/dev/null 2>&1; then
   : # use bundled jq
 elif command -v jq >/dev/null 2>&1; then

@@ -10,6 +10,10 @@
 #    `Y8bood8P'   `Y8bood8P'  o8o        `8  o888o        o888o  `Y8bood8P'    #
 ################################################################################
 
+######### Variables ###########
+ALPINE_VERSION="3.23.3"
+ALPINE_MAJOR_MINOR="${ALPINE_VERSION%.*}"
+
 # Set directory name for the target chroot
 : "${CHROOTDIR:=potato}"
 
