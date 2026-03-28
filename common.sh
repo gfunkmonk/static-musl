@@ -2,19 +2,6 @@
 
 . "$(dirname "$0")/config.sh"
 
-########################
-# normalize ARCH names #
-########################
-ARCH=${ARCH:-$(uname -m)}
-case "${ARCH}" in
-  x86-64|amd64) ARCH="x86_64" ;;
-  i*86)         ARCH="x86" ;;
-  arm64|armv8)  ARCH="aarch64" ;;
-  armv7*)       ARCH="armv7" ;;
-  armv6|arm)    ARCH="armhf" ;;
-  *)    echo -e "${REBECCA}${ARCH}${NC}" ;;
-esac
-
 ##### Colors ################
 ORANGE="\033[38;2;255;165;0m"
 LEMON="\033[38;2;255;244;79m"
@@ -46,6 +33,19 @@ BLOOD="\033[38;2;102;6;6m"
 UGLY="\033[38;2;122;115;115m"
 CARIBBEAN="\033[38;2;0;204;153m"
 NC="\033[0m"
+
+########################
+# normalize ARCH names #
+########################
+ARCH=${ARCH:-$(uname -m)}
+case "${ARCH}" in
+  x86-64|amd64) ARCH="x86_64" ;;
+  i*86)         ARCH="x86" ;;
+  arm64|armv8)  ARCH="aarch64" ;;
+  armv7*)       ARCH="armv7" ;;
+  armv6|arm)    ARCH="armhf" ;;
+  *)    echo -e "${REBECCA}${ARCH}${NC}" ;;
+esac
 
 ####################
 #   Setup tools    #
@@ -395,7 +395,7 @@ package_output() {
     if grep -qF "$(pwd)/${CHROOTDIR}" /proc/mounts; then
       unmount_chroot
     fi
-    echo -e "${REBECCA}Cleaning up chroot: ${ORANGE}${CHROOTDIR}${NC}"
+    echo -e "${REBECCA}= Cleaning up chroot: ${ORANGE}${CHROOTDIR}${NC}"
     sudo rm -rf "${CHROOTDIR}"
   else
     echo -e "${SLATE}KEEP_CHROOT is true. ${NAVAJO}Preserving: ${CHROOTDIR}${NC}"
