@@ -3,46 +3,18 @@
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
 source ${SCRIPT_DIR}/config.sh
 
-########################################################
-# setup_arch: resolve QEMU_ARCH & ARCH_FLAGS from ARCH #
-# aldo normalize ARCH names
-########################################################
+########################
+# normalize ARCH names #
+########################
 ARCH=${ARCH:-$(uname -m)}
-setup_arch() {
 case "${ARCH}" in
-  x86-64|amd64|x86_64)
-    ARCH="x86_64"
-    QEMU_ARCH=""
-    ARCH_FLAGS="-march=x86-64 -mtune=generic"
-    ;;
-  i*86|x86)
-    ARCH="x86"
-    QEMU_ARCH="i386"
-    ARCH_FLAGS="-march=pentium-m -mtune=generic"
-    ;;
-  arm64|armv8|aarch64)
-    ARCH="aarch64"
-    QEMU_ARCH="aarch64"
-    ARCH_FLAGS="-march=armv8-a"
-    ;;
-  armv7*)
-    ARCH="armv7"
-    QEMU_ARCH="arm"
-    ARCH_FLAGS="-march=armv7-a -mfpu=neon-vfpv4 -mfloat-abi=hard -marm"
-    ;;
-  armv6|arm)
-    ARCH="armhf"
-    QEMU_ARCH="arm"
-    ARCH_FLAGS="-march=armv6kz -mfloat-abi=hard -mfpu=vfp -marm"
-    ;;
-  *)
-    echo -e "${LAGOON}Unknown architecture: ${HOTPINK}${ARCH}${NC}" >&2
-    exit 1
-    ;;
+  x86-64|amd64) ARCH="x86_64" ;;
+  i*86)         ARCH="x86" ;;
+  arm64|armv8)  ARCH="aarch64" ;;
+  armv7*)       ARCH="armv7" ;;
+  armv6|arm)    ARCH="armhf" ;;
+  *)    echo -e "${REBECCA}${ARCH}${NC}" ;;
 esac
-  ALPINE_URL="https://dl-cdn.alpinelinux.org/alpine/v${ALPINE_MAJOR_MINOR}/releases/${ARCH}/alpine-minirootfs-${ALPINE_VERSION}-${ARCH}.tar.gz"
-  TARBALL="${ALPINE_URL##*/}"
-}
 
 ####################
 #   Setup tools    #
@@ -60,6 +32,40 @@ for tool in jq curl; do
     exit 1
   fi
 done
+
+########################################################
+# setup_arch: resolve QEMU_ARCH & ARCH_FLAGS from ARCH #
+########################################################
+setup_arch() {
+  case "${ARCH}" in
+    x86_64)
+      QEMU_ARCH=""
+      ARCH_FLAGS="-march=x86-64 -mtune=generic"
+      ;;
+    x86)
+      QEMU_ARCH="i386"
+      ARCH_FLAGS="-march=pentium-m -mtune=generic"
+      ;;
+    aarch64)
+      QEMU_ARCH="aarch64"
+      ARCH_FLAGS="-march=armv8-a"
+      ;;
+    armv7)
+      QEMU_ARCH="arm"
+      ARCH_FLAGS="-march=armv7-a -mfpu=neon-vfpv4 -mfloat-abi=hard -marm"
+      ;;
+    armhf)
+      QEMU_ARCH="arm"
+      ARCH_FLAGS="-march=armv6kz -mfloat-abi=hard -mfpu=vfp -marm"
+      ;;
+    *)
+      echo -e "${LAGOON}Unknown architecture: ${HOTPINK}${ARCH}${NC}" >&2
+      exit 1
+      ;;
+  esac
+  ALPINE_URL="https://dl-cdn.alpinelinux.org/alpine/v${ALPINE_MAJOR_MINOR}/releases/${ARCH}/alpine-minirootfs-${ALPINE_VERSION}-${ARCH}.tar.gz"
+  TARBALL="${ALPINE_URL##*/}"
+}
 
 #########################################
 # Get latest release or tag from Github #
