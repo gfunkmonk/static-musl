@@ -4,7 +4,6 @@ set -euo pipefail
 
 echo -e "${AQUA}= fetching latest aria2 version${NC}"
 ARIA2_VERSION=$(get_version release "aria2/aria2" '.tag_name | ltrimstr("release-")' "1.37.0")
-
 echo -e "${MINT}= building aria2 version: ${ARIA2_VERSION}${NC}"
 PACKAGE_VERSION="${ARIA2_VERSION}"
 ARIA2_TARBALL="aria2-${ARIA2_VERSION}.tar.gz"

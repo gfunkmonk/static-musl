@@ -4,7 +4,7 @@ set -euo pipefail
 
 echo -e "${VIOLET}= fetching latest bsdtar version${NC}"
 BSDTAR_VERSION=$(get_version release "libarchive/libarchive" ".tag_name | ltrimstr("v")" "3.8.6")
-
+echo -e "${MINT}= building bsdtar version: ${BSDTAR_VERSION}${NC}"
 PACKAGE_VERSION="${BSDTAR_VERSION}"
 BSDTAR_TARBALL="libarchive-${BSDTAR_VERSION}.tar.xz"
 BSDTAR_MIRRORS=(

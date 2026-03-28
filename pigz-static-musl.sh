@@ -4,7 +4,7 @@ set -euo pipefail
 
 echo -e "${VIOLET}= fetching latest pigz version${NC}"
 PIGZ_VERSION=$(get_version tag "madler/pigz" ".[0].name | ltrimstr("v")" "2.8")
-
+echo -e "${UGLY}= building pigz version: ${PIGZ_VERSION}${NC}"
 PACKAGE_VERSION="${PIGZ_VERSION}"
 PIGZ_TARBALL="pigz-${PIGZ_VERSION}.tar.gz"
 PIGZ_MIRRORS=(

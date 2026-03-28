@@ -21,7 +21,6 @@ esac
 ####################
 for tool in jq curl; do
   bundled="tools/${tool}/${tool}-${ARCH}"
-
   if [[ -x "$bundled" ]] && "$bundled" --version &>/dev/null; then
     declare "${tool^^}=$bundled"
   elif command -v "$tool" &>/dev/null; then

@@ -4,7 +4,7 @@ set -euo pipefail
 
 echo -e "${VIOLET}= fetching latest tmux version${NC}"
 TMUX_VERSION=$(get_version release "tmux/tmux" ".tag_name" "3.6")
-
+echo -e "${PEACH}= building tmux version: ${TMUX_VERSION}${NC}"
 PACKAGE_VERSION="${TMUX_VERSION}"
 TMUX_TARBALL="tmux-${TMUX_VERSION}.tar.gz"
 TMUX_MIRRORS=(

@@ -4,7 +4,7 @@ set -euo pipefail
 
 echo -e "${JUNEBUD}= fetching latest dropbear version${NC}"
 DROPBEAR_VERSION=$(get_version release "mkj/dropbear" '.tag_name | ltrimstr("DROPBEAR_")' "2025.88")
-
+echo -e "${SLATE}= building dropbear version: ${DROPBEAR_VERSION}${NC}"
 PACKAGE_VERSION="${DROPBEAR_VERSION}"
 DROPBEAR_TARBALL="dropbear-${DROPBEAR_VERSION}.tar.bz2"
 DROPBEAR_MIRRORS=(

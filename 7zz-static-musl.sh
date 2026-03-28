@@ -4,8 +4,8 @@ set -euo pipefail
 . "$(dirname "$0")/common.sh"
 
 echo -e "${CHARTREUSE}= fetching latest 7zip version${NC}"
-SEVENZIP_VERSION=$(get_version release "mcmilk/7-Zip-zstd" "" "1.37.0")
-
+SEVENZIP_VERSION=$(get_version release "mcmilk/7-Zip-zstd" "" "v25.01-v1.5.7-R4")
+echo -e "${MINT}= building 7zz version: ${SEVENZIP_VERSION}${NC}"
 PACKAGE_VERSION="${SEVENZIP_VERSION}"
 SEVENZIP_SHORT="${SEVENZIP_VERSION#v}"
 SEVENZIP_TARBALL="7-Zip-zstd-${SEVENZIP_VERSION}.tar.gz"

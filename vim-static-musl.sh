@@ -2,9 +2,9 @@
 set -euo pipefail
 . "$(dirname "$0")/common.sh"
 
-echo -e "${VIOLET}= fetching latest vim version${NC}"
+echo -e "${MINT}= fetching latest vim version${NC}"
 VIM_VERSION=$(get_version tag "vim/vim" '.[0].name | ltrimstr("v")' "9.2.0119")
-
+echo -e "${JUNEBUD}= building vim version: ${VIM_VERSION}${NC}"
 PACKAGE_VERSION="${VIM_VERSION}"
 VIM_TARBALL="vim-${VIM_VERSION}.tar.gz"
 VIM_MIRRORS=(

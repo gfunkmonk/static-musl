@@ -2,9 +2,9 @@
 set -euo pipefail
 . "$(dirname "$0")/common.sh"
 
-echo -e "${VIOLET}= fetching latest lftp version${NC}"
+echo -e "${ORANGE}= fetching latest lftp version${NC}"
 LFTP_VERSION=$(get_version release "lavv17/lftp" ".tag_name | ltrimstr("v")" "4.9.3")
-
+echo -e "${CHARTREUSE}= building lftp version: ${LFTP_VERSION}${NC}"
 PACKAGE_VERSION="${LFTP_VERSION}"
 LFTP_TARBALL="lftp-${LFTP_VERSION}.tar.gz"
 LFTP_MIRRORS=(

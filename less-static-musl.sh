@@ -4,7 +4,7 @@ set -euo pipefail
 
 echo -e "${VIOLET}= fetching latest less version${NC}"
 LESS_VERSION=$(get_version tag "gwsw/less" '.[0].name | ltrimstr("v")' "692")
-
+echo -e "${TEAL}= building less version: ${LESS_VERSION}${NC}"
 PACKAGE_VERSION="${LESS_VERSION}"
 LESS_TARBALL="less-${LESS_VERSION}.tar.gz"
 LESS_MIRRORS=(
