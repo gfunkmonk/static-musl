@@ -3,7 +3,7 @@ set -euo pipefail
 . "$(dirname "$0")/common.sh"
 
 echo -e "${VIOLET}= fetching latest less version${NC}"
-LESS_VERSION=$(get_version tag "gwsw/less" ".[0].name | ltrimstr("v")" "692")
+LESS_VERSION=$(get_version tag "gwsw/less" '.[0].name | ltrimstr("v")' "692")
 
 PACKAGE_VERSION="${LESS_VERSION}"
 LESS_TARBALL="less-${LESS_VERSION}.tar.gz"

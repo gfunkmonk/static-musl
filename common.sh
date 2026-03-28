@@ -8,6 +8,7 @@ source ${SCRIPT_DIR}/config.sh
 # aldo normalize ARCH names
 ########################################################
 ARCH=${ARCH:-$(uname -m)}
+setup_arch() {
 case "${ARCH}" in
   x86-64|amd64|x86_64)
     ARCH="x86_64"
@@ -41,7 +42,7 @@ case "${ARCH}" in
 esac
   ALPINE_URL="https://dl-cdn.alpinelinux.org/alpine/v${ALPINE_MAJOR_MINOR}/releases/${ARCH}/alpine-minirootfs-${ALPINE_VERSION}-${ARCH}.tar.gz"
   TARBALL="${ALPINE_URL##*/}"
-
+}
 
 ####################
 #   Setup tools    #
@@ -312,6 +313,7 @@ run_build_setup() {
   done
   [[ $# -gt 0 && "$1" == "--" ]] && shift
   local mirrors=("$@")
+  setup_arch
   setup_cleanup
   install_host_deps
   download_source "${tool}" "${version}" "${tarball}" "${mirrors[@]}"
