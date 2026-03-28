@@ -2,7 +2,7 @@
 set -euo pipefail
 . $(dirname "${BASH_SOURCE[0]}")/common.sh
 
-echo -e "${SKY= fetching latest xz version${NC}"
+echo -e "${SKY}= fetching latest xz version${NC}"
 XZ_VERSION=$(get_version release "tukaani-project/xz" ".tag_name | ltrimstr("v")" "5.8.2")
 echo -e "${TAWNY}= building xz version: ${XZ_VERSION}${NC}"
 PACKAGE_VERSION="${XZ_VERSION}"
