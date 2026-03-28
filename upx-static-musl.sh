@@ -4,11 +4,7 @@ set -euo pipefail
 . "$(dirname "$0")/common.sh"
 
 echo -e "${VIOLET}= fetching latest upx version${NC}"
-UPX_VERSION=$(gh_latest_release "upx/upx" '.tag_name | ltrimstr("v")') || true
-if [ -z "${UPX_VERSION}" ]; then
-  echo -e "${TAWNY}= GitHub API unavailable, falling back to upx 5.1.1${NC}"
-  UPX_VERSION="5.1.1"
-fi
+UPX_VERSION=$(get_version release "upx/upx" ".tag_name | ltrimstr("v")" "5.1.1")
 
 PACKAGE_VERSION="${UPX_VERSION}"
 UPX_TARBALL="upx-${UPX_VERSION}-src.tar.xz"

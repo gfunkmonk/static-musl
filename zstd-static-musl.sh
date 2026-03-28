@@ -3,11 +3,7 @@ set -euo pipefail
 . "$(dirname "$0")/common.sh"
 
 echo -e "${VIOLET}= fetching latest zstd version${NC}"
-ZSTD_VERSION=$(gh_latest_release "facebook/zstd" '.tag_name | ltrimstr("v")') || true
-if [ -z "${ZSTD_VERSION}" ]; then
-  echo -e "${TAWNY}= GitHub API unavailable, falling back to zstd 1.5.7${NC}"
-  ZSTD_VERSION="1.5.7"
-fi
+ZSTD_VERSION=$(get_version release "facebook/zstd" ".tag_name | ltrimstr("v")" "1.5.7")
 
 PACKAGE_VERSION="${ZSTD_VERSION}"
 ZSTD_TARBALL="zstd-${ZSTD_VERSION}.tar.zst"

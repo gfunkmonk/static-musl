@@ -3,11 +3,7 @@ set -euo pipefail
 . "$(dirname "$0")/common.sh"
 
 echo -e "${VIOLET}= fetching latest oksh version${NC}"
-OKSH_VERSION=$(gh_latest_release "ibara/oksh" '.tag_name | ltrimstr("oksh-")') || true
-if [ -z "${OKSH_VERSION}" ]; then
-  echo -e "${TAWNY}= GitHub API unavailable, falling back to oksh 7.8${NC}"
-  OKSH_VERSION="7.8"
-fi
+OKSH_VERSION=$(get_version release "ibara/oksh" ".tag_name | ltrimstr("oksh-")" "7.8")
 
 PACKAGE_VERSION="${OKSH_VERSION}"
 OKSH_TARBALL="oksh-${OKSH_VERSION}.tar.gz"

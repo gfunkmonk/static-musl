@@ -3,11 +3,7 @@ set -euo pipefail
 . "$(dirname "$0")/common.sh"
 
 echo -e "${VIOLET}= fetching latest less version${NC}"
-LESS_VERSION=$(gh_latest_tag "gwsw/less" '.[0].name | ltrimstr("v")') || true
-if [ -z "${LESS_VERSION}" ]; then
-  echo -e "${TAWNY}= GitHub API unavailable, falling back to less 692${NC}"
-  LESS_VERSION="692"
-fi
+LESS_VERSION=$(get_version tag "gwsw/less" ".[0].name | ltrimstr("v")" "692")
 
 PACKAGE_VERSION="${LESS_VERSION}"
 LESS_TARBALL="less-${LESS_VERSION}.tar.gz"

@@ -3,11 +3,7 @@ set -euo pipefail
 . "$(dirname "$0")/common.sh"
 
 echo -e "${JUNEBUD}= fetching latest dropbear version${NC}"
-DROPBEAR_VERSION=$(gh_latest_release "mkj/dropbear" '.tag_name | ltrimstr("DROPBEAR_")') || true
-if [ -z "${DROPBEAR_VERSION}" ]; then
-  echo -e "${BOYSENBERRY}= GitHub API unavailable, falling back to dropbear 2025.88${NC}"
-  DROPBEAR_VERSION="2025.88"
-fi
+DROPBEAR_VERSION=$(get_version release "mkj/dropbear" '.tag_name | ltrimstr("DROPBEAR_")' "2025.88")
 
 PACKAGE_VERSION="${DROPBEAR_VERSION}"
 DROPBEAR_TARBALL="dropbear-${DROPBEAR_VERSION}.tar.bz2"

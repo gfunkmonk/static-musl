@@ -3,11 +3,7 @@ set -euo pipefail
 . "$(dirname "$0")/common.sh"
 
 echo -e "${VIOLET}= fetching latest curl version${NC}"
-CURL_VERSION=$(gh_latest_release "curl/curl" '.tag_name | ltrimstr("curl-") | gsub("_"; ".")') || true
-if [ -z "${CURL_VERSION}" ]; then
-  echo -e "${TAWNY}= GitHub API unavailable, falling back to curl 8.19.0${NC}"
-  CURL_VERSION="8.19.0"
-fi
+CURL_VERSION=$(get_version release "curl/curl" ".tag_name | ltrimstr("curl-") | gsub("_"; ".")" "8.19.0")
 
 PACKAGE_VERSION="${CURL_VERSION}"
 CURL_GIT_VER="${CURL_VERSION//./_}"

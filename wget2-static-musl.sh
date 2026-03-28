@@ -1,13 +1,9 @@
 #!/bin/bash
-set -euo pipefail
+set -euox pipefail
 . "$(dirname "$0")/common.sh"
 
 echo -e "${VIOLET}= fetching latest wget2 version${NC}"
-WGET2_VERSION=$(gh_latest_release "rockdaboot/wget2" '.tag_name | ltrimstr("v")') || true
-if [ -z "${WGET2_VERSION}" ]; then
-  echo -e "${TAWNY}= GitHub API unavailable, falling back to wget2 2.2.1${NC}"
-  WGET2_VERSION="2.2.1"
-fi
+WGET2_VERSION=$(get_version release "rockdaboot/wget2" '.tag_name | ltrimstr("v")' "2.2.1")
 
 PACKAGE_VERSION="${WGET2_VERSION}"
 WGET2_TARBALL="wget2-${WGET2_VERSION}.tar.lz"

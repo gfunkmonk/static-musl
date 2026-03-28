@@ -1,104 +1,88 @@
 #!/bin/bash
 
-. "$(dirname "$0")/config.sh"
+SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
+source ${SCRIPT_DIR}/config.sh
 
-########################
-# normalize ARCH names #
-########################
+########################################################
+# setup_arch: resolve QEMU_ARCH & ARCH_FLAGS from ARCH #
+# aldo normalize ARCH names
+########################################################
 ARCH=${ARCH:-$(uname -m)}
 case "${ARCH}" in
-  x86-64|amd64) ARCH="x86_64" ;;
-  i*86)         ARCH="x86" ;;
-  arm64|armv8)  ARCH="aarch64" ;;
-  armv7*)       ARCH="armv7" ;;
-  armv6|arm)    ARCH="armhf" ;;
-  *)    echo -e "${REBECCA}${ARCH}${NC}" ;;
+  x86-64|amd64|x86_64)
+    ARCH="x86_64"
+    QEMU_ARCH=""
+    ARCH_FLAGS="-march=x86-64 -mtune=generic"
+    ;;
+  i*86|x86)
+    ARCH="x86"
+    QEMU_ARCH="i386"
+    ARCH_FLAGS="-march=pentium-m -mtune=generic"
+    ;;
+  arm64|armv8|aarch64)
+    ARCH="aarch64"
+    QEMU_ARCH="aarch64"
+    ARCH_FLAGS="-march=armv8-a"
+    ;;
+  armv7*)
+    ARCH="armv7"
+    QEMU_ARCH="arm"
+    ARCH_FLAGS="-march=armv7-a -mfpu=neon-vfpv4 -mfloat-abi=hard -marm"
+    ;;
+  armv6|arm)
+    ARCH="armhf"
+    QEMU_ARCH="arm"
+    ARCH_FLAGS="-march=armv6kz -mfloat-abi=hard -mfpu=vfp -marm"
+    ;;
+  *)
+    echo -e "${LAGOON}Unknown architecture: ${HOTPINK}${ARCH}${NC}" >&2
+    exit 1
+    ;;
 esac
+  ALPINE_URL="https://dl-cdn.alpinelinux.org/alpine/v${ALPINE_MAJOR_MINOR}/releases/${ARCH}/alpine-minirootfs-${ALPINE_VERSION}-${ARCH}.tar.gz"
+  TARBALL="${ALPINE_URL##*/}"
+
 
 ####################
 #   Setup tools    #
 ####################
-JQ="tools/jq/jq-${ARCH}"
-CURL="tools/curl/curl-${ARCH}"
-if [[ -x "${JQ}" ]] && "${JQ}" --version >/dev/null 2>&1; then
-  : # use bundled jq
-elif command -v jq >/dev/null 2>&1; then
-  echo -e "${LIME}= bundled jq not usable on this arch, falling back to system jq${NC}" >&2
-  JQ="jq"
-else
-  echo -e "${BLOOD}= ERROR: no jq binary available (checked ${JQ} and PATH)${NC}" >&2
-  exit 1
-fi
-if [[ -x "${CURL}" ]] && "${CURL}" --version >/dev/null 2>&1; then
-  : # use bundled curl
-elif command -v curl >/dev/null 2>&1; then
-  echo -e "${LIME}= bundled curl not usable on this arch, falling back to system curl${NC}" >&2
-  CURL="curl"
-else
-  echo -e "${BLOOD}= ERROR: no curl available (checked ${CURL} and PATH)${NC}" >&2
-  exit 1
-fi
+for tool in jq curl; do
+  bundled="tools/${tool}/${tool}-${ARCH}"
 
-########################################################
-# setup_arch: resolve QEMU_ARCH & ARCH_FLAGS from ARCH #
-########################################################
-setup_arch() {
-  case "${ARCH}" in
-    x86_64)
-      QEMU_ARCH=""
-      ARCH_FLAGS="-march=x86-64 -mtune=generic"
-      ;;
-    x86)
-      QEMU_ARCH="i386"
-      ARCH_FLAGS="-march=pentium-m -mtune=generic"
-      ;;
-    aarch64)
-      QEMU_ARCH="aarch64"
-      ARCH_FLAGS="-march=armv8-a"
-      ;;
-    armv7)
-      QEMU_ARCH="arm"
-      ARCH_FLAGS="-march=armv7-a -mfpu=neon-vfpv4 -mfloat-abi=hard -marm"
-      ;;
-    armhf)
-      QEMU_ARCH="arm"
-      ARCH_FLAGS="-march=armv6kz -mfloat-abi=hard -mfpu=vfp -marm"
-      ;;
-    *)
-      echo -e "${LAGOON}Unknown architecture: ${HOTPINK}${ARCH}${NC}" >&2
-      exit 1
-      ;;
-  esac
-  ALPINE_URL="https://dl-cdn.alpinelinux.org/alpine/v${ALPINE_MAJOR_MINOR}/releases/${ARCH}/alpine-minirootfs-${ALPINE_VERSION}-${ARCH}.tar.gz"
-  TARBALL="${ALPINE_URL##*/}"
-}
+  if [[ -x "$bundled" ]] && "$bundled" --version &>/dev/null; then
+    declare "${tool^^}=$bundled"
+  elif command -v "$tool" &>/dev/null; then
+    echo -e "${LIME}= bundled $tool not usable, falling back to system $tool${NC}" >&2
+    declare "${tool^^}=$tool"
+  else
+    echo -e "${BLOOD}= ERROR: no $tool available (checked $bundled and PATH)${NC}" >&2
+    exit 1
+  fi
+done
 
-###########################################
-# gh_latest_release REPO [JQ_FILTER]      #
-# Fetches .tag_name from the GitHub       #
-# releases/latest API, applies optional   #
-# jq filter. Default:--> .tag_name as-is. #
-###########################################
-gh_latest_release() {
-    local repo="$1" filter="${2:-.tag_name}"
-    "${CURL}" -fsSL --connect-timeout 10 --max-time 30 \
-        ${GITHUB_TOKEN:+-H "Authorization: Bearer ${GITHUB_TOKEN}"} \
-        "https://api.github.com/repos/${repo}/releases/latest" \
-        | "${JQ}" -r "${filter} // empty"
-}
+#########################################
+# Get latest release or tag from Github #
+#########################################
+get_version() {
+  local type="$1" repo="$2" filter="$3" fallback="$4" version
+  local endpoint="releases/latest" default_f=".tag_name"
 
-#####################################
-# gh_latest_tag REPO [JQ_FILTER]    #
-# Fetches the first entry from the  #
-# GitHub tags API, applies optional #
-# jq filter.                        #
-#####################################
-gh_latest_tag() {
-    local repo="$1" filter="${2:-.[0].name}"
-    "${CURL}" -fsSL --connect-timeout 10 --max-time 30 \
-        ${GITHUB_TOKEN:+-H "Authorization: Bearer ${GITHUB_TOKEN}"} \
-        "https://api.github.com/repos/${repo}/tags" \
-        | "${JQ}" -r "${filter} // empty"
+  [[ "$type" == "tag" ]] && { endpoint="tags"; default_f=".[0].name"; }
+
+  # This specific line fixes the "api.github.com{repo}" error
+  local url="https://api.github.com/repos/${repo}/${endpoint}"
+
+  version=$("${CURL}" -fsSL --connect-timeout 10 --max-time 30 \
+    ${GITHUB_TOKEN:+-H "Authorization: Bearer ${GITHUB_TOKEN}"} \
+    "$url" | "${JQ}" -r "${filter:-$default_f} // empty" 2>/dev/null)
+
+  if [[ -n "$version" && "$version" != "null" ]]; then
+    echo "$version"
+  else
+    local name="${repo##*/}"
+    echo -e "${TAWNY}= GitHub API unavailable, falling back to $name $fallback${NC}" >&2
+    echo "$fallback"
+  fi
 }
 
 ###############################################################
@@ -328,7 +312,6 @@ run_build_setup() {
   done
   [[ $# -gt 0 && "$1" == "--" ]] && shift
   local mirrors=("$@")
-  setup_arch
   setup_cleanup
   install_host_deps
   download_source "${tool}" "${version}" "${tarball}" "${mirrors[@]}"

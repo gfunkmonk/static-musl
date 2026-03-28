@@ -1,13 +1,9 @@
 #!/bin/bash
-set -euo pipefail
+set -euox pipefail
 . "$(dirname "$0")/common.sh"
 
 echo -e "${VIOLET}= fetching latest vim version${NC}"
-VIM_VERSION=$(gh_latest_tag "vim/vim" '.[0].name | ltrimstr("v")') || true
-if [ -z "${VIM_VERSION}" ]; then
-  echo -e "${TAWNY}= GitHub API unavailable, falling back to vim 9.2.0119${NC}"
-  VIM_VERSION="9.2.0119"
-fi
+VIM_VERSION=$(get_version tag "vim/vim" '.[0].name | ltrimstr("v")' "9.2.0119")
 
 PACKAGE_VERSION="${VIM_VERSION}"
 VIM_TARBALL="vim-${VIM_VERSION}.tar.gz"

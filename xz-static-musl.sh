@@ -3,11 +3,7 @@ set -euo pipefail
 . "$(dirname "$0")/common.sh"
 
 echo -e "${VIOLET}= fetching latest xz version${NC}"
-XZ_VERSION=$(gh_latest_release "tukaani-project/xz" '.tag_name | ltrimstr("v")') || true
-if [ -z "${XZ_VERSION}" ]; then
-  echo -e "${TAWNY}= GitHub API unavailable, falling back to xz 5.8.2${NC}"
-  XZ_VERSION="5.8.2"
-fi
+XZ_VERSION=$(get_version release "tukaani-project/xz" ".tag_name | ltrimstr("v")" "5.8.2")
 
 PACKAGE_VERSION="${XZ_VERSION}"
 XZ_TARBALL="xz-${XZ_VERSION}.tar.xz"

@@ -3,11 +3,7 @@ set -euo pipefail
 . "$(dirname "$0")/common.sh"
 
 echo -e "${AQUA}= fetching latest aria2 version${NC}"
-ARIA2_VERSION=$(gh_latest_release "aria2/aria2" '.tag_name | ltrimstr("release-")') || true
-if [ -z "${ARIA2_VERSION}" ]; then
-  echo -e "${TAWNY}= GitHub API unavailable, falling back to aria2 1.37.0${NC}"
-  ARIA2_VERSION="1.37.0"
-fi
+ARIA2_VERSION=$(get_version release "aria2/aria2" '.tag_name | ltrimstr("release-")' "1.37.0"
 
 echo -e "${MINT}= building aria2 version: ${ARIA2_VERSION}${NC}"
 PACKAGE_VERSION="${ARIA2_VERSION}"

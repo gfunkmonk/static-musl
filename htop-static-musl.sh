@@ -3,11 +3,7 @@ set -euo pipefail
 . "$(dirname "$0")/common.sh"
 
 echo -e "${VIOLET}= fetching latest htop version${NC}"
-HTOP_VERSION=$(gh_latest_release "htop-dev/htop") || true
-if [ -z "${HTOP_VERSION}" ]; then
-  echo -e "${TAWNY}= GitHub API unavailable, falling back to htop 3.4.1${NC}"
-  HTOP_VERSION="3.4.1"
-fi
+HTOP_VERSION=$(get_version release "htop-dev/htop" "" "3.4.1")
 
 PACKAGE_VERSION="${HTOP_VERSION}"
 HTOP_TARBALL="htop-${HTOP_VERSION}.tar.xz"

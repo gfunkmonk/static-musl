@@ -3,11 +3,7 @@ set -euo pipefail
 . "$(dirname "$0")/common.sh"
 
 echo -e "${VIOLET}= fetching latest tmux version${NC}"
-TMUX_VERSION=$(gh_latest_release "tmux/tmux" '.tag_name') || true
-if [ -z "${TMUX_VERSION}" ]; then
-  echo -e "${TAWNY}= GitHub API unavailable, falling back to tmux 3.6${NC}"
-  TMUX_VERSION="3.6"
-fi
+TMUX_VERSION=$(get_version release "tmux/tmux" ".tag_name" "3.6")
 
 PACKAGE_VERSION="${TMUX_VERSION}"
 TMUX_TARBALL="tmux-${TMUX_VERSION}.tar.gz"

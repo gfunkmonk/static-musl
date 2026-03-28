@@ -3,11 +3,7 @@ set -euo pipefail
 . "$(dirname "$0")/common.sh"
 
 echo -e "${VIOLET}= fetching latest bsdtar version${NC}"
-BSDTAR_VERSION=$(gh_latest_release "libarchive/libarchive" '.tag_name | ltrimstr("v")') || true
-if [ -z "${BSDTAR_VERSION}" ]; then
-  echo -e "${TAWNY}= GitHub API unavailable, falling back to bsdtar 3.8.6${NC}"
-  BSDTAR_VERSION="3.8.6"
-fi
+BSDTAR_VERSION=$(get_version release "libarchive/libarchive" ".tag_name | ltrimstr("v")" "3.8.6")
 
 PACKAGE_VERSION="${BSDTAR_VERSION}"
 BSDTAR_TARBALL="libarchive-${BSDTAR_VERSION}.tar.xz"

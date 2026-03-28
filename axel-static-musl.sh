@@ -3,11 +3,7 @@ set -euo pipefail
 . "$(dirname "$0")/common.sh"
 
 echo -e "${VIOLET}= fetching latest axel version${NC}"
-AXEL_VERSION=$(gh_latest_release "axel-download-accelerator/axel" '.tag_name | ltrimstr("v")') || true
-if [ -z "${AXEL_VERSION}" ]; then
-  echo -e "${TAWNY}= GitHub API unavailable, falling back to axel 2.17.14${NC}"
-  AXEL_VERSION="2.17.14"
-fi
+AXEL_VERSION=$(get_version release "axel-download-accelerator/axel" ".tag_name | ltrimstr("v")" "2.17.14")
 
 PACKAGE_VERSION="${AXEL_VERSION}"
 AXEL_TARBALL="axel-${AXEL_VERSION}.tar.xz"
