@@ -2,17 +2,17 @@
 set -euo pipefail
 . $(dirname "${BASH_SOURCE[0]}")/common.sh
 
-DASH_VERSION="0.5.13.1"
-PACKAGE_VERSION="0.5.13.2"
+DASH_VERSION="0.5.13.2"
+PACKAGE_VERSION="${DASH_VERSION}"
 DASH_TARBALL="dash-${DASH_VERSION}.tar.gz"
 DASH_MIRRORS=(
-  #"https://git.kernel.org/pub/scm/utils/dash/dash.git/snapshot/dash-${DASH_VERSION}.tar.gz"
-  "http://gondor.apana.org.au/~herbert/dash/files/dash-${DASH_VERSION}.tar.gz"
-  "https://distfiles-origin.macports.org/dash/dash-${DASH_VERSION}.tar.gz"
-  "https://distfiles.alpinelinux.org/distfiles/v3.23/dash-${DASH_VERSION}.tar.gz"
-  "https://ftp.fr.openbsd.org/pub/OpenBSD/distfiles/dash-${DASH_VERSION}.tar.gz"
-  "https://mirror-hk.koddos.net/blfs/svn/d/dash-${DASH_VERSION}.tar.gz"
-  "https://mirrors.lug.mtu.edu/gentoo/distfiles/46/dash-${DASH_VERSION}.tar.gz"
+  "https://git.kernel.org/pub/scm/utils/dash/dash.git/snapshot/dash-${DASH_VERSION}.tar.gz"
+  #"http://gondor.apana.org.au/~herbert/dash/files/dash-${DASH_VERSION}.tar.gz"
+  #"https://distfiles-origin.macports.org/dash/dash-${DASH_VERSION}.tar.gz"
+  #"https://distfiles.alpinelinux.org/distfiles/v3.23/dash-${DASH_VERSION}.tar.gz"
+  #"https://ftp.fr.openbsd.org/pub/OpenBSD/distfiles/dash-${DASH_VERSION}.tar.gz"
+  #"https://mirror-hk.koddos.net/blfs/svn/d/dash-${DASH_VERSION}.tar.gz"
+  #"https://mirrors.lug.mtu.edu/gentoo/distfiles/46/dash-${DASH_VERSION}.tar.gz"
 )
 
 run_build_setup "dash" "${DASH_VERSION}" "${DASH_TARBALL}" \
@@ -32,7 +32,7 @@ echo -e "${LIME}= Extracting source${NC}"
 tar xf ${DASH_TARBALL}
 cd dash-${DASH_VERSION}/
 echo -e "${LAGOON}= Applying custom patch${NC}"
-patch -p1 --fuzz=4 < ../dash-0.5.13.2.patch
+#patch -p1 --fuzz=4 < ../dash-0.5.13.2.patch
 patch -p1 --fuzz=4 < ../dash.patch
 patch -p1 --fuzz=4 < ../dash-cflags-for-build.patch
 patch -p1 --fuzz=4 < ../dash-SHELL-Disable-sh-c-command-sh-c-exec-command.patch

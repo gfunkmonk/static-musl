@@ -101,12 +101,16 @@ setup_cleanup() {
     # Use --list and --noheadings to get a clean list of paths
     # We grep to only get lines that ARE the target or INSIDE it
     sudo findmnt --list --noheadings --output TARGET | grep -F "$(pwd)/${CHROOTDIR}" | tac | xargs -r sudo umount -nR  2>/dev/null || true
+    sleep 2s
     sudo findmnt --list --noheadings --output TARGET | grep -F "$(pwd)/${CHROOTDIR}" | tac | xargs -r sudo umount -nRf 2>/dev/null || true
+    sleep 2s
     sudo findmnt --list --noheadings --output TARGET | grep -F "$(pwd)/${CHROOTDIR}" | tac | xargs -r sudo umount -nl  2>/dev/null || true
   else
     # Fallback for grep
     grep -F "$(pwd)/${CHROOTDIR}" /proc/mounts | cut -f2 -d" " | sort -r | xargs -r sudo umount -nR  2>/dev/null || true
+    sleep 2s
     grep -F "$(pwd)/${CHROOTDIR}" /proc/mounts | cut -f2 -d" " | sort -r | xargs -r sudo umount -nRf 2>/dev/null || true
+    sleep 2s
     grep -F "$(pwd)/${CHROOTDIR}" /proc/mounts | cut -f2 -d" " | sort -r | xargs -r sudo umount -nl  2>/dev/null || true
   fi
   }
