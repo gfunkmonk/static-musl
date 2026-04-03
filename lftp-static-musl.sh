@@ -3,7 +3,7 @@ set -euo pipefail
 . $(dirname "${BASH_SOURCE[0]}")/common.sh
 
 echo -e "${ORANGE}= fetching latest lftp version${NC}"
-LFTP_VERSION=$(get_version release "lavv17/lftp" ".tag_name | ltrimstr("v")" "4.9.3")
+LFTP_VERSION=$(get_version release "lavv17/lftp" '.tag_name | ltrimstr("v")' "4.9.3")
 echo -e "${CHARTREUSE}= building lftp version: ${LFTP_VERSION}${NC}"
 PACKAGE_VERSION="${LFTP_VERSION}"
 LFTP_TARBALL="lftp-${LFTP_VERSION}.tar.gz"

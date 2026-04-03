@@ -3,7 +3,7 @@ set -euo pipefail
 . $(dirname "${BASH_SOURCE[0]}")/common.sh
 
 echo -e "${VIOLET}= fetching latest axel version${NC}"
-AXEL_VERSION=$(get_version release "axel-download-accelerator/axel" ".tag_name | ltrimstr("v")" "2.17.14")
+AXEL_VERSION=$(get_version release "axel-download-accelerator/axel" '.tag_name | ltrimstr("v")' "2.17.14")
 echo -e "${MINT}= building axel version: ${AXEL_VERSION}${NC}"
 PACKAGE_VERSION="${AXEL_VERSION}"
 AXEL_TARBALL="axel-${AXEL_VERSION}.tar.xz"

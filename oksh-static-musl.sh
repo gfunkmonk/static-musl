@@ -3,7 +3,7 @@ set -euo pipefail
 . $(dirname "${BASH_SOURCE[0]}")/common.sh
 
 echo -e "${LEMON}= fetching latest oksh version${NC}"
-OKSH_VERSION=$(get_version release "ibara/oksh" ".tag_name | ltrimstr("oksh-")" "7.8")
+OKSH_VERSION=$(get_version release "ibara/oksh" '.tag_name | ltrimstr("oksh-")' "7.8")
 echo -e "${LAGOON}= building oksh version: ${OKSH_VERSION}${NC}"
 PACKAGE_VERSION="${OKSH_VERSION}"
 OKSH_TARBALL="oksh-${OKSH_VERSION}.tar.gz"

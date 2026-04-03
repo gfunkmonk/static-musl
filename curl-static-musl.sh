@@ -3,7 +3,7 @@ set -euo pipefail
 . $(dirname "${BASH_SOURCE[0]}")/common.sh
 
 echo -e "${VIOLET}= fetching latest curl version${NC}"
-CURL_VERSION=$(get_version release "curl/curl" ".tag_name | ltrimstr("curl-") | gsub("_"; ".")" "8.19.0")
+CURL_VERSION=$(get_version release "curl/curl" '.tag_name | ltrimstr("curl-") | gsub("_"; ".")' "8.19.0")
 echo -e "${HOTPINK}= building curl version: ${CURL_VERSION}${NC}"
 PACKAGE_VERSION="${CURL_VERSION}"
 CURL_GIT_VER="${CURL_VERSION//./_}"

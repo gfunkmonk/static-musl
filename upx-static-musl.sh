@@ -4,7 +4,7 @@ set -euo pipefail
 . $(dirname "${BASH_SOURCE[0]}")/common.sh
 
 echo -e "${VIOLET}= fetching latest upx version${NC}"
-UPX_VERSION=$(get_version release "upx/upx" ".tag_name | ltrimstr("v")" "5.1.1")
+UPX_VERSION=$(get_version release "upx/upx" '.tag_name | ltrimstr("v")' "5.1.1")
 echo -e "${CARIBBEAN}= building upx version: ${UPX_VERSION}${NC}"
 PACKAGE_VERSION="${UPX_VERSION}"
 UPX_TARBALL="upx-${UPX_VERSION}-src.tar.xz"
