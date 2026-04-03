@@ -7,6 +7,7 @@ echo -e "${VIOLET}= fetching latest upx version${NC}"
 UPX_VERSION=$(get_version release "upx/upx" '.tag_name | ltrimstr("v")' "5.1.1")
 echo -e "${CARIBBEAN}= building upx version: ${UPX_VERSION}${NC}"
 PACKAGE_VERSION="${UPX_VERSION}"
+SINGLEVER=$(echo $UPX_VERSION | sed 's/^.*\.//')
 UPX_TARBALL="upx-${UPX_VERSION}-src.tar.xz"
 UPX_MIRRORS=(
   "https://github.com/upx/upx/releases/download/v${UPX_VERSION}/upx-${UPX_VERSION}-src.tar.xz"
@@ -28,13 +29,13 @@ tar xf ${UPX_TARBALL}
 cd upx-${UPX_VERSION}-src/
 echo -e "${LAGOON}= Applying custom patch${NC}"
 patch -p1 --fuzz=4 < ../upx-mod.patch
-sed -i 's|define UPX_VERSION_HEX      0x050...|define UPX_VERSION_HEX      0x050103|g' src/version.h
-sed -i 's|05.01...|05.01.03|g' src/version.h
-sed -i 's|"5...."|"5.1.3"|g' src/version.h
-sed -i 's|"5..."|"5.13"|g' src/version.h
+sed -i 's|define UPX_VERSION_HEX      0x050...|define UPX_VERSION_HEX      0x00010${SINGLEVER}|g' src/version.h
+sed -i 's|05.01...|00.01.0${SINGLEVER}|g' src/version.h
+sed -i 's|"5...."|"0.1.${SINGLEVER}"|g' src/version.h
+sed -i 's|"5..."|"0.1${SINGLEVER}"|g' src/version.h
 sed -i "s/UPX_VERSION_DATE     \".*\"/UPX_VERSION_DATE     \"$(date +"%b %-d, %Y" | sed 's/\(1[0-9]\),/\1th,/;s/1,/1st,/;s/2,/2nd,/;s/3,/3rd,/;s/\([0-9]\),/\1th,/g' | sed 's/,//g')\"/g" src/version.h
 sed -i "s/UPX_VERSION_DATE_ISO \".*\"/UPX_VERSION_DATE_ISO \"$(date '+%Y-%m-%d')\"/g" src/version.h
-sed -i 's%UPX_VERSION_STRING "5.1.."%UPX_VERSION_STRING "5.1.3"%g' CMakeLists.txt
+sed -i 's%UPX_VERSION_STRING "5.1.."%UPX_VERSION_STRING "0.1.${SINGLEVER}"%g' CMakeLists.txt
 mkdir build && cd build/
 echo -e "${PEACH}= Configure source${NC}"
 cmake -G Ninja \
