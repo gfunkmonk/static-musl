@@ -16,7 +16,6 @@ DASH_MIRRORS=(
 )
 
 run_build_setup "dash" "${DASH_VERSION}" "${DASH_TARBALL}" \
-  "dash-0.5.13.2.patch" \
   "dash.patch" \
   "dash-cflags-for-build.patch" \
   "dash-SHELL-Disable-sh-c-command-sh-c-exec-command.patch" \

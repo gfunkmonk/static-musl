@@ -3,7 +3,7 @@ set -euo pipefail
 . $(dirname "${BASH_SOURCE[0]}")/common.sh
 
 echo -e "${VIOLET}= fetching latest pigz version${NC}"
-PIGZ_VERSION=$(get_version tag "madler/pigz" ".[0].name | ltrimstr("v")" "2.8")
+PIGZ_VERSION=$(get_version tag "madler/pigz" '.[0].name | ltrimstr("v")' "2.8")
 echo -e "${UGLY}= building pigz version: ${PIGZ_VERSION}${NC}"
 PACKAGE_VERSION="${PIGZ_VERSION}"
 PIGZ_TARBALL="pigz-${PIGZ_VERSION}.tar.gz"

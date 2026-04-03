@@ -3,7 +3,7 @@ set -euo pipefail
 . $(dirname "${BASH_SOURCE[0]}")/common.sh
 
 echo -e "${AQUA}= fetching latest zstd version${NC}"
-ZSTD_VERSION=$(get_version release "facebook/zstd" ".tag_name | ltrimstr("v")" "1.5.7")
+ZSTD_VERSION=$(get_version release "facebook/zstd" '.tag_name | ltrimstr("v")' "1.5.7")
 echo -e "${BOYSENBERRY}= building zstd version: ${ZSTD_VERSION}${NC}"
 PACKAGE_VERSION="${ZSTD_VERSION}"
 ZSTD_TARBALL="zstd-${ZSTD_VERSION}.tar.zst"
