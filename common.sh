@@ -285,6 +285,7 @@ setup_alpine_chroot() {
   cp distfiles/"${tarball}" "./${CHROOTDIR}/${tarball}"
   # bundled tools
   echo -e "${NAVAJO}= install prebuilt tools${NC}"
+  local src
   for prebuilt in 7zz upx uasm envx curl jq mold; do
     src="tools/${prebuilt}/${prebuilt}-${ARCH}"
     if [[ ! -f "$src" ]]; then
@@ -419,9 +420,8 @@ package_output() {
   local filename="${tool}${version_suffix}-${ARCH}"
   # install -D is atomic and handles directory creation safely under parallel builds
   install -D -m 755 "${binary}" "dist/${filename}"
-  echo -e "${SKY}= Verifying binary${NC}"
   if command -v file >/dev/null 2>&1; then
-    echo -e "${UGLY}= Verifying binary${NC}"
+    echo -e "${SKY}= Verifying binary${NC}"
     if ! file "${binary}" | grep -q "statically linked"; then
         echo -e "${CRIMSON}WARNING: Binary may not be statically linked${NC}"
     fi

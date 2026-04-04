@@ -106,4 +106,4 @@ echo -e "${CARIBBEAN}= ccache statistics:${NC}"
 ccache -s
 EOF
 
-package_output "bash" "${CHROOTDIR}/bash-${BASH_VERSION}/bash"
+package_output "bash" "./${CHROOTDIR}/bash-${BASH_VERSION}/bash"

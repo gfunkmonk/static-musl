@@ -25,7 +25,8 @@ apk update && apk add build-base mold ccache ncurses-dev ncurses-static libevent
 apk upgrade musl-dev mold --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
 echo -e "${TURQUOISE}= Download & build libutempter..${NC}"
-/usr/local/bin/curl --output libutempter-1.2.1.tar.gz https://ftp.altlinux.org/pub/people/ldv/utempter/libutempter-1.2.1.tar.gz
+/usr/local/bin/curl --retry 3 --retry-delay 2 --connect-timeout 10 --max-time 120 \
+  --output libutempter-1.2.1.tar.gz https://ftp.altlinux.org/pub/people/ldv/utempter/libutempter-1.2.1.tar.gz
 tar xvfz libutempter-1.2.1.tar.gz
 cd libutempter-1.2.1/
 echo -e "${UGLY}= Installing libutempter${NC}"

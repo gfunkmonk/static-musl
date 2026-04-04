@@ -19,10 +19,10 @@ run_build_setup "wget2" "${WGET2_VERSION}" "${WGET2_TARBALL}" \
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
 set -e
 echo -e "${ORANGE}= Installing dependencies...${NC}"
-apk update && apk add build-base brotli-dev brotli-static bzip2-dev bzip2-static libidn2-dev libidn2-static libpsl-dev \
+apk update && apk add build-base mold ccache brotli-dev brotli-static bzip2-dev bzip2-static libidn2-dev libidn2-static libpsl-dev \
   libpsl-static libunistring-dev libunistring-static nghttp2-dev nghttp2-static openssl-dev openssl-libs-static pcre2-dev \
   pcre2-static xz-dev xz-static zlib-dev zlib-static zstd-dev zstd-static
-apk upgrade musl-dev --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
+apk upgrade musl-dev mold --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
 echo -e "${CARIBBEAN}= Extracting source${NC}"
 7zz x -so ${WGET2_TARBALL} | tar xf -
@@ -31,7 +31,7 @@ echo -e "${PEACH}= Configure source${NC}"
 ./configure  CC=gcc --with-ssl=openssl \
   --disable-nls --disable-rpath --sysconfdir=/etc --disable-silent-rules --disable-ipv6 --enable-year2038 \
   --disable-shared --enable-static --disable-doc --with-bzip2 --enable-manylibs --with-lzma --with-brotlidec \
-  LDFLAGS='${BLDFLAGS} -static-pie -w -Wl,-s -lidn2 -lunistring' PKG_CONFIG='${PKGCFG}' \
+  LDFLAGS='${BLDFLAGS} ${MOLD} -static-pie -w -Wl,-s -lidn2 -lunistring' PKG_CONFIG='${PKGCFG}' \
   CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fPIE -Wno-unterminated-string-initialization'
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc)
