@@ -46,6 +46,8 @@ echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip src/lftp
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
 upx --lzma src/lftp
+echo -e "${CARIBBEAN}= ccache statistics:${NC}"
+ccache -s
 EOF
 
 package_output "lftp" "./${CHROOTDIR}/lftp-${LFTP_VERSION}/src/lftp"

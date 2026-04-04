@@ -33,6 +33,8 @@ echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip ssh
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
 upx --lzma ssh
+echo -e "${CARIBBEAN}= ccache statistics:${NC}"
+ccache -s
 EOF
 
 package_output "openssh" "./${CHROOTDIR}/openssh-${OPENSSH_VERSION}/ssh"

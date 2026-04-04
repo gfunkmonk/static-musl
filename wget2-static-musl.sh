@@ -39,6 +39,8 @@ echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip src/wget2
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
 upx --lzma src/wget2
+echo -e "${CARIBBEAN}= ccache statistics:${NC}"
+ccache -s
 EOF
 
 package_output "wget2" "./${CHROOTDIR}/wget2-${WGET2_VERSION}/src/wget2"

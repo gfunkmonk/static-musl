@@ -47,6 +47,8 @@ echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip tmux
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
 upx --lzma tmux
+echo -e "${CARIBBEAN}= ccache statistics:${NC}"
+ccache -s
 EOF
 
 package_output "tmux" "./${CHROOTDIR}/tmux-${TMUX_VERSION}/tmux"

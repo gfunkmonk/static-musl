@@ -41,6 +41,8 @@ echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip src/dash
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
 upx --lzma src/dash
+echo -e "${CARIBBEAN}= ccache statistics:${NC}"
+ccache -s
 EOF
 
 package_output "dash" "./${CHROOTDIR}/dash-${DASH_VERSION}/src/dash"

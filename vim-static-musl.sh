@@ -41,6 +41,8 @@ echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip src/vim
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
 upx --lzma src/vim
+echo -e "${CARIBBEAN}= ccache statistics:${NC}"
+ccache -s
 EOF
 
 package_output "vim" "./${CHROOTDIR}/vim-${VIM_VERSION}/src/vim"

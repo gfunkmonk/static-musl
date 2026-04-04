@@ -40,6 +40,8 @@ echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip axel
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
 upx --lzma axel
+echo -e "${CARIBBEAN}= ccache statistics:${NC}"
+ccache -s
 EOF
 
 package_output "axel" "./${CHROOTDIR}/axel-${AXEL_VERSION}/axel"

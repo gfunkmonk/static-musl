@@ -42,6 +42,8 @@ echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip sed/sed
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
 upx --lzma sed/sed
+echo -e "${CARIBBEAN}= ccache statistics:${NC}"
+ccache -s
 EOF
 
 package_output "sed" "./${CHROOTDIR}/sed-${SED_VERSION}/sed/sed"

@@ -43,6 +43,8 @@ echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip src/aria2c
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
 upx --lzma src/aria2c
+echo -e "${CARIBBEAN}= ccache statistics:${NC}"
+ccache -s
 EOF
 
 package_output "aria2c" "./${CHROOTDIR}/aria2-${ARIA2_VERSION}/src/aria2c"

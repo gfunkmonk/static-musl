@@ -38,6 +38,8 @@ echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip less
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
 upx --lzma less
+echo -e "${CARIBBEAN}= ccache statistics:${NC}"
+ccache -s
 EOF
 
 package_output "less" "./${CHROOTDIR}/less-${LESS_VERSION}/less"

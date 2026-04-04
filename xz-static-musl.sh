@@ -38,6 +38,8 @@ echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip src/xz/xz
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
 upx --lzma src/xz/xz
+echo -e "${CARIBBEAN}= ccache statistics:${NC}"
+ccache -s
 EOF
 
 package_output "xz" "./${CHROOTDIR}/xz-${XZ_VERSION}/src/xz/xz"

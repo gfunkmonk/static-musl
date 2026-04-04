@@ -39,6 +39,8 @@ echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip htop
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
 upx --lzma htop
+echo -e "${CARIBBEAN}= ccache statistics:${NC}"
+ccache -s
 EOF
 
 package_output "htop" "./${CHROOTDIR}/htop-${HTOP_VERSION}/htop"

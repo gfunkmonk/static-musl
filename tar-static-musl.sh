@@ -55,6 +55,8 @@ echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip src/tar
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
 upx --lzma src/tar
+echo -e "${CARIBBEAN}= ccache statistics:${NC}"
+ccache -s
 EOF
 
 package_output "tar" "./${CHROOTDIR}/tar-${TAR_VERSION}/src/tar"

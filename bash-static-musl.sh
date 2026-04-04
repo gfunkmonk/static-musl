@@ -102,6 +102,8 @@ echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip bash
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
 upx --lzma bash
+echo -e "${CARIBBEAN}= ccache statistics:${NC}"
+ccache -s
 EOF
 
 package_output "bash" "${CHROOTDIR}/bash-${BASH_VERSION}/bash"

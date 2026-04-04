@@ -42,6 +42,8 @@ echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip programs/zstd
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
 upx --lzma programs/zstd
+echo -e "${CARIBBEAN}= ccache statistics:${NC}"
+ccache -s
 EOF
 
 package_output "zstd" "./${CHROOTDIR}/zstd-${ZSTD_VERSION}/programs/zstd"

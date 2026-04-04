@@ -174,7 +174,8 @@ jobs:
       run: |
         set -euo pipefail
         shopt -s nullglob
-        files=(dist/${{ matrix.tool }}-*-${{ matrix.arch }}.tar.xz)
+        files=(dist/${{ matrix.tool }}-[0-9]*-${{ matrix.arch }}.tar.xz)
+        #files=(dist/${{ matrix.tool }}-*-${{ matrix.arch }}.tar.xz)
         if [ "${#files[@]}" -ne 1 ]; then
           echo "::error::Expected exactly one artifact, found ${#files[@]}"
           ls -al dist || true
@@ -218,7 +219,7 @@ jobs:
     - name: Read Alpine version
       id: alpine-version
       run: |
-        ALPINE_VERSION=$(grep '^ALPINE_VERSION=' common.sh | cut -d= -f2 | tr -d '"')
+        ALPINE_VERSION=$(grep '^ALPINE_VERSION=' config.sh | cut -d= -f2 | tr -d '"')
         echo "ALPINE_VERSION=${ALPINE_VERSION}" >> "$GITHUB_ENV"
 
     - name: Download artifacts for ${{ matrix.tool }}

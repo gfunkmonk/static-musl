@@ -37,6 +37,8 @@ echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip socat
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
 upx --lzma socat
+echo -e "${CARIBBEAN}= ccache statistics:${NC}"
+ccache -s
 EOF
 
 package_output "socat" "./${CHROOTDIR}/socat-${SOCAT_VERSION}/socat"

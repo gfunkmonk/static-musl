@@ -33,6 +33,8 @@ echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip pigz
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
 upx --lzma pigz
+echo -e "${CARIBBEAN}= ccache statistics:${NC}"
+ccache -s
 EOF
 
 package_output "pigz" "./${CHROOTDIR}/pigz-${PIGZ_VERSION}/pigz"

@@ -43,6 +43,8 @@ echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip src/curl
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
 upx --lzma src/curl
+echo -e "${CARIBBEAN}= ccache statistics:${NC}"
+ccache -s
 EOF
 
 package_output "curl" "./${CHROOTDIR}/curl-${CURL_VERSION}/src/curl"

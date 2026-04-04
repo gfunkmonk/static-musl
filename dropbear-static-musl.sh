@@ -47,6 +47,8 @@ echo -e "${INDIGO}= Stripping binary${NC}"
 strip dropbear
 echo -e "${SKY}= Compressing with UPX${NC}"
 upx --lzma dropbear
+echo -e "${CARIBBEAN}= ccache statistics:${NC}"
+ccache -s
 EOF
 
 package_output "dropbear" "./${CHROOTDIR}/dropbear-${DROPBEAR_VERSION}/dropbear"

@@ -51,6 +51,8 @@ strip upx
 cp upx upx1
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
 ./upx1 --lzma upx
+echo -e "${CARIBBEAN}= ccache statistics:${NC}"
+ccache -s
 EOF
 
 package_output "upx" "./${CHROOTDIR}/upx-${UPX_VERSION}-src/build/upx"

@@ -4,9 +4,49 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
 CONF_FILE="${SCRIPT_DIR}"/config.sh
 [[ -f "${CONF_FILE}" ]] && source "${CONF_FILE}"
 
-########################
-# normalize ARCH names #
-########################
+##### Colors ################
+ORANGE="\033[38;2;255;165;0m"
+LEMON="\033[38;2;255;244;79m"
+TAWNY="\033[38;2;204;78;0m"
+HELIOTROPE="\033[38;2;223;115;255m"
+VIOLET="\033[38;2;143;0;255m"
+MINT="\033[38;2;152;255;152m"
+AQUA="\033[38;2;18;254;202m"
+TOMATO="\033[38;2;255;99;71m"
+PEACH="\033[38;2;246;161;146m"
+LAGOON="\033[38;2;142;235;236m"
+HOTPINK="\033[38;2;255;105;180m"
+LIME="\033[38;2;204;255;0m"
+OCHRE="\033[38;2;204;119;34m"
+SLATE="\033[38;2;109;129;150m"
+SKY="\033[38;2;135;206;250m"
+JUNEBUD="\033[38;2;189;218;87m"
+NAVAJO="\033[38;2;255;222;173m"
+BOYSENBERRY="\033[38;2;135;50;96m"
+CORAL="\033[38;2;240;128;128m"
+CAMEL="\033[38;2;193;154;107m"
+INDIGO="\033[38;2;111;0;255m"
+CHARTREUSE="\033[38;2;127;255;0m"
+PURPLE_BLUE="\033[38;2;147;130;255m"
+REBECCA="\033[38;2;102;51;153m"
+TEAL="\033[38;2;0;128;128m"
+TURQUOISE="\033[38;2;64;224;208m"
+BLOOD="\033[38;2;102;6;6m"
+UGLY="\033[38;2;122;115;115m"
+CARIBBEAN="\033[38;2;0;204;153m"
+CRIMSON="\033[38;2;220;20;60m"
+NC="\033[0m"
+
+##############################################
+# normalize ARCH names                       #
+# Map various CPU architecture names         #
+# to canonical values used by Alpine Linux   #
+# x86-64/amd64 → x86_64  (Intel/AMD 64-bit)  #
+# i386/i486/i586/i686 → x86  (Intel 32-bit)  #
+# arm64/armv8 → aarch64  (ARM 64-bit)        #
+# armv7* → armv7  (ARM 32-bit with NEON)     #
+# armv6/arm → armhf  (ARM 32-bit hard-float) #
+##############################################
 ARCH=${ARCH:-$(uname -m)}
 case "${ARCH}" in
   x86-64|amd64) ARCH="x86_64" ;;
@@ -144,35 +184,61 @@ download_source() {
     echo -e "${SLATE}= ${label}-${version}: distfiles/${tarball} already cached, skipping download${NC}"
     # Verify cached file is not empty
     if [ ! -s "distfiles/${tarball}" ]; then
-      echo -e "${TOMATO}= ERROR: Cached file is empty: distfiles/${tarball}${NC}" >&2
+      echo -e "${CRIMSON}= ERROR: Cached file is empty: distfiles/${tarball}${NC}" >&2
       exit 1
     fi
     return 0
   fi
   echo -e "${AQUA}= downloading ${label}-${version} tarball${NC}"
   local tmp_file="distfiles/${tarball}.tmp"
+  local error_log="distfiles/${tarball}.err"
   local downloaded=false
+  local mirror_count=0
+  local total_mirrors=$#
+
   for mirror in "$@"; do
-    echo -e "${TAWNY}= trying mirror: ${mirror}${NC}"
+    mirror_count=$((mirror_count + 1))
+    echo -e "${TAWNY}= trying mirror [${mirror_count}/${total_mirrors}]: ${mirror}${NC}"
+
+    # Capture curl output (both stdout redirect and stderr to error log)
     if "${CURL}" -fsSL --retry 3 --retry-delay 2 --connect-timeout 10 --max-time 120 \
-        -o "${tmp_file}" "${mirror}"; then
+        -o "${tmp_file}" "${mirror}" 2>"${error_log}"; then
       # Verify downloaded file is not empty
       if [ ! -s "${tmp_file}" ]; then
-        echo -e "${LEMON}= downloaded file is empty, trying next mirror${NC}"
+        echo -e "${LEMON}= failed: downloaded file is empty, trying next mirror${NC}"
         rm -f "${tmp_file}"
         continue
       fi
       mv "${tmp_file}" "distfiles/${tarball}"
-      echo -e "${MINT}= downloaded from: ${mirror}${NC}"
+      echo -e "${MINT}= successfully downloaded from: ${mirror}${NC}"
+      rm -f "${error_log}"
       downloaded=true
       break
     else
-      echo -e "${LEMON}= failed: ${mirror}${NC}"
-      rm -f "${tmp_file}"
+      local exit_code=$?
+      echo -e "${LEMON}= download failed: ${mirror}${NC}"
+
+      # Parse and display the actual error
+      if [ -s "${error_log}" ]; then
+        local error_msg=$(head -n 1 "${error_log}" | sed 's/^curl: //')
+        echo -e "${TOMATO}  └─ Error: ${error_msg}${NC}" >&2
+      else
+        # Map common curl exit codes to human-readable messages
+        case ${exit_code} in
+          6)  echo -e "${CORAL}  └─ Error: Could not resolve host${NC}" >&2 ;;
+          7)  echo -e "${HOTPINK}  └─ Error: Failed to connect${NC}" >&2 ;;
+          22) echo -e "${ORANGE}  └─ Error: HTTP error (404, 403, etc.)${NC}" >&2 ;;
+          28) echo -e "${CHARTREUSE}  └─ Error: Timeout${NC}" >&2 ;;
+          35) echo -e "${TURQUOISE}  └─ Error: SSL connection error${NC}" >&2 ;;
+          *)  echo -e "${LIME}  └─ Error: curl exit code ${exit_code}${NC}" >&2 ;;
+        esac
+      fi
+      rm -f "${tmp_file}" "${error_log}"
     fi
   done
   if [ "${downloaded}" = false ]; then
-    echo -e "${TOMATO}= ERROR: all mirrors failed for ${tarball}${NC}" >&2
+    echo -e "${CRIMSON}= ERROR: all ${total_mirrors} mirror(s) failed for ${tarball}${NC}" >&2
+    echo -e "${CRIMSON}= Please check your network connection or try again later${NC}" >&2
     exit 1
   fi
 }
@@ -203,10 +269,10 @@ setup_alpine_chroot() {
     echo -e "${HELIOTROPE}= download alpine rootfs${NC}"
     "${CURL}" -fsSL --retry 3 --retry-delay 2 --connect-timeout 10 --max-time 120 \
       -o minirootfs/"${TARBALL}" "${ALPINE_URL}" \
-      || { echo -e "${TOMATO}= ERROR: failed to download Alpine rootfs${NC}" >&2; exit 1; }
+      || { echo -e "${CRIMSON}= ERROR: failed to download Alpine rootfs${NC}" >&2; exit 1; }
     # Verify downloaded rootfs is not empty
     if [ ! -s minirootfs/"${TARBALL}" ]; then
-      echo -e "${TOMATO}= ERROR: Downloaded Alpine rootfs is empty${NC}" >&2
+      echo -e "${CRIMSON}= ERROR: Downloaded Alpine rootfs is empty${NC}" >&2
       exit 1
     fi
   fi
@@ -222,7 +288,7 @@ setup_alpine_chroot() {
   for prebuilt in 7zz upx uasm envx curl jq mold; do
     src="tools/${prebuilt}/${prebuilt}-${ARCH}"
     if [[ ! -f "$src" ]]; then
-      echo -e "${TOMATO}= ERROR: ${src} not found${NC}" >&2
+      echo -e "${CRIMSON}= ERROR: ${src} not found${NC}" >&2
       exit 1
     fi
     cp "$src" "./${CHROOTDIR}/usr/local/bin/${prebuilt}"
@@ -235,6 +301,10 @@ setup_alpine_chroot() {
 #############################################################
 copy_patches() {
   local tool="$1"; shift
+  if [ ! -d "patches/${tool}" ]; then
+    echo -e "${TOMATO}= ERROR: patches directory not found: patches/${tool}${NC}" >&2
+    exit 1
+  fi
   for patch in "$@"; do
     if [ ! -f "patches/${tool}/${patch}" ]; then
       echo -e "${TOMATO}= ERROR: patch file not found: patches/${tool}/${patch}${NC}" >&2
@@ -255,7 +325,7 @@ setup_qemu() {
     if command -v qemu-"${QEMU_ARCH}"-static >/dev/null 2>&1; then
       qemu_bin="/usr/bin/qemu-${QEMU_ARCH}-static"
       if [ ! -f "${qemu_bin}" ]; then
-        echo -e "${TOMATO}= ERROR: QEMU binary not found: ${qemu_bin}${NC}" >&2
+        echo -e "${CRIMSON}= ERROR: QEMU binary not found: ${qemu_bin}${NC}" >&2
         echo -e "${HELIOTROPE}= Install it with:${NC} ${TEAL}sudo apt-get install qemu-user-static${NC}" >&2
         exit 1
       fi
@@ -264,14 +334,14 @@ setup_qemu() {
     elif command -v qemu-"${QEMU_ARCH}" >/dev/null 2>&1; then
       qemu_bin="/usr/bin/qemu-${QEMU_ARCH}"
       if [ ! -f "${qemu_bin}" ]; then
-        echo -e "${TOMATO}= ERROR: QEMU binary not found: ${qemu_bin}${NC}" >&2
+        echo -e "${CRIMSON}= ERROR: QEMU binary not found: ${qemu_bin}${NC}" >&2
         echo -e "${HELIOTROPE}= Install it with:${NC} ${TEAL}sudo apt-get install qemu-user-binfmt${NC}" >&2
         exit 1
       fi
       sudo mkdir -p "./${CHROOTDIR}/usr/bin/"
       sudo cp "${qemu_bin}" "./${CHROOTDIR}/usr/bin/qemu-${QEMU_ARCH}-static"
     else
-      echo -e "${TOMATO}= ERROR: no QEMU binary found for ${QEMU_ARCH}${NC}" >&2
+      echo -e "${CRIMSON}= ERROR: no QEMU binary found for ${QEMU_ARCH}${NC}" >&2
       echo -e "${HELIOTROPE}= Install it with:${NC} ${TEAL}sudo apt-get install qemu-user-static${NC}" >&2
       exit 1
     fi
@@ -294,7 +364,7 @@ mount_chroot() {
   # Mount ccache directories if CCACHE_DIR is set
   if [ -n "${CCACHE_DIR:-}" ]; then
     if [ ! -d "${CCACHE_DIR}" ]; then
-      echo -e "${TOMATO}= ERROR: CCACHE_DIR is set but directory does not exist: ${CCACHE_DIR}${NC}" >&2
+      echo -e "${CRIMSON}= ERROR: CCACHE_DIR is set but directory does not exist: ${CCACHE_DIR}${NC}" >&2
       exit 1
     fi
     echo -e "${JUNEBUD}= bind mounting ccache directories${NC}"
@@ -326,10 +396,10 @@ run_build_setup() {
   setup_arch
   setup_cleanup
   install_host_deps
+  setup_qemu
   download_source "${tool}" "${version}" "${tarball}" "${mirrors[@]}"
   setup_alpine_chroot "${tarball}"
   [[ ${#patches[@]} -gt 0 ]] && copy_patches "${tool}" "${patches[@]}"
-  setup_qemu
   mount_chroot
 }
 
@@ -341,7 +411,7 @@ run_build_setup() {
 package_output() {
   local tool="$1" binary="$2"
   if [ ! -f "${binary}" ]; then
-    echo -e "${TOMATO}= ERROR: Binary not found: ${binary}${NC}" >&2
+    echo -e "${CRIMSON}= ERROR: Binary not found: ${binary}${NC}" >&2
     exit 1
   fi
   local version_suffix=""
@@ -349,10 +419,17 @@ package_output() {
   local filename="${tool}${version_suffix}-${ARCH}"
   # install -D is atomic and handles directory creation safely under parallel builds
   install -D -m 755 "${binary}" "dist/${filename}"
+  echo -e "${SKY}= Verifying binary${NC}"
   if command -v file >/dev/null 2>&1; then
+    echo -e "${UGLY}= Verifying binary${NC}"
+    if ! file "${binary}" | grep -q "statically linked"; then
+        echo -e "${CRIMSON}WARNING: Binary may not be statically linked${NC}"
+    fi
     echo -e "${ORANGE} File Info:  $(file "dist/${filename}" | cut -d: -f2-)${NC}"
   fi
-  tar -C dist -cJf "dist/${filename}.tar.xz" "${filename}"
+  local temp_archive="dist/${filename}.tar.xz.tmp.$$"
+  tar -C dist -cJf "${temp_archive}" "${filename}"
+  mv "${temp_archive}" "dist/${filename}.tar.xz"
   echo -e "${JUNEBUD}= All done! Binary: dist/${filename} ($(du -sh "dist/${filename}" | cut -f1))${NC}"
   if [ "${KEEP_CHROOT}" = "false" ]; then
     if grep -qF "$(pwd)/${CHROOTDIR}" /proc/mounts; then

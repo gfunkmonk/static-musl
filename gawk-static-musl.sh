@@ -37,6 +37,8 @@ echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip gawk
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
 upx --lzma gawk
+echo -e "${CARIBBEAN}= ccache statistics:${NC}"
+ccache -s
 EOF
 
 package_output "gawk" "./${CHROOTDIR}/gawk-${GAWK_VERSION}/gawk"

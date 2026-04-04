@@ -39,6 +39,8 @@ echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip src/nano
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
 upx --lzma src/nano
+echo -e "${CARIBBEAN}= ccache statistics:${NC}"
+ccache -s
 EOF
 
 package_output "nano" "./${CHROOTDIR}/nano-${NANO_VERSION}/src/nano"

@@ -33,6 +33,8 @@ echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip src/tnftp
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
 upx --lzma src/tnftp
+echo -e "${CARIBBEAN}= ccache statistics:${NC}"
+ccache -s
 EOF
 
 package_output "tnftp" "./${CHROOTDIR}/tnftp-${TNFTP_VERSION}/src/tnftp"

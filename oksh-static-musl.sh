@@ -34,6 +34,8 @@ echo -e "${CHARTREUSE}= Stripping binary${NC}"
 strip oksh
 echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
 upx --lzma oksh
+echo -e "${CARIBBEAN}= ccache statistics:${NC}"
+ccache -s
 EOF
 
 package_output "oksh" "./${CHROOTDIR}/oksh-${OKSH_VERSION}/oksh"
