@@ -36,6 +36,8 @@ CXX="${CXX:-g++}"
 PKGCFG="pkg-config --static"
 
 ######### Variables ###########
+# Alpine minirootfs version   #
+###############################
 ALPINE_VERSION="3.23.3"
 ALPINE_MAJOR_MINOR="${ALPINE_VERSION%.*}"
 
@@ -86,6 +88,7 @@ FALLBACK_NMAP="7.99"
 FALLBACK_OKSH="7.8"
 FALLBACK_OPENSSH="10.3p1"
 FALLBACK_PIGZ="2.8"
+FALLBACK_RSYNC="3.4.1"
 FALLBACK_SCREEN="5.0.1"
 FALLBACK_SED="4.9"
 FALLBACK_SOCAT="1.8.1.1"

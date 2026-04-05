@@ -31,6 +31,7 @@ on:
           - oksh
           - openssh
           - pigz
+          - rsync
           - sed
           - screen
           - socat
@@ -58,7 +59,7 @@ jobs:
         id: set-matrix
         run: |
           if [[ "${{ github.event_name }}" == "schedule" || "${{ inputs.tool }}" == "all" || "${{ inputs.tool }}" == "" ]]; then
-            echo 'matrix=["7zz","aria2c","axel","bash","bsdtar","curl","dash","dropbear","gawk","htop","less","lftp","nano","nmap","oksh","openssh","pigz","sed","screen","socat","tar","tmux","tnftp","upx","vim","wget","wget2","xz","zsh","zstd"]' >> "$GITHUB_OUTPUT"
+            echo 'matrix=["7zz","aria2c","axel","bash","bsdtar","curl","dash","dropbear","gawk","htop","less","lftp","nano","nmap","oksh","openssh","pigz","rsync","sed","screen","socat","tar","tmux","tnftp","upx","vim","wget","wget2","xz","zsh","zstd"]' >> "$GITHUB_OUTPUT"
           else
             echo 'matrix=["${{ inputs.tool }}"]' >> "$GITHUB_OUTPUT"
           fi

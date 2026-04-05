@@ -23,6 +23,7 @@ Build scripts that produce fully static, multi-architecture binaries using musl 
 | oksh | latest | OpenBSD ksh shell |
 | openssh | latest | OpenSSH ssh client |
 | pigz | latest | Parallel implementation of GZip |
+| rsync | latest | rsync synchronizes files locally or remotely |
 | sed | latest | Stream editor for filtering/transforming text |
 | screen | latest | Screen is a mature terminal multiplexer |
 | socat | latest | Socat is a flexible, multi-purpose relay tool |
