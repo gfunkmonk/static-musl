@@ -23,12 +23,14 @@ mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${HEXCURSE_TARBALL}
 cd hexcurse-ng-${HEXCURSE_VERSION}/
+sed -i 's/-Werror//g' src/Makefile.am
+autoreconf -fi
 echo -e "${PEACH}= Configure source${NC}"
 ./configure CC="${CC}" \
   LDFLAGS='${BLDFLAGS} ${MOLD} -no-pie' PKG_CONFIG='${PKGCFG}' \
   CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fno-PIE'
 echo -e "${VIOLET}= Building...${NC}"
-CC="${CC}" make -j\$(nproc) AM_CFLAGS="-Wall -Wextra"
+CC="${CC}" make -j\$(nproc)
 echo -e "\n${CARIBBEAN}= ccache statistics:${NC}"
 ccache -s | tail -n 10
 EOF
