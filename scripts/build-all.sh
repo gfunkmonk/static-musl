@@ -15,7 +15,7 @@ done
 cd "$(dirname "$0")/.."
 
 LOG_DIR=${PWD}/logs/
-mkdir -p "$LOG_DIR"
+mkdir -p "$LOG_DIR"/builds/
 
 # Clear logs only if NOT in resume mode
 if [ "$RESUME" = false ]; then
@@ -65,7 +65,7 @@ for file in *-static-musl.sh; do
         chmod +x "$file"
 
         # Execute and capture log
-        ./"$file" 2>&1 | tee -a "${LOG_DIR}/${bin_name}.txt"
+        ./"$file" 2>&1 | tee -a "${LOG_DIR}/builds/${bin_name}.txt"
         exit_status=${PIPESTATUS[0]}
 
         if [ $exit_status -eq 0 ]; then
