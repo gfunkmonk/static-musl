@@ -45,6 +45,13 @@ echo -e "${BWHITE}lftp: ${GREEN}${LFTP_VER}${NC}"
 NANO_VER=$(get_git_version "https://cgit.git.savannah.gnu.org/cgit/nano.git/refs/tags" "v[0-9]+\.[0-9]+(\.[0-9]+)*" "v" "")
 echo -e "${BWHITE}nano: ${GREEN}${NANO_VER}${NC}"
 
+FPING_VER=$(get_version release "schweikert/fping" '.tag_name | ltrimstr("v")' "")
+echo -e "${BWHITE}fping: ${GREEN}${FPING_VER}${NC}"
+
+NETCAT_VER=$("${CURL}" -s "https://salsa.debian.org/api/v4/projects/debian%2Fnetcat-openbsd/repository/tags" | \
+  "${JQ}" -r '[.[] | select(.name | test("^[0-9]"))] | .[0].name // empty' 2>/dev/null)
+echo -e "${BWHITE}netcat: ${GREEN}${NETCAT_VER}${NC}"
+
 NMAP_VER=$("${CURL}" -s https://nmap.org/dist/ | grep -o 'href="[^"]*.tar.bz2"' | cut -d'"' -f2 | sort | tail -1 | sed 's/\.tar.*//' | sed 's/nm
 echo -e "${BWHITE}nmap: ${GREEN}${NMAP_VER}${NC}"
 
@@ -75,6 +82,9 @@ echo -e "${BWHITE}tmux: ${GREEN}${TMUX_VER}${NC}"
 
 TNFTP_VER=$("${CURL}" -s https://ftp.netbsd.org/pub/NetBSD/misc/tnftp/ | grep -o 'href="tnftp-[^"]*.gz"' | cut -d'"' -f2 | sort | tail -1 | sed ed 's/tnftp-//')
 echo -e "${BWHITE}tnftp: ${GREEN}${TNFTP_VER}${NC}"
+
+RG_VER=$(get_version release "BurntSushi/ripgrep" '.tag_name' "")
+echo -e "${BWHITE}ripgrep: ${GREEN}${RG_VER}${NC}"
 
 UPX_VER=$(get_version release "upx/upx" '.tag_name | ltrimstr("v")' "")
 echo -e "${BWHITE}upx: ${GREEN}${UPX_VER}${NC}"
