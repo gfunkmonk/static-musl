@@ -3,7 +3,7 @@ set -euo pipefail
 . "$(dirname "${BASH_SOURCE[0]}")/common.sh"
 
 echo -e "${VIOLET}= fetching latest hexcurse-ng version${NC}"
-HEXCURSE_VERSION=$(get_version release "prso/hexcurse-ng" "v" "${FALLBACK_HEXCURSE}")
+HEXCURSE_VERSION=$(get_version release "prso/hexcurse-ng" '.tag_name | ltrimstr("v")' "${FALLBACK_HEXCURSE}")
 echo -e "${CORAL}= building hexcurse-ng version: ${HEXCURSE_VERSION}${NC}"
 PACKAGE_VERSION="${HEXCURSE_VERSION}"
 HEXCURSE_TARBALL="hexcurse-ng-${HEXCURSE_VERSION}.tar.gz"
@@ -27,6 +27,7 @@ echo -e "${PEACH}= Configure source${NC}"
 ./configure CC="${CC}" \
   LDFLAGS='${BLDFLAGS} ${MOLD} -no-pie' PKG_CONFIG='${PKGCFG}' \
   CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fno-PIE'
+sed -i 's/-Werror//g' src/Makefile
 echo -e "${VIOLET}= Building...${NC}"
 CC="${CC}" make -j\$(nproc)
 echo -e "\n${CARIBBEAN}= ccache statistics:${NC}"
