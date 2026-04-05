@@ -17,14 +17,13 @@ run_build_setup "hexcurse" "${HEXCURSE_VERSION}" "${HEXCURSE_TARBALL}" \
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
 set -e
 echo -e "${ORANGE}= Installing dependencies...${NC}"
-apk update && apk add build-base mold ccache pkgconfig ncurses-dev ncurses-static autoconf automake
+apk update && apk add build-base mold ccache pkgconfig ncurses-dev ncurses-static autoconf
 apk upgrade musl-dev mold --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${HEXCURSE_TARBALL}
 cd hexcurse-ng-${HEXCURSE_VERSION}/
-sed -i 's/-Werror//g' src/Makefile.am
-autoreconf -fi
+sed -i 's/-Werror//g' src/Makefile.in
 echo -e "${PEACH}= Configure source${NC}"
 ./configure CC="${CC}" \
   LDFLAGS='${BLDFLAGS} ${MOLD} -no-pie' PKG_CONFIG='${PKGCFG}' \
