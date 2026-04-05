@@ -13,37 +13,45 @@ RSYNC_MIRRORS=(
 )
 
 run_build_setup "rsync" "${RSYNC_VERSION}" "${RSYNC_TARBALL}" \
+  "CVE-2025-10158.patch" \
+  "disable_reconfigure_req.diff" \
+  "gcc_15.patch" \
+  "reproducible-build.patch" \
   -- "${RSYNC_MIRRORS[@]}"
 
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
 set -e
 echo -e "${ORANGE}= Installing dependencies...${NC}"
-apk update && apk add build-base mold ccache pkgconfig clang acl-dev acl-static attr-dev zstd-dev zstd-static openssl-libs-static \
-  openssl-dev lz4-dev lz4-static git
-apk add xxhash-dev xxhash-static --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
-apk upgrade musl-dev mold xxhash-dev xxhash-static --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
-mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
+apk update && apk add build-base ccache mold pkgconfig clang acl-dev acl-static attr-dev zstd-dev zstd-static openssl-libs-static openssl-dev git
+apk upgrade musl-dev mold --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
+#mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
 echo -e "${CANARY}= Build & install xxHash${NC}"
 git clone https://github.com/Cyan4973/xxHash.git
 cd xxHash
-CCACHE_DISABLE=1 PREFIX=/usr CC=/usr/bin/clang make LDFLAGS='-static' PKG_CONFIG='pkg-config --static' CFLAGS='-Os -static'
-CCACHE_DISABLE=1 PREFIX=/usr CC=/usr/bin/clang make install LDFLAGS='-static' PKG_CONFIG='pkg-config --static' CFLAGS='-Os -static'
+PREFIX=/usr CC="${CC}" make LDFLAGS='${BLDFLAGS} ${MOLD} -static-pie' PKG_CONFIG='${PKGCFG}' CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fPIE'
+PREFIX=/usr CC="${CC}" make install LDFLAGS='${BLDFLAGS} ${MOLD} -static-pie' PKG_CONFIG='${PKGCFG}' CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fPIE'
 cd ..
 echo -e "${REBECCA}= Build & install lz4${NC}"
 git clone https://github.com/lz4/lz4.git
 cd lz4
-CCACHE_DISABLE=1 PREFIX=/usr CC=/usr/bin/clang make LDFLAGS='-static' PKG_CONFIG='pkg-config --static' CFLAGS='-Os -static'
-CCACHE_DISABLE=1 PREFIX=/usr CC=/usr/bin/clang make install LDFLAGS='-static' PKG_CONFIG='pkg-config --static' CFLAGS='-Os -static'
+PREFIX=/usr CC="${CC}" make LDFLAGS='${BLDFLAGS} ${MOLD} -static-pie' PKG_CONFIG='${PKGCFG}' CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fPIE'
+PREFIX=/usr CC="${CC}" make install LDFLAGS='${BLDFLAGS} ${MOLD} -static-pie' PKG_CONFIG='${PKGCFG}' CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fPIE'
 cd ..
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${RSYNC_TARBALL}
 cd rsync-${RSYNC_VERSION}/
+echo -e "${LAGOON}= Applying custom patch${NC}"
+patch -p1 --fuzz=4 < ../CVE-2025-10158.patch
+patch -p1 --fuzz=4 < ../disable_reconfigure_req.diff
+patch -p1 --fuzz=4 < ../gcc_15.patch
+patch -p1 --fuzz=4 < ../reproducible-build.patch
 echo -e "${PEACH}= Configure source${NC}"
-CCACHE_DISABLE=1 ./configure CC=/usr/bin/clang --disable-ipv6 \
-  LDFLAGS='-static' PKG_CONFIG='${PKGCFG}' \
-  CFLAGS='-Os -static' LD_LIBRARY_PATH='/lib:/usr/lib:/usr/local/lib' EXEEXT="-static"
+./configure CC="${CC}" --disable-ipv6 --disable-roll-simd --with-included-zlib=no --disable-md5-asm \
+  LDFLAGS='${BLDFLAGS} ${MOLD} -static-pie' PKG_CONFIG='${PKGCFG}' EXEEXT='-static' \
+  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fPIE -Wno-maybe-uninitialized -Wno-unused-variable -Wno-unused-parameter \
+  -Wno-calloc-transposed-args -Wno-unused-but-set-variable -Wno-old-style-definition'
 echo -e "${VIOLET}= Building...${NC}"
-CCACHE_DISABLE=1 CC=clang make -j\$(nproc)
+CC="${CC}" make -j\$(nproc)
 echo -e "\n${CARIBBEAN}= ccache statistics:${NC}"
 ccache -s | tail -n 10
 EOF

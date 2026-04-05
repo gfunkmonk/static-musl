@@ -3,7 +3,7 @@ set -euo pipefail
 . "$(dirname "${BASH_SOURCE[0]}")/common.sh"
 
 echo -e "${OCHRE}= fetching latest wget2 version${NC}"
-WGET2_VERSION=$(get_version release "rockdaboot/wget2" '.tag_name | ltrimstr("v")' "${FALLBACK_WGET2}")
+WGET2_VERSION=$(get_gitlab_version "gnuwget/wget2" "${FALLBACK_WGET2}")
 echo -e "${PURPLE_BLUE}= building wget2 version: ${WGET2_VERSION}${NC}"
 PACKAGE_VERSION="${WGET2_VERSION}"
 WGET2_TARBALL="wget2-${WGET2_VERSION}.tar.lz"

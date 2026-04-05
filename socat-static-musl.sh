@@ -3,7 +3,7 @@ set -euo pipefail
 . "$(dirname "${BASH_SOURCE[0]}")/common.sh"
 
 echo -e "${MINT}= fetching latest socat version${NC}"
-SOCAT_VERSION=$(get_git_version "https://repo.or.cz/socat.git/refs/tags" "tag-1[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)*" "tag-" "${FALLBACK_SOCAT}")
+SOCAT_VERSION=$(get_git_version "https://repo.or.cz/socat.git/refs/tags" "tag-1\.[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)*" "tag-" "${FALLBACK_SOCAT}")
 echo -e "${JUNEBUD}= building socat version: ${SOCAT_VERSION}${NC}"
 PACKAGE_VERSION="${SOCAT_VERSION}"
 SOCAT_TARBALL="socat-${SOCAT_VERSION}.tar.gz"

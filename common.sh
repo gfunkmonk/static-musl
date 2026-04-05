@@ -134,16 +134,47 @@ setup_arch() {
   ALPINE_TARBALL="${ALPINE_URL##*/}"
 }
 
+####################################
+# Helper to handle cache checks    #
+# Usage: check_cache "unique_key"  #
+####################################
+check_cache() {
+    local cache_file="${VER_CACHE_DIR}/${1}.cache"
+    if [[ -f "$cache_file" ]]; then
+        local last_mod=$(stat -c %Y "$cache_file" 2>/dev/null || stat -f %m "$cache_file")
+        local now=$(date +%s)
+        if (( now - last_mod < VER_CACHE_TTL )); then
+            cat "$cache_file"
+            return 0
+        fi
+    fi
+    return 1
+}
+
+###########################################
+# Helper to save to cache                 #
+# Usage: write_cache "unique_key" "value" #
+###########################################
+write_cache() {
+    mkdir -p "$VER_CACHE_DIR"
+    echo "$2" > "${VER_CACHE_DIR}/${1}.cache"
+}
+
 #########################################
 # Get latest release or tag from Github #
 #########################################
 get_version() {
-  local type="$1" repo="$2" filter="$3" fallback="$4" version
+  local type="$1" repo="$2" filter="$3" fallback="$4"
+  local cache_key="gh_${repo//\//_}_${type}"
+  local version
+
+  if cached_val=$(check_cache "$cache_key"); then
+      echo "$cached_val"
+      return
+  fi
+
   local endpoint="releases/latest" default_f=".tag_name"
-
   [[ "$type" == "tag" ]] && { endpoint="tags"; default_f=".[0].name"; }
-
-  # This specific line fixes the "api.github.com{repo}" error
   local url="https://api.github.com/repos/${repo}/${endpoint}"
 
   version=$("${CURL}" -fsSL --connect-timeout 10 --max-time 30 \
@@ -151,6 +182,7 @@ get_version() {
     "$url" | "${JQ}" -r "${filter:-$default_f} // empty" 2>/dev/null)
 
   if [[ -n "$version" && "$version" != "null" ]]; then
+    write_cache "$cache_key" "$version"
     echo "$version"
   else
     local name="${repo##*/}"
@@ -163,46 +195,70 @@ get_version() {
 # Helper to fetch latest version from cgit/gitweb interfaces #
 ##############################################################
 get_git_version() {
-    local url="$1"
-    local pattern="$2"
-    local strip_prefix="$3"
-    local fallback="$4"
+    local url="$1" pattern="$2" strip_prefix="$3" fallback="$4"
+    local cache_key="git_${url//[^[:alnum:]]/_}"
 
-    # 1. Fetch tags
-    # 2. Extract matches
-    # 3. Use 'sed' to temporarily turn underscores into dots for sorting
-    # 4. Sort by version (sort -V)
-    # 5. Take the last one (the highest version)
-    # 6. Finally, strip the requested prefix
-    local version=$("${CURL}" -sL --connect-timeout 5 --max-time 15 "$url" | \
-        grep -oE "$pattern" | \
-        sed 's/_/./g' | \
-        sort -V | \
-        tail -n 1 | \
-        sed "s|^${strip_prefix//_/.}||")
+    # 1. Try Cache (CRITICAL: Delete your /tmp/ files before testing this)
+    local cached_val
+    if cached_val=$(check_cache "$cache_key"); then
+        [[ -n "$cached_val" ]] && { echo "$cached_val"; return 0; }
+    fi
 
-    if [ -z "$version" ]; then
-        echo "$fallback"
+    # 2. Fetch
+    local raw_output=$("${CURL}" -fsSL --retry 3 --retry-delay 2 --connect-timeout 10 --max-time 30 "$url")
+    local version=$(echo "$raw_output" | grep -oaE "$pattern" | sort -V | tail -n 1)
+
+    if [[ -n "$version" ]]; then
+        # --- THE CORRECT FIX ---
+        # 1. Strip the prefix from the RAW version (before underscores become dots)
+        # This handles the "V_" correctly.
+        version="${version#$strip_prefix}"
+        
+        # 2. Now convert remaining underscores to dots
+        version="${version//_/.}"
+        
+        # 3. Final cleanup for 'p' suffix and any trailing dots
+        # This turns 10.3.P1 into 10.3p1
+        version=$(echo "$version" | sed -E 's/\.[Pp]/p/; s/\.$//')
+        # -----------------------
+
+        write_cache "$cache_key" "$version"
+        echo "$version"
     else
-        # Normalise separator — turns e.g. ".P1" → "p1" (needed for OpenSSH tags
-        # like "V_10_1_P1"; for other tools this substitution is a no-op).
-        echo "$version" | sed 's/\.[Pp]/p/'
+        echo "$fallback"
     fi
 }
 
+#############################
+# versions from gitlab      #
+#############################
 get_gitlab_version() {
-    local project_path="$1" # e.g., "gnuwget/wget2"
-    local fallback="$2"
+    local project_path="$1" fallback="$2"
+    local cache_key="gitlab_${project_path//\//_}"
 
-    # API returns tags ordered by date by default
-    local version=$("${CURL}" -s "https://gitlab.com/api/v4/projects/${project_path//\//%2F}/repository/tags" | \
-        grep -oP '"name":"v?\K[0-9]+\.[0-9]+\.[0-9]+' | \
-        head -n 1)
+    # 1. Try Cache
+    local cached_val
+    if cached_val=$(check_cache "$cache_key"); then
+        [[ -n "$cached_val" ]] && { echo "$cached_val"; return 0; }
+    fi
 
-    if [ -z "$version" ]; then
-        echo "$fallback"
-    else
+    # 2. Fetch from API
+    # We URL-encode the path and use JQ to grab the first 'name' field
+    local url="https://gitlab.com/api/v4/projects/${project_path//\//%2F}/repository/tags"
+    local version
+    
+    version=$("${CURL}" -fsSL --connect-timeout 10 --max-time 30 "$url" | "${JQ}" -r '.[0].name // empty' 2>/dev/null)
+
+    # 3. Process and Save
+    if [[ -n "$version" && "$version" != "null" ]]; then
+        # Strip leading 'v' if present (common in GitLab tags)
+        version="${version#v}"
+        
+        write_cache "$cache_key" "$version"
         echo "$version"
+    else
+        # If blank, return fallback
+        echo "$fallback"
     fi
 }
 

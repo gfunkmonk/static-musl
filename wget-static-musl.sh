@@ -3,7 +3,7 @@ set -euo pipefail
 . "$(dirname "${BASH_SOURCE[0]}")/common.sh"
 
 echo -e "${MINT}= fetching latest wget version${NC}"
-WGET_VERSION=$(get_git_version "https://cgit.git.savannah.gnu.org/cgit/wget.git/refs/tags" "v[0-9]+\.[0-9]+(\.[0-9]+)*" "v" "${FALLBACK_WGET}")
+WGET_VERSION=$(get_gitlab_version "gnuwget/wget" "${FALLBACK_WGET}")
 echo -e "${JUNEBUD}= building wget version: ${WGET_VERSION}${NC}"
 PACKAGE_VERSION="${WGET_VERSION}"
 WGET_TARBALL="wget-${WGET_VERSION}.tar.gz"

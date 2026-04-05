@@ -3,7 +3,10 @@ set -euo pipefail
 . "$(dirname "${BASH_SOURCE[0]}")/common.sh"
 
 echo -e "${MINT}= fetching latest sed version${NC}"
-SED_VERSION=$(get_git_version "https://cgit.git.savannah.gnu.org/cgit/sed.git/refs/tags" "[0-9]+\.[0-9]+(\.[0-9]+)*" "v" "${FALLBACK_SED}")
+#SED_VERSION=$(get_git_version "https://cgit.git.savannah.gnu.org/cgit/sed.git/refs/tags" "[0-9]+\.[0-9]+(\.[0-9]+)*" "v" "${FALLBACK_SED}")
+SED_VERSION=$("${CURL}" -s https://ftp.gnu.org/gnu/sed/ | grep -oP 'sed-\K[0-9]+\.[0-9]+\.[0-9]+' | sort -V | tail -n 1)
+[[ -z "${SED_VERSION}" ]] && { echo -e "${TAWNY}= ftp.gnu.org fetch failed, using fallback ${FALLBACK_SED}${NC}" >&2; SED_VERSION="${FALLBACK_SED}"; }
+#SED_VERSION=$(get_version tag "mirror/sed" '.[0].name | ltrimstr("v")' "${FALLBACK_SED}")
 echo -e "${JUNEBUD}= building sed version: ${SED_VERSION}${NC}"
 PACKAGE_VERSION="${SED_VERSION}"
 SED_TARBALL="sed-${SED_VERSION}.tar.xz"

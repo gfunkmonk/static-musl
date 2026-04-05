@@ -14,15 +14,19 @@ Build scripts that produce fully static, multi-architecture binaries using musl 
 | curl | latest | Data transfer tool |
 | dash | latest | POSIX shell |
 | dropbear | latest | A relatively small SSH server and client. |
+| fping | latest | A fancy ping tool |
 | gawk | latest | a tool for processing text data |
+| hexcurse | latest | ncurses based hex editor |
 | htop | latest | Interactive process viewer |
 | less | latest | pager program similar to more |
 | lftp | latest | Command line ftp client |
 | nano | latest | Small command-line text editor |
+| netcat | latest | TCP/IP Swiss Army knife |
 | nmap | latest | Network scanning & discovery tool |
 | oksh | latest | OpenBSD ksh shell |
 | openssh | latest | OpenSSH ssh client |
 | pigz | latest | Parallel implementation of GZip |
+| ripgrep | latest | a line-oriented recursive search tool |
 | rsync | latest | rsync synchronizes files locally or remotely |
 | sed | latest | Stream editor for filtering/transforming text |
 | screen | latest | Screen is a mature terminal multiplexer |
