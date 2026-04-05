@@ -345,7 +345,7 @@ download_source() {
 # resolv.conf + source tarball inside.              #
 #####################################################
 setup_alpine_chroot() {
-  local PREBAKED_IMAGE="alpine-base-${ARCH}.tar.gz"
+  local PREBAKED_IMAGE="alpine-base-${ARCH}.tar.zst"
   local tarball="$1"
   if [ -d "./${CHROOTDIR}" ] && [ "${KEEP_CHROOT}" = "false" ]; then
     unmount_chroot
@@ -359,7 +359,7 @@ setup_alpine_chroot() {
   if [ -f "minirootfs/${PREBAKED_IMAGE}" ]; then
       echo -e "${CARIBBEAN}= Found pre-baked image: ${PREBAKED_IMAGE}. Extracting...${NC}"
       mkdir -p "./${CHROOTDIR}"
-      sudo tar -xzf minirootfs/"${PREBAKED_IMAGE}" -C "./${CHROOTDIR}"
+      sudo tar -xf minirootfs/"${PREBAKED_IMAGE}" -C "./${CHROOTDIR}"
   else
       echo -e "${CORAL}= No pre-baked image found. Downloading official Alpine...${NC}"
       if [ ! -d minirootfs/ ]; then

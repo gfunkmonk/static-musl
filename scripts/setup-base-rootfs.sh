@@ -7,7 +7,7 @@ cd "$(dirname "$0")/.."
 source "$(dirname "$0")/../common.sh"
 
 setup_arch
-[ -f minirootfs/"alpine-base-${ARCH}.tar.gz" ] && rm minirootfs/"alpine-base-${ARCH}.tar.gz"
+[ -f minirootfs/"alpine-base-${ARCH}.tar.zst" ] && rm minirootfs/"alpine-base-${ARCH}.tar.zst"
 echo -e "${LAGOON}== Building Master Base Rootfs ==${NC}"
 setup_alpine_chroot base-setup
 
@@ -26,10 +26,11 @@ fi
 
 sudo chroot "./${CHROOTDIR}/" /bin/sh -c "rm -rf /var/cache/apk/*"
 
-echo -e "${LIME}= Saving snapshot to alpine-base-${ARCH}.tar.gz...${NC}"
+echo -e "${LIME}= Saving snapshot to alpine-base-${ARCH}.tar.zst...${NC}"
 unmount_chroot
-sudo tar -czf "alpine-base-${ARCH}.tar.gz" -C "${CHROOTDIR}" .
+sudo tar -cf "alpine-base-${ARCH}.tar" -C "${CHROOTDIR}" .
+zstd -T0 -13 --rm alpine-base-${ARCH}.tar
 mkdir -p minirootfs/
-mv "alpine-base-${ARCH}.tar.gz" minirootfs/
+mv "alpine-base-${ARCH}.tar.zst" minirootfs/
 
 echo -e "${HELIOTROPE}== Done! Future builds will now use this snapshot. ==${NC}"
