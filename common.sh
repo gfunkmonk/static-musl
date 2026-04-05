@@ -415,7 +415,7 @@ setup_alpine_chroot() {
   if [ -f "minirootfs/${PREBAKED_IMAGE}" ]; then
       echo -e "${CARIBBEAN}= Found pre-baked image: ${PREBAKED_IMAGE}. Extracting...${NC}"
       mkdir -p "./${CHROOTDIR}"
-      sudo tar -xf minirootfs/"${PREBAKED_IMAGE}" -C "./${CHROOTDIR}"
+      tar -xf minirootfs/"${PREBAKED_IMAGE}" -C "./${CHROOTDIR}"
   else
       echo -e "${CORAL}= No pre-baked image found. Downloading official Alpine...${NC}"
       if [ ! -d minirootfs/ ]; then
@@ -444,11 +444,11 @@ setup_alpine_chroot() {
     tar xf minirootfs/"${ALPINE_TARBALL}" -C "${CHROOTDIR}"/
   fi
   echo -e "${TURQUOISE}= copy resolv.conf into chroot${NC}"
-  sudo cp /etc/resolv.conf "./${CHROOTDIR}/etc/" || \
+  cp /etc/resolv.conf "./${CHROOTDIR}/etc/" || \
     echo -e "${TAWNY}= WARNING: failed to copy resolv.conf — DNS may not work inside chroot${NC}"
   if [ "${tarball}" != "base-setup" ]; then
     echo -e "${PEACH}= copying ${tarball} into chroot${NC}"
-    sudo cp distfiles/"${tarball}" "./${CHROOTDIR}/${tarball}"
+    cp distfiles/"${tarball}" "./${CHROOTDIR}/${tarball}"
   fi
   # bundled tools
   echo -e "${NAVAJO}= install prebuilt tools${NC}"
@@ -459,7 +459,7 @@ setup_alpine_chroot() {
       echo -e "${CRIMSON}= ERROR: ${src} not found${NC}" >&2
       exit 1
     fi
-    sudo cp "$src" "./${CHROOTDIR}/usr/local/bin/${prebuilt}"
+    cp "$src" "./${CHROOTDIR}/usr/local/bin/${prebuilt}"
   done
 }
 
@@ -478,7 +478,7 @@ copy_patches() {
       echo -e "${TOMATO}= ERROR: patch file not found: patches/${tool}/${patch}${NC}" >&2
       exit 1
     fi
-    sudo cp "patches/${tool}/${patch}" "./${CHROOTDIR}/${patch}"
+    cp "patches/${tool}/${patch}" "./${CHROOTDIR}/${patch}"
   done
 }
 
