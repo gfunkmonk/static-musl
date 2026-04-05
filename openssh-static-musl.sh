@@ -1,10 +1,10 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
-. "$(dirname "$0")/common.sh"
+. "$(dirname "${BASH_SOURCE[0]}")/common.sh"
 
-setup_tools
-
-OPENSSH_VERSION="10.2p1"
+echo -e "${MINT}= fetching latest openssh version${NC}"
+OPENSSH_VERSION=$(get_git_version "https://anongit.mindrot.org/openssh.git/refs/tags" "V_[0-9]+_[0-9]+(_P[0-9]+)?" "V_" "${FALLBACK_OPENSSH}")
+echo -e "${JUNEBUD}= building openssh version: ${OPENSSH_VERSION}${NC}"
 PACKAGE_VERSION="${OPENSSH_VERSION}"
 OPENSSH_TARBALL="openssh-${OPENSSH_VERSION}.tar.gz"
 OPENSSH_MIRRORS=(
@@ -19,22 +19,20 @@ run_build_setup "openssh" "${OPENSSH_VERSION}" "${OPENSSH_TARBALL}" \
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
 set -e
 echo -e "${ORANGE}= Installing dependencies...${NC}"
-apk update && apk add build-base musl-dev ccache openssl-dev openssl-libs-static zlib-dev zlib-static autoconf automake
+apk update && apk add build-base mold ccache openssl-dev openssl-libs-static zlib-dev zlib-static autoconf automake
+apk upgrade musl-dev mold --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
-chmod 755 upx
 echo -e "${LIME}= Extracting source${NC}"
-tar xf openssh-${OPENSSH_VERSION}.tar.gz
+tar xf ${OPENSSH_TARBALL}
 cd openssh-${OPENSSH_VERSION}/
 echo -e "${PEACH}= Configure source${NC}"
 ./configure --with-privsep-user=nobody \
-  LIBS='-pthread' LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
-  CFLAGS='-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie -Wno-unterminated-string-initialization'
+  LIBS='-pthread' LDFLAGS='${BLDFLAGS} -no-pie' PKG_CONFIG='${PKGCFG}' \
+  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fno-PIE -Wno-unterminated-string-initialization'
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc)
-echo -e "${CHARTREUSE}= Stripping binary${NC}"
-strip ssh
-echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
-../upx --lzma ssh
+echo -e "\n${CARIBBEAN}= ccache statistics:${NC}"
+ccache -s | tail -n 10
 EOF
 
 package_output "openssh" "./${CHROOTDIR}/openssh-${OPENSSH_VERSION}/ssh"

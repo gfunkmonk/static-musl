@@ -1,0 +1,63 @@
+Description: Adjust cross-compile fallback values to yes.
+Origin: commit, revision id: dmitrijs.ledkovs@canonical.com-20121220153357-amh2d7kzw5d314mt
+Author: Dmitrijs Ledkovs <dmitrijs.ledkovs@canonical.com>
+Last-Update: 2012-12-20
+X-Bzr-Revision-Id: dmitrijs.ledkovs@canonical.com-20121220153357-amh2d7kzw5d314mt
+
+=== modified file 'aczsh.m4'
+--- a/aczsh.m4
++++ b/aczsh.m4
+@@ -172,7 +172,7 @@
+ }
+ ]])],[zsh_cv_shared_$1=yes],
+ [zsh_cv_shared_$1=no],
+-[zsh_cv_shared_$1=no]
++[zsh_cv_shared_$1=yes]
+ )
+ else
+     zsh_cv_shared_$1=no
+@@ -244,7 +244,7 @@
+ }
+ ]])],[zsh_cv_sys_dynamic_clash_ok=yes],
+ [zsh_cv_sys_dynamic_clash_ok=no],
+-[zsh_cv_sys_dynamic_clash_ok=no]
++[zsh_cv_sys_dynamic_clash_ok=yes]
+ )
+ else
+     zsh_cv_sys_dynamic_clash_ok=no
+@@ -318,7 +318,7 @@
+ }
+ ]])],[zsh_cv_sys_dynamic_rtld_global=yes],
+ [zsh_cv_sys_dynamic_rtld_global=no],
+-[zsh_cv_sys_dynamic_rtld_global=no]
++[zsh_cv_sys_dynamic_rtld_global=yes]
+ )
+ else
+     zsh_cv_sys_dynamic_rtld_global=no
+@@ -388,7 +388,7 @@
+ int fred () { return 42; }
+ ]])],[zsh_cv_sys_dynamic_execsyms=yes],
+ [zsh_cv_sys_dynamic_execsyms=no],
+-[zsh_cv_sys_dynamic_execsyms=no]
++[zsh_cv_sys_dynamic_execsyms=yes]
+ )
+     LDFLAGS=$save_ldflags
+ else
+@@ -462,7 +462,7 @@
+ int fred () { return 42; }
+ ]])],[zsh_cv_sys_dynamic_strip_exe=yes],
+ [zsh_cv_sys_dynamic_strip_exe=no],
+-[zsh_cv_sys_dynamic_strip_exe=no]
++[zsh_cv_sys_dynamic_strip_exe=yes]
+ )
+     LDFLAGS=$save_ldflags
+ else
+@@ -528,7 +528,7 @@
+ }
+ ]])],[zsh_cv_sys_dynamic_strip_lib=yes],
+ [zsh_cv_sys_dynamic_strip_lib=no],
+-[zsh_cv_sys_dynamic_strip_lib=no]
++[zsh_cv_sys_dynamic_strip_lib=yes]
+ )
+ else
+     zsh_cv_sys_dynamic_strip_lib=no

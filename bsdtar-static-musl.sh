@@ -1,16 +1,10 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
-. "$(dirname "$0")/common.sh"
-
-setup_tools
+. "$(dirname "${BASH_SOURCE[0]}")/common.sh"
 
 echo -e "${VIOLET}= fetching latest bsdtar version${NC}"
-BSDTAR_VERSION=$(gh_latest_release "libarchive/libarchive" '.tag_name | ltrimstr("v")') || true
-if [ -z "${BSDTAR_VERSION}" ]; then
-  echo -e "${TAWNY}= GitHub API unavailable, falling back to bsdtar 3.8.6${NC}"
-  BSDTAR_VERSION="3.8.6"
-fi
-
+BSDTAR_VERSION=$(get_version release "libarchive/libarchive" '.tag_name | ltrimstr("v")' "${FALLBACK_BSDTAR}")
+echo -e "${MINT}= building bsdtar version: ${BSDTAR_VERSION}${NC}"
 PACKAGE_VERSION="${BSDTAR_VERSION}"
 BSDTAR_TARBALL="libarchive-${BSDTAR_VERSION}.tar.xz"
 BSDTAR_MIRRORS=(
@@ -27,32 +21,27 @@ run_build_setup "libarchive" "${BSDTAR_VERSION}" "${BSDTAR_TARBALL}" \
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
 set -e
 echo -e "${ORANGE}= Installing dependencies...${NC}"
-apk update && apk add build-base musl-dev ccache make pkgconfig zlib-dev zlib-static xz-dev xz-static zstd-dev zstd-static lz4-dev lz4-static openssl-dev openssl-libs-static libbz2 bzip2-static libxml2-dev libxml2-static
+apk update && apk add build-base mold ccache make pkgconfig zlib-dev zlib-static xz-dev xz-static \
+  zstd-dev zstd-static lz4-dev lz4-static openssl-dev openssl-libs-static libbz2 bzip2-static \
+  libxml2-dev libxml2-static lzo-dev
+apk upgrade musl-dev mold --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
-chmod 755 upx
 echo -e "${LIME}= Extracting source${NC}"
-tar xf libarchive-${BSDTAR_VERSION}.tar.xz
+tar xf ${BSDTAR_TARBALL}
 cd libarchive-${BSDTAR_VERSION}/
 echo -e "${PEACH}= Configure source${NC}"
-./configure CC=gcc \
-  --disable-shared --enable-static --enable-bsdtar=static \
-  --disable-bsdcat --disable-bsdcpio --with-zlib \
-  --disable-maintainer-mode --with-bz2lib --disable-dependency-tracking \
-  LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
-  CFLAGS='-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie'
+./configure CC="${CC}" --disable-shared --enable-static --enable-bsdtar=static --disable-bsdcat \
+  --disable-bsdcpio --with-zlib --disable-maintainer-mode --with-bz2lib --with-lzo2 \
+  --disable-dependency-tracking --disable-bsdunzip --disable-rpath --enable-year2038 \
+  LDFLAGS='${BLDFLAGS} -static-pie' PKG_CONFIG='${PKGCFG}' CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fPIE'
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc)
-LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
-  CFLAGS='-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie' \
-  gcc -static -o bsdtar tar/bsdtar-bsdtar.o \
-  tar/bsdtar-cmdline.o tar/bsdtar-creation_set.o \
+gcc -static -o bsdtar tar/bsdtar-bsdtar.o tar/bsdtar-cmdline.o tar/bsdtar-creation_set.o \
   tar/bsdtar-read.o tar/bsdtar-subst.o tar/bsdtar-util.o \
   tar/bsdtar-write.o .libs/libarchive.a .libs/libarchive_fe.a \
-  -lz -lbz2 -llzma -lzstd -llz4 -lxml2 -lcrypto -lssl
-echo -e "${CHARTREUSE}= Stripping binary${NC}"
-strip bsdtar
-echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
-../upx --lzma bsdtar
+  -lz -lbz2 -llzma -lzstd -llz4 -lxml2 -lcrypto -lssl -llzo2
+echo -e "\n${CARIBBEAN}= ccache statistics:${NC}"
+ccache -s | tail -n 10
 EOF
 
 package_output "bsdtar" "./${CHROOTDIR}/libarchive-${BSDTAR_VERSION}/bsdtar"

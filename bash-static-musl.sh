@@ -1,10 +1,10 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
-. "$(dirname "$0")/common.sh"
+. "$(dirname "${BASH_SOURCE[0]}")/common.sh"
 
-setup_tools
-
-BASH_VERSION="5.3"
+echo -e "${MINT}= fetching latest bash version${NC}"
+BASH_VERSION=$(get_git_version "https://cgit.git.savannah.gnu.org/cgit/bash.git/refs/tags" "bash-[0-9]+\.[0-9]+(\.[0-9]+)*" "bash-" "${FALLBACK_BASH}")
+echo -e "${JUNEBUD}= building bash version: ${BASH_VERSION}${NC}"
 PACKAGE_VERSION="${BASH_VERSION}"
 BASH_TARBALL="bash-${BASH_VERSION}.tar.gz"
 IFS='.' read -r bash_major bash_minor _ <<< "${BASH_VERSION}"
@@ -18,7 +18,6 @@ BASH_MIRRORS=(
   "https://mirrors.kernel.org/gnu/bash/bash-${BASH_VERSION}.tar.gz"
   "https://mirrors.ibiblio.org/pub/mirrors/gnu/bash/bash-${BASH_VERSION}.tar.gz"
   "https://mirror.us-midwest-1.nexcess.net/gnu/bash/bash-${BASH_VERSION}.tar.gz"
-
 )
 
 download_bash_upstream_patches() {
@@ -62,17 +61,23 @@ download_bash_upstream_patches() {
 
 download_bash_upstream_patches
 run_build_setup "bash" "${BASH_VERSION}" "${BASH_TARBALL}" \
-  "bash.patch" \
+  "bash-aliases-repeat.patch" \
+  "bash-bash-config.patch" \
+  "bash-bashansi-bool-c23.patch" \
+  "bash-default-editor.patch" \
+  "bash-input-err.patch" \
+  "bash_cd_three_dot.patch" \
+  "bash_make-the-bash-fc-builtin-more-reliable-for-scripting.patch" \
   -- "${BASH_MIRRORS[@]}"
 cp -r distfiles/"${BASH_PATCH_DIR}" "./${CHROOTDIR}/"
 
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
 set -e
 apk update
-apk add build-base musl-dev ccache sed automake autoconf pkgconfig ncurses-dev ncurses-static perl gettext-dev gettext-static readline readline-static
+apk add build-base mold ccache sed automake autoconf pkgconfig ncurses-dev ncurses-static perl gettext-dev gettext-static readline readline-static
+apk upgrade musl-dev mold --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
 mkdir -p /ccache
 export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
-chmod 755 upx
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${BASH_TARBALL}
 cd bash-${BASH_VERSION}/
@@ -80,20 +85,23 @@ while read -r patch; do
   echo -e "${NAVAJO}= applying \$patch${NC}"
   patch -p0 < ../${BASH_PATCH_DIR}/"\$patch"
 done < ../${BASH_PATCH_DIR}/.patch-list
-echo -e "${BOYSENBERRY}= applying bash-5.3_my.patch${NC}"
-echo -e "${LAGOON}= Applying custom patch${NC}"
-patch -p1 --fuzz=4 < ../bash.patch
+echo -e "${BOYSENBERRY}= applying custom patch${NC}"
+patch -p1 --fuzz=4 < ../bash-aliases-repeat.patch
+patch -p1 --fuzz=4 < ../bash-bash-config.patch
+patch -p1 --fuzz=4 < ../bash-bashansi-bool-c23.patch
+patch -p1 --fuzz=4 < ../bash-default-editor.patch
+patch -p1 --fuzz=4 < ../bash-input-err.patch
+patch -p1 --fuzz=4 < ../bash_cd_three_dot.patch
+patch -p1 --fuzz=4 < ../bash_make-the-bash-fc-builtin-more-reliable-for-scripting.patch
 echo -e "${PEACH}= Configure source${NC}"
-./configure CC='gcc' \
+./configure \
   --disable-nls --without-bash-malloc --with-curses --enable-static-link \
-  LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
-  CFLAGS='-Os -static $ARCH_FLAGS -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie -Wno-discarded-qualifiers'
+  LDFLAGS='${BLDFLAGS} ${MOLD} -static-pie' PKG_CONFIG='${PKGCFG}' \
+  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fPIE -Wno-discarded-qualifiers'
 echo -e "${VIOLET}= Building...${NC}"
-CC='gcc' make -j\$(nproc)
-echo -e "${CHARTREUSE}= Stripping binary${NC}"
-strip bash
-echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
-../upx --ultra-brute bash
+make -j\$(nproc)
+echo -e "\n${CARIBBEAN}= ccache statistics:${NC}"
+ccache -s | tail -n 10
 EOF
 
-package_output "bash" "${CHROOTDIR}/bash-${BASH_VERSION}/bash"
+package_output "bash" "./${CHROOTDIR}/bash-${BASH_VERSION}/bash"

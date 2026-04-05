@@ -1,16 +1,10 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
-. "$(dirname "$0")/common.sh"
+. "$(dirname "${BASH_SOURCE[0]}")/common.sh"
 
-setup_tools
-
-echo -e "${VIOLET}= fetching latest oksh version${NC}"
-OKSH_VERSION=$(gh_latest_release "ibara/oksh" '.tag_name | ltrimstr("oksh-")') || true
-if [ -z "${OKSH_VERSION}" ]; then
-  echo -e "${TAWNY}= GitHub API unavailable, falling back to oksh 7.8${NC}"
-  OKSH_VERSION="7.8"
-fi
-
+echo -e "${LEMON}= fetching latest oksh version${NC}"
+OKSH_VERSION=$(get_version release "ibara/oksh" '.tag_name | ltrimstr("oksh-")' "${FALLBACK_OKSH}")
+echo -e "${LAGOON}= building oksh version: ${OKSH_VERSION}${NC}"
 PACKAGE_VERSION="${OKSH_VERSION}"
 OKSH_TARBALL="oksh-${OKSH_VERSION}.tar.gz"
 OKSH_MIRRORS=(
@@ -24,32 +18,20 @@ run_build_setup "oksh" "${OKSH_VERSION}" "${OKSH_TARBALL}" \
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
 set -e
 echo -e "${ORANGE}= Installing dependencies...${NC}"
-if [ "$ARCH" = "x86" ]; then
-  apk update && apk add build-base musl-dev ccache pkgconfig ncurses-dev ncurses-static
-else
-  apk update && apk add build-base musl-dev ccache pkgconfig ncurses-dev ncurses-static clang
-fi
+apk update && apk add build-base mold ccache pkgconfig ncurses-dev ncurses-static clang
+apk upgrade musl-dev mold --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
-chmod 755 upx
 echo -e "${LIME}= Extracting source${NC}"
-tar xf oksh-${OKSH_VERSION}.tar.gz
+tar xf ${OKSH_TARBALL}
 cd oksh-${OKSH_VERSION}/
 echo -e "${PEACH}= Configure source${NC}"
-if [ "$ARCH" = "x86" ]; then
-./configure --cc=gcc --cflags="-Os ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer" \
-    --enable-curses --enable-static --enable-lto \
-    LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static'
-else
-./configure --cc=clang --cflags="-Os ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer" \
-    --enable-curses --enable-static --enable-lto \
-    LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static'
-fi
+./configure --cc=clang --cflags="${BCFLAGS} ${ARCH_FLAGS} ${EXTRA}" \
+  --enable-curses --enable-static --enable-lto \
+  LDFLAGS='${BLDFLAGS} ${MOLD}' PKG_CONFIG='${PKGCFG}'
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc)
-echo -e "${CHARTREUSE}= Stripping binary${NC}"
-strip oksh
-echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
-../upx --ultra-brute oksh
+echo -e "\n${CARIBBEAN}= ccache statistics:${NC}"
+ccache -s | tail -n 10
 EOF
 
 package_output "oksh" "./${CHROOTDIR}/oksh-${OKSH_VERSION}/oksh"

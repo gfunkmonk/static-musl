@@ -1,33 +1,41 @@
 # static-musl-builds
-
+ 
 Build scripts that produce fully static, multi-architecture binaries using musl libc and Alpine Linux.
 
 ## Tools
 
 | Tool | Version | Description |
-|------|---------|-------------|
-| 7zz | v1.5.7-R4 | CLI 7zip built from 7-Zip-zstd |
+|:-----:|:---------:|:-------------|
+| 7zz | latest | CLI 7zip built from 7-Zip-zstd |
 | aria2c | latest | Multi-protocol download utility |
 | axel | latest | Parallel download accelerator |
-| bash | 5.3 | Bash (Bourne Again SHell) |
+| bash | latest | Bash (Bourne Again SHell) |
 | bsdtar | latest | Archive tool (libarchive) |
 | curl | latest | Data transfer tool |
-| dash | 0.5.13.1 | POSIX shell |
+| dash | latest | POSIX shell |
+| dropbear | latest | A relatively small SSH server and client. |
+| gawk | latest | a tool for processing text data |
 | htop | latest | Interactive process viewer |
 | less | latest | pager program similar to more |
-| lftp | 4.9.3 | Command line ftp client |
-| nano | 8.7.1 | Small command-line text editor |
-| nmap | 7.98 | Network scanning & discovery tool |
+| lftp | latest | Command line ftp client |
+| nano | latest | Small command-line text editor |
+| nmap | latest | Network scanning & discovery tool |
 | oksh | latest | OpenBSD ksh shell |
-| openssh | 10.2p1 | OpenSSH ssh client |
-| pigz | 2.8 | Parallel implementation of GZip |
-| sed | 4.9 | Stream editor for filtering/transforming text |
-| screen | 5.0.1 | Screen is a mature terminal multiplexer |
-| tar | 1.35 | GNU tar archive utility |
+| openssh | latest | OpenSSH ssh client |
+| pigz | latest | Parallel implementation of GZip |
+| sed | latest | Stream editor for filtering/transforming text |
+| screen | latest | Screen is a mature terminal multiplexer |
+| socat | latest | Socat is a flexible, multi-purpose relay tool |
+| tar | latest | GNU tar archive utility |
+| tnftp | latest | a port of the NetBSD FTP client |
+| tmux | latest | Tmux is a terminal multiplexer |
 | upx | latest | UPX w/ custom patch & zstd support |
 | vim | latest | Text editor |
-| wget | 1.25.0 | File downloader |
+| wget | latest | File downloader |
+| wget2 | latest | The successor of GNU Wget. |
 | xz | latest | XZ/LZMA compression |
+| zsh | latest | an interactive Bourne-like POSIX shell |
+| zstd | latest | Fast real-time compression algorithm |
 
 ## Architectures
 

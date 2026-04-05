@@ -1,0 +1,25 @@
+commit 4b7a9fd0ecb750646cac76c41383f8391cd0fdd9
+Author: Bart Schaefer <schaefer@zsh.org>
+Date:   Tue Mar 14 20:51:15 2023 -0700
+
+    [partial cherry-pick] 51573: additional "typset -p -m" fix for namespaces
+    
+    The "-m pattern" option is supposed to enable printing namespaces, but
+    that didn't work when combined with -p.
+    
+    The -p option could also cause an unset parameter to become set if a
+    named reference pointed at it.
+
+diff --git a/Src/builtin.c b/Src/builtin.c
+index d99802f5f..f38a54936 100644
+--- a/Src/builtin.c
++++ b/Src/builtin.c
+@@ -2502,6 +2502,8 @@ typeset_single(char *cname, char *pname, Param pm, int func,
+ 		    "%s: inconsistent array element or slice assignment", pname);
+ 	    return NULL;
+ 	}
++    } else if (!pm && OPT_ISSET(ops,'p')) {
++	return NULL;
+     }
+     /*
+      * As we can hide existing parameters, we allow a name if

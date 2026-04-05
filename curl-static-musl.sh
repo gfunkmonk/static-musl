@@ -1,16 +1,10 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
-. "$(dirname "$0")/common.sh"
-
-setup_tools
+. "$(dirname "${BASH_SOURCE[0]}")/common.sh"
 
 echo -e "${VIOLET}= fetching latest curl version${NC}"
-CURL_VERSION=$(gh_latest_release "curl/curl" '.tag_name | ltrimstr("curl-") | gsub("_"; ".")') || true
-if [ -z "${CURL_VERSION}" ]; then
-  echo -e "${TAWNY}= GitHub API unavailable, falling back to curl 8.19.0${NC}"
-  CURL_VERSION="8.19.0"
-fi
-
+CURL_VERSION=$(get_version release "curl/curl" '.tag_name | ltrimstr("curl-") | gsub("_"; ".")' "${FALLBACK_CURL}")
+echo -e "${HOTPINK}= building curl version: ${CURL_VERSION}${NC}"
 PACKAGE_VERSION="${CURL_VERSION}"
 CURL_GIT_VER="${CURL_VERSION//./_}"
 CURL_TARBALL="curl-${CURL_VERSION}.tar.xz"
@@ -30,44 +24,23 @@ run_build_setup "curl" "${CURL_VERSION}" "${CURL_TARBALL}" \
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
 set -e
 echo -e "${ORANGE}= Installing dependencies...${NC}"
-if [ "$ARCH" = "x86" ]; then
-  apk update && apk add build-base musl-dev ccache openssl-dev openssl-libs-static nghttp2-dev nghttp2-static libssh2-dev libssh2-static zlib-dev zlib-static zstd-dev zstd-static autoconf automake libunistring-static libunistring-dev libidn2-static libidn2-dev libpsl-static libpsl-dev
-else
-  apk update && apk add build-base musl-dev ccache openssl-dev openssl-libs-static nghttp2-dev nghttp2-static libssh2-dev libssh2-static zlib-dev zlib-static zstd-dev zstd-static autoconf automake libunistring-static libunistring-dev libidn2-static libidn2-dev libpsl-static libpsl-dev clang
-fi
+apk update && apk add build-base ccache openssl-dev openssl-libs-static nghttp2-dev nghttp2-static libssh2-dev libssh2-static zlib-dev zlib-static zstd-dev zstd-static autoconf automake libunistring-static libunistring-dev libidn2-static libidn2-dev libpsl-static libpsl-dev clang
+apk upgrade musl-dev --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
-chmod 755 upx
 echo -e "${LIME}= Extracting source${NC}"
-tar xf curl-${CURL_VERSION}.tar.xz
+tar xf ${CURL_TARBALL}
 cd curl-${CURL_VERSION}/
 echo -e "${LAGOON}= Applying custom patch${NC}"
 patch -p1 --fuzz=4 < ../curl.patch
 echo -e "${PEACH}= Configure source${NC}"
-if [ "$ARCH" = "x86" ]; then
-  ./configure \
-    --disable-shared --enable-static \
-    --disable-ldap --enable-ipv6 --enable-unix-sockets \
-    --with-ssl --with-libssh2 \
-    --disable-docs --disable-manual --without-libpsl \
-    CC=gcc LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
-    CFLAGS='-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie -Wno-unterminated-string-initialization'
-    echo -e "${VIOLET}= Building...${NC}"
-    CC=gcc make -j\$(nproc) V=1 LDFLAGS='-static -all-static'
-else
-  ./configure \
-    --disable-shared --enable-static \
-    --disable-ldap --enable-ipv6 --enable-unix-sockets \
-    --with-ssl --with-libssh2 \
-    --disable-docs --disable-manual --without-libpsl \
-    CC=clang LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
-    CFLAGS='-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie -Wno-unterminated-string-initialization'
-    echo -e "${VIOLET}= Building...${NC}"
-    CC=clang make -j\$(nproc) V=1 LDFLAGS='-static -all-static'
-fi
-echo -e "${CHARTREUSE}= Stripping binary${NC}"
-strip src/curl
-echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
-../upx --lzma src/curl
+./configure CC='clang' --disable-shared --enable-static --disable-ldap --disable-ipv6 --enable-unix-sockets \
+  --with-ssl --with-libssh2 --disable-docs --disable-manual --without-libpsl \
+  LDFLAGS='${BLDFLAGS} -static-pie' PKG_CONFIG='${PKGCFG}' \
+  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fPIE -Wno-unterminated-string-initialization'
+echo -e "${VIOLET}= Building...${NC}"
+CC='clang' make -j\$(nproc) V=1 LDFLAGS='-all-static ${BLDFLAGS} -static-pie'
+echo -e "\n${CARIBBEAN}= ccache statistics:${NC}"
+ccache -s | tail -n 10
 EOF
 
 package_output "curl" "./${CHROOTDIR}/curl-${CURL_VERSION}/src/curl"

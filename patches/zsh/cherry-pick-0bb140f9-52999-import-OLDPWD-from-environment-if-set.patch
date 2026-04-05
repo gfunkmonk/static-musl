@@ -1,0 +1,22 @@
+From 0bb140f9911851e9712dba311925f9c9ab521fd2 Mon Sep 17 00:00:00 2001
+From: Peter Stephenson <p.w.stephenson@ntlworld.com>
+Date: Sun, 28 Jul 2024 20:33:07 +0100
+Subject: [PATCH] 52999: import OLDPWD from environment if set
+
+diff --git a/Src/init.c b/Src/init.c
+index ec21521b1..0aecb5db9 100644
+--- a/Src/init.c
++++ b/Src/init.c
+@@ -1245,7 +1245,11 @@ setupvals(char *cmd, char *runscript, char *zsh_name)
+ 	pwd = metafy(zgetcwd(), -1, META_DUP);
+     }
+ 
+-    oldpwd = ztrdup(pwd);  /* initialize `OLDPWD' = `PWD' */
++    oldpwd = zgetenv("OLDPWD");
++    if (oldpwd == NULL)
++        oldpwd = ztrdup(pwd);  /* initialize `OLDPWD' = `PWD' */
++    else
++	oldpwd = ztrdup(oldpwd);
+ 
+     inittyptab();     /* initialize the ztypes table */
+     initlextabs();    /* initialize lexing tables    */

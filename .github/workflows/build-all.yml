@@ -21,6 +21,8 @@ on:
           - bsdtar
           - curl
           - dash
+          - dropbear
+          - gawk
           - htop
           - less
           - lftp
@@ -31,14 +33,17 @@ on:
           - pigz
           - sed
           - screen
+          - socat
           - tar
+          - tmux
+          - tnftp
           - upx
           - vim
           - wget
+          - wget2
           - xz
-
-env:
-  ALPINE_VERSION: "3.23.3"
+          - zsh
+          - zstd
 
 permissions:
   contents: read
@@ -53,7 +58,7 @@ jobs:
         id: set-matrix
         run: |
           if [[ "${{ github.event_name }}" == "schedule" || "${{ inputs.tool }}" == "all" || "${{ inputs.tool }}" == "" ]]; then
-            echo 'matrix=["7zz","aria2c","axel","bash","bsdtar","curl","dash","htop","less","lftp","nano","nmap","oksh","openssh","pigz","sed","screen","tar","upx","vim","wget","xz"]' >> "$GITHUB_OUTPUT"
+            echo 'matrix=["7zz","aria2c","axel","bash","bsdtar","curl","dash","dropbear","gawk","htop","less","lftp","nano","nmap","oksh","openssh","pigz","sed","screen","socat","tar","tmux","tnftp","upx","vim","wget","wget2","xz","zsh","zstd"]' >> "$GITHUB_OUTPUT"
           else
             echo 'matrix=["${{ inputs.tool }}"]' >> "$GITHUB_OUTPUT"
           fi
@@ -87,7 +92,7 @@ jobs:
     - name: Read Alpine version
       id: alpine-version
       run: |
-        ALPINE_VERSION=$(grep '^ALPINE_VERSION=' common.sh | cut -d= -f2 | tr -d '"')
+        ALPINE_VERSION=$(grep '^ALPINE_VERSION=' config.sh | cut -d= -f2 | tr -d '"')
         echo "version=${ALPINE_VERSION}" >> "$GITHUB_OUTPUT"
         echo "ALPINE_VERSION=${ALPINE_VERSION}" >> "$GITHUB_ENV"
 
@@ -124,7 +129,8 @@ jobs:
         update_packager_index: true
         install_ccache: true
         prepend_symlinks_to_path: true
-        override_cache_key: ccache-${{ steps.alpine-version.outputs.version }}-${{ matrix.arch }}-${{ matrix.tool }}-${{ hashFiles(format('{0}-static-musl.sh', matrix.tool)) }}
+        # Include common.sh in the hash so flag changes invalidate the cache
+        override_cache_key: ccache-${{ steps.alpine-version.outputs.version }}-${{ matrix.arch }}-${{ matrix.tool }}-${{ hashFiles(format('{0}-static-musl.sh', matrix.tool), 'common.sh') }}
         override_cache_key_fallback: |
           ccache-${{ steps.alpine-version.outputs.version }}-${{ matrix.arch }}-${{ matrix.tool }}-
           ccache-${{ steps.alpine-version.outputs.version }}-${{ matrix.arch }}-
@@ -133,13 +139,14 @@ jobs:
           compression=true
           compression_level=7
           hash_dir=false
-          sloppiness=file_macro,locale,time_macros
+          sloppiness=file_macro,locale,time_macros,include_file_mtime,include_file_ctime
           file_clone=true
           hard_link=false
           inode_cache=true
           direct_mode=true
           depend_mode=true
           compiler_check=content
+          run_second_cpp=false
 
     - name: Cache distfiles
       uses: actions/cache@v5
@@ -190,7 +197,7 @@ jobs:
         echo "TOOL_VERSION=${version}" >> "$GITHUB_ENV"
 
     - name: Upload artifact
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: ${{ steps.artifact-info.outputs.name }}
         path: ${{ steps.artifact-info.outputs.file }}
@@ -199,7 +206,7 @@ jobs:
   release:
     needs: [setup, build]
     runs-on: ubuntu-latest
-    if: ${{ !cancelled() && github.event_name != 'pull_request' }}
+    if: ${{ !cancelled() }}
     permissions:
       contents: write
     strategy:
@@ -208,6 +215,14 @@ jobs:
         tool: ${{ fromJson(needs.setup.outputs.matrix) }}
 
     steps:
+    - uses: actions/checkout@v6
+
+    - name: Read Alpine version
+      id: alpine-version
+      run: |
+        ALPINE_VERSION=$(grep '^ALPINE_VERSION=' config.sh | cut -d= -f2 | tr -d '"')
+        echo "ALPINE_VERSION=${ALPINE_VERSION}" >> "$GITHUB_ENV"
+
     - name: Download artifacts for ${{ matrix.tool }}
       uses: actions/download-artifact@v8
       with:
@@ -244,7 +259,8 @@ jobs:
       continue-on-error: true
 
     - name: Create Release
-      uses: softprops/action-gh-release@v2
+      #uses: softprops/action-gh-release@v2
+      uses: xiechangan123/action-gh-release@master
       with:
         name: "${{ matrix.tool }} ${{ steps.release-version.outputs.version }}"
         tag_name: ${{ matrix.tool }}-${{ steps.release-version.outputs.version }}

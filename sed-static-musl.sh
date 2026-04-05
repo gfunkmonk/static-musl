@@ -1,39 +1,47 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
-. "$(dirname "$0")/common.sh"
+. "$(dirname "${BASH_SOURCE[0]}")/common.sh"
 
-setup_tools
-
-SED_VERSION="4.9"
+echo -e "${MINT}= fetching latest sed version${NC}"
+SED_VERSION=$(get_git_version "https://cgit.git.savannah.gnu.org/cgit/sed.git/refs/tags" "[0-9]+\.[0-9]+(\.[0-9]+)*" "v" "${FALLBACK_SED}")
+echo -e "${JUNEBUD}= building sed version: ${SED_VERSION}${NC}"
 PACKAGE_VERSION="${SED_VERSION}"
-SED_SEDBALL="sed-${SED_VERSION}.tar.xz"
+SED_TARBALL="sed-${SED_VERSION}.tar.xz"
 SED_MIRRORS=(
   "https://ftp.gnu.org/gnu/sed/sed-${SED_VERSION}.tar.xz"
   "https://fossies.org/linux/misc/sed-${SED_VERSION}.tar.xz"
 )
 
-run_build_setup "sed" "${SED_VERSION}" "${SED_SEDBALL}" \
+run_build_setup "sed" "${SED_VERSION}" "${SED_TARBALL}" \
+  "sed-b-flag.patch" \
+  "sed-c-flag.patch" \
+  "sed-covscan-annotations.patch" \
+  "sed-regexp-cache-size.patch" \
   -- "${SED_MIRRORS[@]}"
 
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
 set -e
 echo -e "${ORANGE}= Installing dependencies...${NC}"
-apk update && apk add build-base musl-dev ccache pkgconfig perl gettext-dev gettext-static
+apk update && apk add build-base mold ccache pkgconfig perl gettext-dev gettext-static
+apk upgrade musl-dev mold --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
-chmod 755 upx
 echo -e "${LIME}= Extracting source${NC}"
-tar xf sed-${SED_VERSION}.tar.xz
+tar xf ${SED_TARBALL}
 cd sed-${SED_VERSION}/
+echo -e "${LAGOON}= Applying custom patch${NC}"
+patch -p1 --fuzz=4 < ../sed-b-flag.patch
+patch -p1 --fuzz=4 < ../sed-c-flag.patch
+patch -p1 --fuzz=4 < ../sed-covscan-annotations.patch
+patch -p1 --fuzz=4 < ../sed-regexp-cache-size.patch
 echo -e "${PEACH}= Configure source${NC}"
 ./configure --enable-threads=posix --disable-nls --disable-i18n --disable-rpath \
-  LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
-  CFLAGS='-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie'
+  --disable-silent-rules --disable-gcc-warnings --without-selinux \
+  LDFLAGS='${BLDFLAGS} ${MOLD} -no-pie' PKG_CONFIG='${PKGCFG}' \
+  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fno-PIE'
 echo -e "${VIOLET}= Building...${NC}"
-LDFLAGS='-static -Wl,--gc-sections' CFLAGS='-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie' make -j\$(nproc)
-echo -e "${CHARTREUSE}= Stripping binary${NC}"
-strip sed/sed
-echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
-../upx --lzma sed/sed
+make -j\$(nproc)
+echo -e "\n${CARIBBEAN}= ccache statistics:${NC}"
+ccache -s | tail -n 10
 EOF
 
 package_output "sed" "./${CHROOTDIR}/sed-${SED_VERSION}/sed/sed"

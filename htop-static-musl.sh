@@ -1,16 +1,10 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
-. "$(dirname "$0")/common.sh"
-
-setup_tools
+. "$(dirname "${BASH_SOURCE[0]}")/common.sh"
 
 echo -e "${VIOLET}= fetching latest htop version${NC}"
-HTOP_VERSION=$(gh_latest_release "htop-dev/htop") || true
-if [ -z "${HTOP_VERSION}" ]; then
-  echo -e "${TAWNY}= GitHub API unavailable, falling back to htop 3.4.1${NC}"
-  HTOP_VERSION="3.4.1"
-fi
-
+HTOP_VERSION=$(get_version release "htop-dev/htop" "" "${FALLBACK_HTOP}")
+echo -e "${CORAL}= building htop version: ${HTOP_VERSION}${NC}"
 PACKAGE_VERSION="${HTOP_VERSION}"
 HTOP_TARBALL="htop-${HTOP_VERSION}.tar.xz"
 HTOP_MIRRORS=(
@@ -25,25 +19,24 @@ run_build_setup "htop" "${HTOP_VERSION}" "${HTOP_TARBALL}" \
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
 set -e
 echo -e "${ORANGE}= Installing dependencies...${NC}"
-apk update && apk add build-base musl-dev ccache pkgconfig ncurses-dev ncurses-static python3 lm-sensors-dev libnl3-dev libnl3-static linux-headers
+apk update && apk add build-base mold ccache pkgconfig ncurses-dev \
+  ncurses-static python3 lm-sensors-dev libnl3-dev libnl3-static linux-headers
+apk upgrade musl-dev mold --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
-chmod 755 upx
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${HTOP_TARBALL}
 cd htop-${HTOP_VERSION}/
 echo -e "${LAGOON}= Applying custom patch${NC}"
 patch -p1 --fuzz=4 < ../htop.patch
 echo -e "${PEACH}= Configure source${NC}"
-./configure CC='gcc' \
+./configure CC="${CC}" \
   --enable-unicode --enable-static --enable-affinity --enable-delayacct \
-  LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
-  CFLAGS='-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector -no-pie'
+  LDFLAGS='${BLDFLAGS} ${MOLD} -no-pie' PKG_CONFIG='${PKGCFG}' \
+  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fno-PIE'
 echo -e "${VIOLET}= Building...${NC}"
-CC='gcc' make -j\$(nproc)
-echo -e "${CHARTREUSE}= Stripping binary${NC}"
-strip htop
-echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
-../upx --lzma htop
+CC="${CC}" make -j\$(nproc)
+echo -e "\n${CARIBBEAN}= ccache statistics:${NC}"
+ccache -s | tail -n 10
 EOF
 
 package_output "htop" "./${CHROOTDIR}/htop-${HTOP_VERSION}/htop"

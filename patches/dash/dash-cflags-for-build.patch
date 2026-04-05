@@ -1,0 +1,20 @@
+From: Andrej Shadura <andrewsh@debian.org>
+Date: Thu, 18 Jul 2019 13:00:01 -0300
+Subject: Add $(CPPFLAGS), $(CFLAGS) and $(LDFLAGS) to $(COMPILE_FOR_BUILD) so that helpers are built with hardening
+
+---
+ src/Makefile.am | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/Makefile.am b/src/Makefile.am
+index 1732465..2c437bb 100644
+--- a/src/Makefile.am
++++ b/src/Makefile.am
+@@ -12,6 +12,7 @@ AM_CPPFLAGS_FOR_BUILD = $(COMMON_CPPFLAGS)
+ COMPILE_FOR_BUILD = \
+ 	$(CC_FOR_BUILD) $(DEFAULT_INCLUDES) $(AM_CPPFLAGS_FOR_BUILD) \
+ 	$(CPPFLAGS_FOR_BUILD) \
++	$(CPPFLAGS) $(CFLAGS) $(LDFLAGS) \
+ 	$(AM_CFLAGS_FOR_BUILD) $(CFLAGS_FOR_BUILD) 
+ 
+ bin_PROGRAMS = dash

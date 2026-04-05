@@ -1,0 +1,11 @@
+--- a/src/default_options.h	2026-03-27 16:39:47.620281028 -0400
++++ b/src/default_options.h	2026-03-27 16:41:07.354938468 -0400
+@@ -360,7 +360,7 @@
+ 
+ /* Ensure that data is transmitted every KEEPALIVE seconds. This can
+ be overridden at runtime with -K. 0 disables keepalives */
+-#define DEFAULT_KEEPALIVE 0
++#define DEFAULT_KEEPALIVE 240
+ 
+ /* If this many KEEPALIVES are sent with no packets received from the
+ other side, exit. Not run-time configurable - if you have a need

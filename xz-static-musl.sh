@@ -1,16 +1,10 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
-. "$(dirname "$0")/common.sh"
+. "$(dirname "${BASH_SOURCE[0]}")/common.sh"
 
-setup_tools
-
-echo -e "${VIOLET}= fetching latest xz version${NC}"
-XZ_VERSION=$(gh_latest_release "tukaani-project/xz" '.tag_name | ltrimstr("v")') || true
-if [ -z "${XZ_VERSION}" ]; then
-  echo -e "${TAWNY}= GitHub API unavailable, falling back to xz 5.8.2${NC}"
-  XZ_VERSION="5.8.2"
-fi
-
+echo -e "${SKY}= fetching latest xz version${NC}"
+XZ_VERSION=$(get_version release "tukaani-project/xz" '.tag_name | ltrimstr("v")' "${FALLBACK_XZ}")
+echo -e "${TAWNY}= building xz version: ${XZ_VERSION}${NC}"
 PACKAGE_VERSION="${XZ_VERSION}"
 XZ_TARBALL="xz-${XZ_VERSION}.tar.xz"
 XZ_MIRRORS=(
@@ -26,36 +20,22 @@ run_build_setup "xz" "${XZ_VERSION}" "${XZ_TARBALL}" \
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
 set -e
 echo -e "${ORANGE}= Installing dependencies...${NC}"
-if [ "$ARCH" = "x86" ]; then
-  apk update && apk add build-base musl-dev ccache pkgconfig
-else
-  apk update && apk add build-base musl-dev ccache pkgconfig clang
-fi
+apk update && apk add build-base mold ccache clang autoconf automake libtool gettext-dev gettext-static
+apk upgrade musl-dev mold --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
-chmod 755 upx
 echo -e "${LIME}= Extracting source${NC}"
-tar xf xz-${XZ_VERSION}.tar.xz
+tar xf ${XZ_TARBALL}
 cd xz-${XZ_VERSION}/
 echo -e "${PEACH}= Configure source${NC}"
-if [ "$ARCH" = "x86" ]; then
-  ./configure CC=gcc \
-    --enable-static --disable-shared --disable-nls \
-    LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
-    CFLAGS='-Os  ${ARCH_FLAGS} -ffunction-sections -fdata-sections -Wno-unterminated-string-initialization'
-  echo -e "${VIOLET}= Building...${NC}"
-  CC=gcc LDFLAGS='-static -Wl,--gc-sections' make -j\$(nproc)
-else
-  ./configure CC=clang \
-    --enable-static --disable-shared --disable-nls \
-    LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
-    CFLAGS='-Os  ${ARCH_FLAGS} -ffunction-sections -fdata-sections -Wno-unterminated-string-initialization'
-  echo -e "${VIOLET}= Building...${NC}"
-  CC=clang LDFLAGS='-static -Wl,--gc-sections' make -j\$(nproc)
-fi
-echo -e "${CHARTREUSE}= Stripping binary${NC}"
-strip src/xz/xz
-echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
-../upx --lzma src/xz/xz
+./configure CC='clang' --enable-static --disable-shared --disable-nls --enable-small \
+  --enable-threads=yes --disable-silent-rules --disable-rpath --enable-lzip-decoder \
+  --enable-year2038 --enable-largefile \
+  LDFLAGS='${BLDFLAGS} ${MOLD} -static-pie' PKG_CONFIG='${PKGCFG}' \
+  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fPIE -Wno-unterminated-string-initialization'
+echo -e "${VIOLET}= Building...${NC}"
+CC='clang' make -j\$(nproc) V=1 LDFLAGS='-all-static ${BLDFLAGS} ${MOLD} -static-pie'
+echo -e "\n${CARIBBEAN}= ccache statistics:${NC}"
+ccache -s | tail -n 10
 EOF
 
 package_output "xz" "./${CHROOTDIR}/xz-${XZ_VERSION}/src/xz/xz"

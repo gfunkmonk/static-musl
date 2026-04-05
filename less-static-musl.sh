@@ -1,16 +1,10 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
-. "$(dirname "$0")/common.sh"
-
-setup_tools
+. "$(dirname "${BASH_SOURCE[0]}")/common.sh"
 
 echo -e "${VIOLET}= fetching latest less version${NC}"
-LESS_VERSION=$(gh_latest_tag "gwsw/less" '.[0].name | ltrimstr("v")') || true
-if [ -z "${LESS_VERSION}" ]; then
-  echo -e "${TAWNY}= GitHub API unavailable, falling back to less 692${NC}"
-  LESS_VERSION="692"
-fi
-
+LESS_VERSION=$(get_version tag "gwsw/less" '.[0].name | ltrimstr("v")' "${FALLBACK_LESS}")
+echo -e "${TEAL}= building less version: ${LESS_VERSION}${NC}"
 PACKAGE_VERSION="${LESS_VERSION}"
 LESS_TARBALL="less-${LESS_VERSION}.tar.gz"
 LESS_MIRRORS=(
@@ -24,24 +18,24 @@ run_build_setup "less" "${LESS_VERSION}" "${LESS_TARBALL}" \
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
 set -e
 echo -e "${ORANGE}= Installing dependencies...${NC}"
-apk update && apk add build-base musl-dev ccache pkgconfig pcre2-static pcre2-dev ncurses-dev ncurses-static perl autoconf automake gpg groff
+apk update && apk add build-base mold ccache pkgconfig pcre2-static pcre2-dev ncurses-dev \
+  ncurses-static perl autoconf automake gpg groff clang
+apk upgrade musl-dev mold --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
-chmod 755 upx
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${LESS_TARBALL}
 cd less-${LESS_VERSION}/
 echo -e "${HOTPINK}= Generating files${NC}"
 make -f Makefile.aut distfiles
 echo -e "${PEACH}= Configure source${NC}"
-./configure --with-regex=pcre2 --enable-year2038 --sysconfdir=/etc --with-editor=/usr/bin/editor \
-  LDFLAGS='-static -Wl,--gc-sections' PKG_CONFIG='pkg-config --static' \
-  CFLAGS='-Os -static ${ARCH_FLAGS} -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-stack-protector'
+./configure CC='clang' --with-regex=pcre2 --enable-year2038 --sysconfdir=/etc \
+  --with-editor=/usr/bin/editor \
+  LDFLAGS='${BLDFLAGS} ${MOLD} -no-pie' PKG_CONFIG='${PKGCFG}' \
+  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fno-PIE'
 echo -e "${VIOLET}= Building...${NC}"
-make -j\$(nproc)
-echo -e "${CHARTREUSE}= Stripping binary${NC}"
-strip less
-echo -e "${PURPLE_BLUE}= Compressing with UPX${NC}"
-../upx --brute less
+CC='clang' make -j\$(nproc)
+echo -e "\n${CARIBBEAN}= ccache statistics:${NC}"
+ccache -s | tail -n 10
 EOF
 
 package_output "less" "./${CHROOTDIR}/less-${LESS_VERSION}/less"
