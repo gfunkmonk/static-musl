@@ -3,7 +3,9 @@ set -euo pipefail
 . "$(dirname "${BASH_SOURCE[0]}")/common.sh"
 
 echo -e "${MINT}= fetching latest gawk version${NC}"
-GAWK_VERSION=$(get_git_version "https://cgit.git.savannah.gnu.org/cgit/gawk.git/refs/tags" "[0-9]+\.[0-9]+(\.[0-9]+)*" "gawk-" "${FALLBACK_GAWK}")
+#GAWK_VERSION=$(get_git_version "https://cgit.git.savannah.gnu.org/cgit/gawk.git/refs/tags" "[0-9]+\.[0-9]+(\.[0-9]+)*" "gawk-" "${FALLBACK_GAWK}")
+GAWK_VERSION=$("${CURL}" -s https://ftp.gnu.org/gnu/gawk/ | grep -oP 'gawk-\K[0-9]+\.[0-9]+(\.[0-9]+)?' | sort -V | tail -n 1)
+[[ -z "${GAWK_VERSION}" ]] && { echo -e "${TAWNY}= ftp.gnu.org fetch failed, using fallback ${FALLBACK_GAWK}${NC}" >&2; GAWK_VERSION="${FALLBACK_GAWK}"; }
 echo -e "${JUNEBUD}= building gawk version: ${GAWK_VERSION}${NC}"
 PACKAGE_VERSION="${GAWK_VERSION}"
 GAWK_TARBALL="gawk-${GAWK_VERSION}.tar.xz"

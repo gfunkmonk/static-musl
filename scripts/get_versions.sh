@@ -33,7 +33,8 @@ echo -e "${BWHITE}dropbear: ${GREEN}${DROPBEAR_VER}${NC}"
 FPING_VER=$(get_version release "schweikert/fping" '.tag_name | ltrimstr("v")' "")
 echo -e "${BWHITE}fping: ${GREEN}${FPING_VER}${NC}"
 
-GAWK_VER=$(get_git_version "https://cgit.git.savannah.gnu.org/cgit/gawk.git/refs/tags" "[0-9]+\.[0-9]+(\.[0-9]+)*" "gawk-" "")
+#GAWK_VER=$(get_git_version "https://cgit.git.savannah.gnu.org/cgit/gawk.git/refs/tags" "[0-9]+\.[0-9]+(\.[0-9]+)*" "gawk-" "")
+GAWK_VER=$("${CURL}" -s https://ftp.gnu.org/gnu/gawk/ | grep -oP 'gawk-\K[0-9]+\.[0-9]+(\.[0-9]+)?' | sort -V | tail -n 1)
 echo -e "${BWHITE}gawk: ${GREEN}${GAWK_VER}${NC}"
 
 HEXCURSE_VER=$(get_version release "prso/hexcurse-ng" '.tag_name | ltrimstr("v")' "")
@@ -48,11 +49,12 @@ echo -e "${BWHITE}less: ${GREEN}${LESS_VER}${NC}"
 LFTP_VER=$(get_version release "lavv17/lftp" '.tag_name | ltrimstr("v")' "")
 echo -e "${BWHITE}lftp: ${GREEN}${LFTP_VER}${NC}"
 
-NANO_VER=$(get_git_version "https://cgit.git.savannah.gnu.org/cgit/nano.git/refs/tags" "v[0-9]+\.[0-9]+(\.[0-9]+)*" "v" "")
+#NANO_VER=$(get_git_version "https://cgit.git.savannah.gnu.org/cgit/nano.git/refs/tags" "v[0-9]+\.[0-9]+(\.[0-9]+)*" "v" "")
+NANO_VER=$("${CURL}" -s https://ftp.gnu.org/gnu/nano/ | grep -oP 'nano-\K[0-9]+\.[0-9]+(\.[0-9]+)?' | sort -V | tail -n 1)
 echo -e "${BWHITE}nano: ${GREEN}${NANO_VER}${NC}"
 
-NETCAT_VER=$("${CURL}" -s "https://salsa.debian.org/api/v4/projects/debian%2Fnetcat-openbsd/repository/tags" | \
-  "${JQ}" -r '[.[] | select(.name | test("^[0-9]"))] | .[0].name // empty' 2>/dev/null)
+NETCAT_VER=$("${CURL}" -s "https://salsa.debian.org/api/v4/projects/debian%2Fnetcat-openbsd/repository/tags?per_page=20" | \
+  "${JQ}" -r '[.[] | select(.name | test("^debian/"))] | .[0].name | ltrimstr("debian/")' 2>/dev/null)
 echo -e "${BWHITE}netcat: ${GREEN}${NETCAT_VER}${NC}"
 
 NMAP_VER=$("${CURL}" -s https://nmap.org/dist/ | grep -o 'href="[^"]*.tar.bz2"' | cut -d'"' -f2 | sort | tail -1 | sed 's/\.tar.*//' | sed 's/nmap-//g')
@@ -70,7 +72,7 @@ echo -e "${BWHITE}pigz: ${GREEN}${PIGZ_VER}${NC}"
 RG_VER=$(get_version release "BurntSushi/ripgrep" '.tag_name | ltrimstr("v")' "")
 echo -e "${BWHITE}ripgrep: ${GREEN}${RG_VER}${NC}"
 
-RSYNC_VERSION=$(get_version release "RsyncProject/rsync" '.tag_name | ltrimstr("v")' "")
+RSYNC_VER=$(get_version release "RsyncProject/rsync" '.tag_name | ltrimstr("v")' "")
 echo -e "${BWHITE}rsync: ${GREEN}${RSYNC_VER}${NC}"
 
 SCREEN_VER=$(get_git_version "https://cgit.git.savannah.gnu.org/cgit/screen.git/refs/tags" "[0-9]+\.[0-9]+(\.[0-9]+)*" "v" "")
@@ -85,7 +87,8 @@ echo -e "${BWHITE}sed: ${GREEN}${SED_VER}${NC}"
 SOCAT_VER=$(get_git_version "https://repo.or.cz/socat.git/refs/tags" "tag-1\.[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)*" "tag-" "")
 echo -e "${BWHITE}socat: ${GREEN}${SOCAT_VER}${NC}"
 
-TAR_VER=$(get_git_version "https://cgit.git.savannah.gnu.org/cgit/tar.git/refs/tags" "v[0-9]+\.[0-9]+(\.[0-9]+)*" "v" "")
+#TAR_VER=$(get_git_version "https://cgit.git.savannah.gnu.org/cgit/tar.git/refs/tags" "v[0-9]+\.[0-9]+(\.[0-9]+)*" "v" "")
+TAR_VER=$("${CURL}" -s https://ftp.gnu.org/gnu/tar/ | grep -oP 'tar-\K[0-9]+\.[0-9]+(\.[0-9]+)?' | sort -V | tail -n 1)
 echo -e "${BWHITE}tar: ${GREEN}${TAR_VER}${NC}"
 
 TMUX_VER=$(get_version release "tmux/tmux" ".tag_name" "")

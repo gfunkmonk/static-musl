@@ -3,7 +3,9 @@ set -euo pipefail
 . "$(dirname "${BASH_SOURCE[0]}")/common.sh"
 
 echo -e "${MINT}= fetching latest nano version${NC}"
-NANO_VERSION=$(get_git_version "https://cgit.git.savannah.gnu.org/cgit/nano.git/refs/tags" "v[0-9]+\.[0-9]+(\.[0-9]+)*" "v" "${FALLBACK_NANO}")
+#NANO_VERSION=$(get_git_version "https://cgit.git.savannah.gnu.org/cgit/nano.git/refs/tags" "v[0-9]+\.[0-9]+(\.[0-9]+)*" "v" "${FALLBACK_NANO}")
+NANO_VERSION=$("${CURL}" -s https://ftp.gnu.org/gnu/nano/ | grep -oP 'nano-\K[0-9]+\.[0-9]+(\.[0-9]+)?' | sort -V | tail -n 1)
+[[ -z "${NANO_VERSION}" ]] && { echo -e "${TAWNY}= ftp.gnu.org fetch failed, using fallback ${FALLBACK_NANO}${NC}" >&2; NANO_VERSION="${FALLBACK_NANO}"; }
 echo -e "${JUNEBUD}= building nano version: ${NANO_VERSION}${NC}"
 PACKAGE_VERSION="${NANO_VERSION}"
 NANO_TARBALL="nano-${NANO_VERSION}.tar.xz"
