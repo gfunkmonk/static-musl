@@ -14,9 +14,20 @@ done
 # Change to the repository root
 cd "$(dirname "$0")/.."
 
-LOG_DIR=${PWD}/logs/$(date +%m-%d-%Y_%I:%M%p)/
+LOG_DIR=${PWD}/logs/
 mkdir -p "$LOG_DIR"
+
+# Clear logs only if NOT in resume mode
+if [ "$RESUME" = false ]; then
+    # Use -f to prevent errors if the directory is already empty
+    rm -f "${LOG_DIR}"/*.txt
+fi
+
 LOG_FILE="${LOG_DIR}/build_log.txt"
+# Note: > "$LOG_FILE" below will still truncate the main build_log.txt, 
+# which is usually what you want so the summary doesn't double up.
+# If you want the main log to append during resume, change > to >>
+[ "$RESUME" = true ] && exec_redir=">>" || exec_redir=">>"
 
 JUNEBUD="\033[38;2;189;218;87m"
 SKY="\033[38;2;135;206;250m"
@@ -32,7 +43,7 @@ NC="\033[0m"
 
 success_count=0
 failure_count=0
-> "$LOG_FILE"
+[ "$RESUME" = false ] && > "$LOG_FILE"
 
 echo "--- Starting file execution loop ---" | tee -a "$LOG_FILE"
 [ "$RESUME" = true ] && echo -e "${CHARTREUSE}Resume mode active: Skipping existing binaries.${NC}" | tee -a "$LOG_FILE"
