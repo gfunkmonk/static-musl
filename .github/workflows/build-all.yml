@@ -7,6 +7,14 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
     inputs:
+      rebuild_base:
+        description: 'Force rebuild of the base rootfs image?'
+        type: boolean
+        default: false
+      extra_packages:
+        description: 'Extra Alpine packages (space separated, e.g., "cmake ninja")'
+        type: string
+        default: ''
       tool:
         description: "Tool to build and release (choose 'all' to build every tool)"
         required: true
@@ -167,6 +175,23 @@ jobs:
       with:
         path: minirootfs/alpine-minirootfs-*.tar.gz
         key: alpine-rootfs-${{ steps.alpine-version.outputs.version }}-${{ matrix.arch }}
+
+    - name: Cache Prebaked Alpine rootfs
+      id: cache-prebaked
+      uses: actions/cache@v5
+      with:
+        path: minirootfs/alpine-base-${{ matrix.arch }}.tar.gz
+        key: alpine-prebaked-${{ steps.alpine-version.outputs.version }}-${{ matrix.arch }}-${{ hashFiles('scripts/setup-base-rootfs.sh') }}-${{ github.event.inputs.rebuild_base }}-${{ github.event.inputs.extra_packages }}
+        restore-keys: |
+          alpine-prebaked-${{ steps.alpine-version.outputs.version }}-${{ matrix.arch }}-${{ hashFiles('scripts/setup-base-rootfs.sh') }}-
+
+    - name: Build Prebaked Rootfs
+      if: steps.cache-prebaked.outputs.cache-hit != 'true' || github.event.inputs.rebuild_base == 'true' || github.event.inputs.extra_packages != ''
+      run: |
+        chmod +x scripts/setup-base-rootfs.sh
+        sudo ./scripts/setup-base-rootfs.sh ${{ github.event.inputs.extra_packages }}
+      env:
+        ARCH: ${{ matrix.arch }}
 
     - name: Build ${{ matrix.tool }} for ${{ matrix.arch }}
       run: |

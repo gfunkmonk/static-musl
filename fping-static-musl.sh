@@ -25,7 +25,7 @@ echo -e "${LIME}= Extracting source${NC}"
 tar xf ${FPING_TARBALL}
 cd fping-${FPING_VERSION}/
 echo -e "${LAGOON}= Configure source${NC}"
-./configure CC="${CC}" \
+./configure CC="${CC}" --disable-ipv6 \
   LDFLAGS='${BLDFLAGS} ${MOLD} -no-pie' \
   CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fno-PIE'
 echo -e "${VIOLET}= Building...${NC}"
