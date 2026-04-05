@@ -410,7 +410,7 @@ setup_alpine_chroot() {
       exit 1
     fi
     echo -e "${CORAL}= chroot dir exist! Removing it now.${NC}"
-    rm -fr "./${CHROOTDIR}"
+    sudo rm -fr "./${CHROOTDIR}"
   fi
   if [ -f "minirootfs/${PREBAKED_IMAGE}" ]; then
       echo -e "${CARIBBEAN}= Found pre-baked image: ${PREBAKED_IMAGE}. Extracting...${NC}"
