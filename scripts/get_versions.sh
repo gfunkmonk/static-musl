@@ -83,7 +83,7 @@ echo -e "${BWHITE}tmux: ${GREEN}${TMUX_VER}${NC}"
 TNFTP_VER=$("${CURL}" -s https://ftp.netbsd.org/pub/NetBSD/misc/tnftp/ | grep -o 'href="tnftp-[^"]*.gz"' | cut -d'"' -f2 | sort | tail -1 | sed ed 's/tnftp-//')
 echo -e "${BWHITE}tnftp: ${GREEN}${TNFTP_VER}${NC}"
 
-RG_VER=$(get_version release "BurntSushi/ripgrep" '.tag_name' "")
+RG_VER=$(get_version release "BurntSushi/ripgrep" '.tag_name | ltrimstr("v")' "")
 echo -e "${BWHITE}ripgrep: ${GREEN}${RG_VER}${NC}"
 
 UPX_VER=$(get_version release "upx/upx" '.tag_name | ltrimstr("v")' "")

@@ -3,7 +3,7 @@ set -euo pipefail
 . "$(dirname "${BASH_SOURCE[0]}")/common.sh"
 
 echo -e "${CANARY}= fetching latest ripgrep version${NC}"
-RG_VERSION=$(get_version release "BurntSushi/ripgrep" '.tag_name' "${FALLBACK_RIPGREP}")
+RG_VERSION=$(get_version release "BurntSushi/ripgrep" '.tag_name | ltrimstr("v")' "${FALLBACK_RIPGREP}")
 echo -e "${SLATE}= building ripgrep version: ${RG_VERSION}${NC}"
 PACKAGE_VERSION="${RG_VERSION}"
 RG_TARBALL="ripgrep-${RG_VERSION}.tar.gz"
