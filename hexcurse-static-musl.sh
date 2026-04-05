@@ -27,9 +27,8 @@ echo -e "${PEACH}= Configure source${NC}"
 ./configure CC="${CC}" \
   LDFLAGS='${BLDFLAGS} ${MOLD} -no-pie' PKG_CONFIG='${PKGCFG}' \
   CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fno-PIE'
-sed -i 's/-Werror//g' src/Makefile
 echo -e "${VIOLET}= Building...${NC}"
-CC="${CC}" make -j\$(nproc)
+CC="${CC}" make -j\$(nproc) AM_CFLAGS="-Wall -Wextra"
 echo -e "\n${CARIBBEAN}= ccache statistics:${NC}"
 ccache -s | tail -n 10
 EOF
