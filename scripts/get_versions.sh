@@ -59,6 +59,9 @@ echo -e "${BWHITE}less: ${LESS_VER}${NC}"
 LFTP_VER=${GREEN}$(get_version release "lavv17/lftp" '.tag_name | ltrimstr("v")' "${RED}FALLBACK${NC}")
 echo -e "${BWHITE}lftp: ${LFTP_VER}${NC}"
 
+MC_VER=${GREEN}$(get_version release "MidnightCommander/mc" '.tag_name | ltrimstr("v")' "${RED}FALLBACK${NC}")
+echo -e "${BWHITE}mc: ${MC_VER}${NC}"
+
 #NANO_VER=${GREEN}$(get_git_version "https://cgit.git.savannah.gnu.org/cgit/nano.git/refs/tags" "v[0-9]+\.[0-9]+(\.[0-9]+)*" "v" "${RED}FALLBACK${NC}")
 NANO_VER=${YELLOW}$("${CURL}" -s https://ftp.gnu.org/gnu/nano/ | grep -oP 'nano-\K[0-9]+\.[0-9]+(\.[0-9]+)?' | sort -V | tail -n 1)
 echo -e "${BWHITE}nano: ${NANO_VER}${NC}"
