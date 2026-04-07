@@ -38,7 +38,7 @@ export CARGO_PROFILE_RELEASE_OPT_LEVEL="z"
 export CARGO_PROFILE_RELEASE_LTO="true"
 export CARGO_PROFILE_RELEASE_STRIP="symbols"
 export CARGO_PROFILE_RELEASE_CODEGEN_UNITS="1"
-export RUSTFLAGS="-C target-feature=+crt-static link-arg=-fuse-ld=mold"
+export RUSTFLAGS="-C target-feature=+crt-static -link-arg=-fuse-ld=mold"
 cargo build --target ${NATIVE_RUST_TARGET} --release
 echo -e "\n${CARIBBEAN}= ccache statistics:${NC}"
 ccache -s | tail -n 10
