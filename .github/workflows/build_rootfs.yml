@@ -30,7 +30,7 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Read Alpine version
-        id: alpine
+        id: alpine-version
         run: echo "version=$(grep '^ALPINE_VERSION=' config.sh | cut -d= -f2 | tr -d '"')" >> "$GITHUB_OUTPUT"
 
       - name: Build and Cache Rootfs
@@ -38,7 +38,7 @@ jobs:
         with:
           path: minirootfs/alpine-base-${{ matrix.arch }}.tar.zst
           # Key MUST match the one in your main build workflow
-          key: alpine-prebaked-${{ steps.alpine.outputs.version }}-${{ matrix.arch }}-${{ hashFiles('scripts/setup-base-rootfs.sh') }}-${{ inputs.extra_packages }}
+          key: alpine-prebaked-${{ steps.alpine-version.outputs.version }}-${{ matrix.arch }}-${{ hashFiles('scripts/setup-base-rootfs.sh') }}
 
       - name: Run Setup Script
         run: |
