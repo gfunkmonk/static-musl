@@ -4,7 +4,7 @@ set -euo pipefail
 
 echo -e "${MINT}= fetching latest tar version${NC}"
 TAR_VERSION=$(get_web_version "https://ftp.gnu.org/gnu/tar/" "tar-\K[0-9]+\.[0-9]+(\.[0-9]+)?")
-[[ -z "${TAR_VERSION}" ]] && { echo -e "${TAWNY}= ftp.gnu.org fetch failed, using fallback ${FALLBACK_TAR}${NC}" >&2; TAR_VERSION="${FALLBACK_TAR}"; }
+[[ -z "${TAR_VERSION}" || "${TAR_VERSION}" == "FAILED" ]] && { echo -e "${TAWNY}= ftp.gnu.org fetch failed, using fallback ${FALLBACK_TAR}${NC}" >&2; TAR_VERSION="${FALLBACK_TAR}"; }
 echo -e "${JUNEBUD}= building tar version: ${TAR_VERSION}${NC}"
 PACKAGE_VERSION="${TAR_VERSION}"
 TAR_TARBALL="tar-${TAR_VERSION}.tar.xz"

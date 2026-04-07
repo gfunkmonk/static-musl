@@ -4,7 +4,7 @@ set -euo pipefail
 
 echo -e "${MINT}= fetching latest gawk version${NC}"
 GAWK_VERSION=$(get_web_version "https://ftp.gnu.org/gnu/gawk/" "gawk-\K[0-9]+\.[0-9]+(\.[0-9]+)?")
-[[ -z "${GAWK_VERSION}" ]] && { echo -e "${TAWNY}= ftp.gnu.org fetch failed, using fallback ${FALLBACK_GAWK}${NC}" >&2; GAWK_VERSION="${FALLBACK_GAWK}"; }
+[[ -z "${GAWK_VERSION}" || "${GAWK_VERSION}" == "FAILED" ]] && { echo -e "${TAWNY}= ftp.gnu.org fetch failed, using fallback ${FALLBACK_GAWK}${NC}" >&2; GAWK_VERSION="${FALLBACK_GAWK}"; }
 echo -e "${JUNEBUD}= building gawk version: ${GAWK_VERSION}${NC}"
 PACKAGE_VERSION="${GAWK_VERSION}"
 GAWK_TARBALL="gawk-${GAWK_VERSION}.tar.xz"

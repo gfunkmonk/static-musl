@@ -4,7 +4,7 @@ set -euo pipefail
 
 echo -e "${MINT}= fetching latest mc version${NC}"
 MC_VERSION=$(get_web_version "https://ftp.osuosl.org/pub/midnightcommander/" "mc-\K[0-9]+\.[0-9]+(\.[0-9]+)?")
-[[ -z "${MC_VERSION}" ]] && { echo -e "${TAWNY}= mc source fetch failed, using fallback ${FALLBACK_MC}${NC}" >&2; MC_VERSION="${FALLBACK_MC}"; }
+[[ -z "${MC_VERSION}" || "${MC_VERSION}" == "FAILED" ]] && { echo -e "${TAWNY}= mc source fetch failed, using fallback ${FALLBACK_MC}${NC}" >&2; MC_VERSION="${FALLBACK_MC}"; }
 echo -e "${JUNEBUD}= building mc version: ${MC_VERSION}${NC}"
 PACKAGE_VERSION="${MC_VERSION}"
 MC_TARBALL="mc-${MC_VERSION}.tar.xz"

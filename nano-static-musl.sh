@@ -4,7 +4,7 @@ set -euo pipefail
 
 echo -e "${MINT}= fetching latest nano version${NC}"
 NANO_VERSION=$(get_web_version "https://ftp.gnu.org/gnu/nano/" "nano-\K[0-9]+\.[0-9]+(\.[0-9]+)?")
-[[ -z "${NANO_VERSION}" ]] && { echo -e "${TAWNY}= ftp.gnu.org fetch failed, using fallback ${FALLBACK_NANO}${NC}" >&2; NANO_VERSION="${FALLBACK_NANO}"; }
+[[ -z "${NANO_VERSION}" || "${NANO_VERSION}" == "FAILED" ]] && { echo -e "${TAWNY}= ftp.gnu.org fetch failed, using fallback ${FALLBACK_NANO}${NC}" >&2; NANO_VERSION="${FALLBACK_NANO}"; }
 echo -e "${JUNEBUD}= building nano version: ${NANO_VERSION}${NC}"
 PACKAGE_VERSION="${NANO_VERSION}"
 NANO_TARBALL="nano-${NANO_VERSION}.tar.xz"

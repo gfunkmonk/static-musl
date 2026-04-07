@@ -4,7 +4,7 @@ set -euo pipefail
 
 echo -e "${MINT}= fetching latest sed version${NC}"
 SED_VERSION=$(get_web_version "https://ftp.gnu.org/gnu/sed/" "sed-\K[0-9]+\.[0-9]+(\.[0-9]+)?")
-[[ -z "${SED_VERSION}" ]] && { echo -e "${TAWNY}= ftp.gnu.org fetch failed, using fallback ${FALLBACK_SED}${NC}" >&2; SED_VERSION="${FALLBACK_SED}"; }
+[[ -z "${SED_VERSION}" || "${SED_VERSION}" == "FAILED" ]] && { echo -e "${TAWNY}= ftp.gnu.org fetch failed, using fallback ${FALLBACK_SED}${NC}" >&2; SED_VERSION="${FALLBACK_SED}"; }
 echo -e "${JUNEBUD}= building sed version: ${SED_VERSION}${NC}"
 PACKAGE_VERSION="${SED_VERSION}"
 SED_TARBALL="sed-${SED_VERSION}.tar.xz"

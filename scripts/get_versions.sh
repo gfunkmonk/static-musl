@@ -72,11 +72,13 @@ echo -e "${BWHITE}mc: ${MC_VER}${NC}"
 NANO_VER=${YELLOW}$(get_web_version "https://ftp.gnu.org/gnu/nano/" "nano-\K[0-9]+\.[0-9]+(\.[0-9]+)?")
 echo -e "${BWHITE}nano: ${NANO_VER}${NC}"
 
-NETCAT_VER=${YELLOW}$("${CURL}" -s "https://salsa.debian.org/api/v4/projects/debian%2Fnetcat-openbsd/repository/tags?per_page=20" | \
+NETCAT_VER=$("${CURL}" -s "https://salsa.debian.org/api/v4/projects/debian%2Fnetcat-openbsd/repository/tags?per_page=20" | \
   "${JQ}" -r '[.[] | select(.name | test("^debian/"))] | .[0].name | ltrimstr("debian/")' 2>/dev/null)
+[[ -z "${NETCAT_VER}" ]] && NETCAT_VER="${RED}${FALLBACK_NETCAT}" || NETCAT_VER="${YELLOW}${NETCAT_VER}"
 echo -e "${BWHITE}netcat: ${NETCAT_VER}${NC}"
 
 NMAP_VER=${YELLOW}$(get_web_version "https://nmap.org/dist/" 'href="[^"]*.tar.bz2"' | cut -d'"' -f2 | sort | tail -1 | sed 's/\.tar.*//' | sed 's/nmap-//g' | cut -d'/' -f3)
+[[ -z "${NMAP_VER}" ]] && NMAP_VER="${RED}${FALLBACK_NMAP}"
 echo -e "${BWHITE}nmap: ${NMAP_VER}${NC}"
 
 OKSH_VER=${GREEN}$(get_version release "ibara/oksh" '.tag_name | ltrimstr("oksh-")' "${RED}FALLBACK${NC}")
@@ -118,6 +120,7 @@ TMUX_VER=${GREEN}$(get_version release "tmux/tmux" ".tag_name" "${RED}FALLBACK${
 echo -e "${BWHITE}tmux: ${TMUX_VER}${NC}"
 
 TNFTP_VER=${YELLOW}$(get_web_version "https://ftp.netbsd.org/pub/NetBSD/misc/tnftp/" 'href="tnftp-[^"]*.gz"' | cut -d'"' -f2 | sort | tail -1 | sed 's/\..*//' | sed 's/tnftp-//')
+[[ -z "${TNFTP_VER}" ]] && TNFTP_VER="${RED}${FALLBACK_TNFTP}"
 echo -e "${BWHITE}tnftp: ${TNFTP_VER}${NC}"
 
 UPX_VER=${GREEN}$(get_version release "upx/upx" '.tag_name | ltrimstr("v")' "${RED}FALLBACK${NC}")
@@ -138,6 +141,7 @@ XZ_VER=${GREEN}$(get_version release "tukaani-project/xz" '.tag_name | ltrimstr(
 echo -e "${BWHITE}xz: ${XZ_VER}${NC}"
 
 ZSH_VER=${YELLOW}$(get_web_version "https://www.zsh.org/pub/" 'href="[^"]*.xz"' | grep -e zsh-[0-9] | cut -d'"' -f2 | sort | tail -1 | sed 's/\.tar.*//' | sed 's/zsh-//g')
+[[ -z "${ZSH_VER}" ]] && ZSH_VER="${RED}${FALLBACK_ZSH}"
 echo -e "${BWHITE}zsh: ${ZSH_VER}${NC}"
 
 ZSTD_VER=${GREEN}$(get_version release "facebook/zstd" '.tag_name | ltrimstr("v")' "${RED}FALLBACK${NC}")

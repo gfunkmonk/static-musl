@@ -5,7 +5,7 @@ set -euo pipefail
 echo -e "${MINT}= fetching latest socat version${NC}"
 #SOCAT_VERSION=$(get_git_version "https://repo.or.cz/socat.git/refs/tags" "tag-1\.[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)*" "tag-" "${FALLBACK_SOCAT}")
 SOCAT_VERSION=$(get_web_version "http://www.dest-unreach.org/socat/download/" "socat-\K1\.[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)*")
-[[ -z "${SOCAT_VERSION}" ]] && { echo -e "${TAWNY}= socat source fetch failed, using fallback ${FALLBACK_SOCAT}${NC}" >&2; SOCAT_VERSION="${FALLBACK_SOCAT}"; }
+[[ -z "${SOCAT_VERSION}" || "${SOCAT_VERSION}" == "FAILED" ]] && { echo -e "${TAWNY}= socat source fetch failed, using fallback ${FALLBACK_SOCAT}${NC}" >&2; SOCAT_VERSION="${FALLBACK_SOCAT}"; }
 echo -e "${JUNEBUD}= building socat version: ${SOCAT_VERSION}${NC}"
 PACKAGE_VERSION="${SOCAT_VERSION}"
 SOCAT_TARBALL="socat-${SOCAT_VERSION}.tar.gz"

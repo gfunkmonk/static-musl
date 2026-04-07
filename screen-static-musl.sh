@@ -5,6 +5,7 @@ set -euo pipefail
 echo -e "${MINT}= fetching latest screen version${NC}"
 #SCREEN_VERSION=$(get_git_version "https://cgit.git.savannah.gnu.org/cgit/screen.git/refs/tags" "[0-9]+\.[0-9]+(\.[0-9]+)*" "v" "${FALLBACK_SCREEN}")
 SCREEN_VERSION=$(get_web_version "https://ftp.gnu.org/gnu/screen/" "screen-\K[0-9]+\.[0-9]+(\.[0-9]+)?")
+[[ -z "${SCREEN_VERSION}" || "${SCREEN_VERSION}" == "FAILED" ]] && { echo -e "${TAWNY}= ftp.gnu.org fetch failed, using fallback ${FALLBACK_SCREEN}${NC}" >&2; SCREEN_VERSION="${FALLBACK_SCREEN}"; }
 echo -e "${JUNEBUD}= building screen version: ${SCREEN_VERSION}${NC}"
 PACKAGE_VERSION="${SCREEN_VERSION}"
 SCREEN_TARBALL="screen-${SCREEN_VERSION}.tar.gz"
