@@ -15,7 +15,7 @@ echo -e "${ORANGE}= Installing base toolchain...${NC}"
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
 apk update
 apk add --no-cache build-base mold ccache patch sed automake autoconf clang
-apk add --no-cache --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main mold musl-dev
+apk update --no-cache --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main mold musl-dev
 EOF
 
 if [ ${#EXTRA_PACKAGES[@]} -gt 0 ]; then
@@ -28,7 +28,7 @@ sudo chroot "./${CHROOTDIR}/" /bin/sh -c "rm -rf /var/cache/apk/*"
 
 echo -e "${LIME}= Saving snapshot to alpine-base-${ARCH}.tar.zst...${NC}"
 unmount_chroot
-sudo tar -cf - -C "${CHROOTDIR}" . | zstd -T0 -13 -o "alpine-base-${ARCH}.tar.zst"
+sudo tar -cf - -C "${CHROOTDIR}" . | zstd -T0 -15 -o "alpine-base-${ARCH}.tar.zst"
 mkdir -p minirootfs/
 mv "alpine-base-${ARCH}.tar.zst" minirootfs/
 
