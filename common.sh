@@ -319,7 +319,7 @@ install_host_deps() {
   local DEBIAN_DEPS=(binutils coreutils patch sed)
   [ -n "${QEMU_ARCH}" ] && DEBIAN_DEPS+=(qemu-user-static)
   sudo flock /var/lib/apt/lists/lock -c "apt-get update -qq"
-  sudo apt-get install -qy --no-install-recommends "${DEBIAN_DEPS[@]}"'
+  sudo apt-get install -qy --no-install-recommends "${DEBIAN_DEPS[@]}"
 }
 
 #######################################################
