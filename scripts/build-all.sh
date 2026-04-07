@@ -5,6 +5,8 @@ RESUME=false
 DRY_RUN=false
 SELECTED_TOOLS=""
 PARALLEL_JOBS=1
+CHECKSUM=false
+CLEAN_DIST=false
 
 JUNEBUD="\033[38;2;189;218;87m"
 SKY="\033[38;2;135;206;250m"
@@ -36,6 +38,8 @@ usage() {
   echo -e "  ${SKY}--dry-run${NC}          Show which scripts would be executed without running them."
   echo -e "  ${SKY}--arch <arch>${NC}      Target architecture (x86_64, aarch64, armv7, armhf, x86)."
   echo -e "                       Overrides ARCH environment variable."
+  echo -e "  ${SKY}--checksum${NC}         Generate SHA256 checksums for all files in dist/ after building."
+  echo -e "  ${SKY}--clean${NC}            Remove dist/*.tar.xz before building."
   echo -e "  ${SKY}--help${NC}             Display this help message and exit."
   echo -e ""
   exit 0
@@ -63,6 +67,12 @@ while [[ $# -gt 0 ]]; do
       ;;
     --dry-run)
       DRY_RUN=true
+      ;;
+    --checksum)
+      CHECKSUM=true
+      ;;
+    --clean)
+      CLEAN_DIST=true
       ;;
     --tool)
       SELECTED_TOOLS="$2"
@@ -102,6 +112,11 @@ mkdir -p "$LOG_DIR/builds"
 if [ "$RESUME" = false ]; then
     rm -f "${LOG_DIR}"/builds/*.txt
     > "$LOG_FILE"
+fi
+
+if [ "$CLEAN_DIST" = true ]; then
+    echo -e "${ORANGE}= Cleaning dist/*.tar.xz ...${NC}" | tee -a "$LOG_FILE"
+    rm -f dist/*.tar.xz
 fi
 
 success_count=0
@@ -181,3 +196,14 @@ echo -e "${SKY}Successful executions: $success_count${NC}" | tee -a "$LOG_FILE"
 echo -e "${NEONRED}Failed executions: $failure_count${NC}" | tee -a "$LOG_FILE"
 
 echo -e "${VIOLET}Results logged to $LOG_FILE${NC}"
+
+if [ "$CHECKSUM" = true ]; then
+    CHECKSUM_FILE="dist/SHA256SUMS"
+    echo -e "${NEONBLUE}= Generating SHA256 checksums for dist/...${NC}" | tee -a "$LOG_FILE"
+    if compgen -G "dist/*.tar.xz" > /dev/null 2>&1; then
+        ( cd dist && sha256sum ./*.tar.xz | sed 's|\./||' ) > "$CHECKSUM_FILE"
+        echo -e "${NEONGREEN}= Checksums written to ${CHECKSUM_FILE}${NC}" | tee -a "$LOG_FILE"
+    else
+        echo -e "${ORANGE}= No dist/*.tar.xz files found for checksum generation.${NC}" | tee -a "$LOG_FILE"
+    fi
+fi

@@ -327,19 +327,25 @@ install_host_deps() {
 #######################################################
 get_fastest_mirrors() {
     local mirrors=("$@")
-    local temp_results
-    temp_results=$(mktemp)
     if [[ ${#mirrors[@]} -le 1 ]]; then
         echo "${mirrors[@]}"
         return
     fi
     echo -e "${SKY}= Ranking ${#mirrors[@]} mirrors by latency...${NC}" >&2
+    local tmp_dir
+    tmp_dir=$(mktemp -d)
+    local pids=() i=0
     for url in "${mirrors[@]}"; do
-        latency=$(curl -o /dev/null -s -w "%{time_connect}\n" --connect-timeout 2 -I "$url" || echo "9.999")
-        echo "$latency $url" >> "$temp_results"
+        (
+            latency=$("${CURL}" -o /dev/null -s -w "%{time_connect}\n" --connect-timeout 2 -I "$url" 2>/dev/null || echo "9.999")
+            echo "$latency $url"
+        ) > "${tmp_dir}/${i}" &
+        pids+=($!)
+        i=$((i + 1))
     done
-    sort -n "$temp_results" | awk '{print $2}'
-    rm -f "$temp_results"
+    for pid in "${pids[@]}"; do wait "$pid" 2>/dev/null || true; done
+    cat "${tmp_dir}"/* 2>/dev/null | sort -n | awk '{print $2}'
+    rm -rf "${tmp_dir}"
 }
 
 ####################################################################
@@ -460,16 +466,16 @@ setup_alpine_chroot() {
       else
         echo -e "${CANARY}= download alpine rootfs and checksum${NC}"
         "${CURL}" -fsSL --retry 3 --retry-delay 2 --connect-timeout 10 --max-time 120 \
-        -o minirootfs/"${ALPINE_TARBALL}" "${ALPINE_URL}" \
-        || { echo -e "${CRIMSON}= ERROR: failed to download Alpine rootfs${NC}" >&2; exit 1; }
-      "${CURL}" -fsSL --retry 3 --retry-delay 2 --connect-timeout 10 --max-time 120 \
-      -o minirootfs/"${ALPINE_TARBALL}.sha256" "${ALPINE_URL}.sha256" \
-      || { echo -e "${CRIMSON}= ERROR: failed to download Alpine rootfs checksum${NC}" >&2; exit 1; }
-      if ! ( cd minirootfs && sha256sum -c "${ALPINE_TARBALL}.sha256" --status ); then
-        echo -e "${CRIMSON}= ERROR: Downloaded Alpine rootfs failed checksum verification${NC}" >&2
-        exit 1
+          -o minirootfs/"${ALPINE_TARBALL}" "${ALPINE_URL}" \
+          || { echo -e "${CRIMSON}= ERROR: failed to download Alpine rootfs${NC}" >&2; exit 1; }
+        "${CURL}" -fsSL --retry 3 --retry-delay 2 --connect-timeout 10 --max-time 120 \
+          -o minirootfs/"${ALPINE_TARBALL}.sha256" "${ALPINE_URL}.sha256" \
+          || { echo -e "${CRIMSON}= ERROR: failed to download Alpine rootfs checksum${NC}" >&2; exit 1; }
+        if ! ( cd minirootfs && sha256sum -c "${ALPINE_TARBALL}.sha256" --status ); then
+          echo -e "${CRIMSON}= ERROR: Downloaded Alpine rootfs failed checksum verification${NC}" >&2
+          exit 1
+        fi
       fi
-    fi
     echo -e "${SKY}= extract rootfs${NC}"
     mkdir -p "${CHROOTDIR}"
     tar xf minirootfs/"${ALPINE_TARBALL}" -C "${CHROOTDIR}"/
@@ -585,7 +591,7 @@ run_build_setup() {
   [[ $# -gt 0 && "$1" == "--" ]] && shift
   local mirrors=("$@")
   if [[ ${#mirrors[@]} -gt 0 ]]; then
-      mirrors=($(get_fastest_mirrors "${mirrors[@]}"))
+      mapfile -t mirrors < <(get_fastest_mirrors "${mirrors[@]}")
       echo -e "${CANARY}= Fastest mirror: ${PEACH}${mirrors[0]}${NC}"
   fi
   setup_arch
@@ -758,7 +764,6 @@ package_output() {
     exit 1
   fi
   mv "${temp_archive}" "dist/${filename}.tar.xz"
-  #echo -e "${MISTYROSE}= All done! Binary: ${BWHITE}dist/${filename}${NAVAJO} ($(du -sh "dist/${filename}" | cut -f1))${NC}"
   local raw_sz compressed_sz
   raw_sz=$(du -sh "dist/${filename}" | cut -f1)
   compressed_sz=$(du -sh "dist/${filename}.tar.xz" | cut -f1)
