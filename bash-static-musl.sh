@@ -73,11 +73,10 @@ cp -r distfiles/"${BASH_PATCH_DIR}" "./${CHROOTDIR}/"
 
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
 set -e
-apk update
-apk add build-base mold ccache sed automake autoconf pkgconfig ncurses-dev ncurses-static perl gettext-dev gettext-static readline readline-static
+echo -e "${ORANGE}= Installing dependencies...${NC}"
+apk update && apk add build-base mold ccache sed automake autoconf pkgconfig ncurses-dev ncurses-static perl gettext-dev gettext-static readline readline-static
 apk upgrade musl-dev mold --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
-mkdir -p /ccache
-export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
+mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${BASH_TARBALL}
 cd bash-${BASH_VERSION}/
