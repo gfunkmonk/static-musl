@@ -151,16 +151,20 @@ setup_arch() {
 ####################################
 check_cache() {
     local cache_file="${VER_CACHE_DIR}/${1}.cache"
-    if [[ -f "$cache_file" ]]; then
-        local last_mod now
-        last_mod=$(stat -c %Y "$cache_file" 2>/dev/null || stat -f %m "$cache_file")
-        now=$(date +%s)
-        if (( now - last_mod < VER_CACHE_TTL )); then
-            cat "$cache_file"
-            return 0
+    local lockfile="${cache_file}.lock"
+    (
+        flock -s 200 || return 1
+        if [[ -f "$cache_file" ]]; then
+            local last_mod now
+            last_mod=$(stat -c %Y "$cache_file" 2>/dev/null || stat -f %m "$cache_file")
+            now=$(date +%s)
+            if (( now - last_mod < VER_CACHE_TTL )); then
+                cat "$cache_file"
+                return 0
+            fi
         fi
-    fi
-    return 1
+        return 1
+    ) 200>"$lockfile"
 }
 
 ###########################################
@@ -169,7 +173,14 @@ check_cache() {
 ###########################################
 write_cache() {
     mkdir -p "$VER_CACHE_DIR"
-    echo "$2" > "${VER_CACHE_DIR}/${1}.cache"
+    local cache_file="${VER_CACHE_DIR}/${1}.cache"
+    local lockfile="${cache_file}.lock"
+    local temp_file="${cache_file}.tmp.$$"
+    (
+        flock -x 200 || return 1
+        echo "$2" > "$temp_file"
+        mv "$temp_file" "$cache_file"
+    ) 200>"$lockfile"
 }
 
 #########################################
@@ -263,6 +274,21 @@ get_gitlab_version() {
         # If blank, return fallback
         echo "$fallback"
     fi
+}
+
+############################
+# get version from the web #
+############################
+get_web_version() {
+  local url="$1"
+  local regex="$2"
+  local version
+  version=$("${CURL}" -s "$url" | grep -oP "$regex" | sort -V | tail -n 1)
+  if [[ -z "$version" ]]; then
+    echo "FAILED"
+    return 1
+  fi
+  echo "$version"
 }
 
 ###############################################################

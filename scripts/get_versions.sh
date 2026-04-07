@@ -103,7 +103,8 @@ SED_VER=${YELLOW}$("${CURL}" -s https://ftp.gnu.org/gnu/sed/ | grep -oP 'sed-\K[
 #SED_VER=${GREEN}$(get_version tag "mirror/sed" '.[0].name | ltrimstr("v")' "${RED}FALLBACK${NC}")
 echo -e "${BWHITE}sed: ${SED_VER}${NC}"
 
-SOCAT_VER=${GREEN}$(get_git_version "https://repo.or.cz/socat.git/refs/tags" "tag-1\.[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)*" "tag-" "${RED}FALLBACK${NC}")
+#SOCAT_VER=${GREEN}$(get_git_version "https://repo.or.cz/socat.git/refs/tags" "tag-1\.[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)*" "tag-" "${RED}FALLBACK${NC}")
+SOCAT_VER=$(get_web_version "http://www.dest-unreach.org/socat/download/" "socat-\K1\.[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)*")
 echo -e "${BWHITE}socat: ${SOCAT_VER}${NC}"
 
 SYSTEMCTL_TUI_VER=${GREEN}$(get_version release "rgwood/systemctl-tui" '.tag_name | ltrimstr("v")' "${RED}FALLBACK${NC}")

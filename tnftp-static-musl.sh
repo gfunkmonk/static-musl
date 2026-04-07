@@ -3,7 +3,7 @@ set -euo pipefail
 . "$(dirname "${BASH_SOURCE[0]}")/common.sh"
 
 echo -e "${VIOLET}= fetching latest tnftp version${NC}"
-TNFTP_VERSION=$("${CURL}" -s https://ftp.netbsd.org/pub/NetBSD/misc/tnftp/ | grep -o 'href="tnftp-[^"]*.gz"' | cut -d'"' -f2 | sort | tail -1 | sed 's/\..*//' | sed 's/tnftp-//')
+TNFTP_VERSION=$(get_web_version "https://ftp.netbsd.org/pub/NetBSD/misc/tnftp/" 'href="tnftp-[^"]*.gz"' | cut -d'"' -f2 | sort | tail -1 | sed 's/\..*//' | sed 's/tnftp-//')
 [[ -z "${TNFTP_VERSION}" ]] && { echo -e "${TAWNY}= netbsd.org fetch failed, using fallback ${FALLBACK_TNFTP}${NC}" >&2; TNFTP_VERSION="${FALLBACK_TNFTP}"; }
 echo -e "${TEAL}= building tnftp version: ${TNFTP_VERSION}${NC}"
 PACKAGE_VERSION="${TNFTP_VERSION}"

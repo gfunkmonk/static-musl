@@ -3,7 +3,7 @@ set -euo pipefail
 . "$(dirname "${BASH_SOURCE[0]}")/common.sh"
 
 echo -e "${VIOLET}= fetching latest zsh version${NC}"
-ZSH_VERSION=$("${CURL}" -s https://www.zsh.org/pub/ | grep -o 'href="[^"]*.xz"' | grep -e zsh-[0-9] | cut -d'"' -f2 | sort | tail -1 | sed 's/\.tar.*//' | sed 's/zsh-//g')
+ZSH_VERSION=$(get_web_version "https://www.zsh.org/pub/" 'href="[^"]*.xz"' | grep -e zsh-[0-9] | cut -d'"' -f2 | sort | tail -1 | sed 's/\.tar.*//' | sed 's/zsh-//g')
 [[ -z "${ZSH_VERSION}" ]] && { echo -e "${TAWNY}= zsh.org fetch failed, using fallback ${FALLBACK_ZSH}${NC}" >&2; ZSH_VERSION="${FALLBACK_ZSH}"; }
 echo -e "${TEAL}= building zsh version: ${ZSH_VERSION}${NC}"
 PACKAGE_VERSION="${ZSH_VERSION}"

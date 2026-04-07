@@ -3,7 +3,8 @@ set -euo pipefail
 . "$(dirname "${BASH_SOURCE[0]}")/common.sh"
 
 echo -e "${VIOLET}= fetching latest nmap version${NC}"
-NMAP_VERSION=$("${CURL}" -s https://nmap.org/dist/ | grep -o 'href="[^"]*.tar.bz2"' | cut -d'"' -f2 | sort | tail -1 | sed 's/\.tar.*//' | sed 's/nmap-//g')
+NMAP_VERSION=$(get_web_version "https://nmap.org/dist/" 'href="[^"]*.tar.bz2"' | cut -d'"' -f2 | sort | tail -1 | sed 's/\.tar.*//' | sed 's/nmap-//g' | cut -d'/' -f3)
+#NMAP_VERSION=$("${CURL}" -s https://nmap.org/dist/ | grep -o 'href="[^"]*.tar.bz2"' | cut -d'"' -f2 | sort | tail -1 | sed 's/\.tar.*//' | sed 's/nmap-//g')
 [[ -z "${NMAP_VERSION}" ]] && { echo -e "${TAWNY}= nmap.org fetch failed, using fallback ${FALLBACK_NMAP}${NC}" >&2; NMAP_VERSION="${FALLBACK_NMAP}"; }
 echo -e "${TEAL}= building nmap version: ${NMAP_VERSION}${NC}"
 PACKAGE_VERSION="${NMAP_VERSION}"
