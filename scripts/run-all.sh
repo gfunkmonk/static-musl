@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ## Change to the repository root so *-static-musl.sh scripts are found regardless
 # of where this script is invoked from.

@@ -90,14 +90,6 @@ jobs:
           else
             echo 'arch_matrix=["${{ inputs.arch }}"]' >> "$GITHUB_OUTPUT"
           fi
-      #- name: Determine tool matrix
-      #  id: set-matrix
-      #  run: |
-      #    if [[ "${{ github.event_name }}" == "schedule" || "${{ inputs.tool }}" == "all" || "${{ inputs.tool }}" == "" ]]; then
-      #      echo 'matrix=["7zz","aria2c","axel","bash","bsdtar","curl","dash","dropbear","fping","gawk","hexcurse","htop","less","lftp","nano","netcat","nmap","oksh","openssh","pigz","ripgrep","rsync","sed","screen","socat","tar","tmux","tnftp","upx","vim","wget","wget2","xz","zsh","zstd"]' >> "$GITHUB_OUTPUT"
-      #    else
-      #      echo 'matrix=["${{ inputs.tool }}"]' >> "$GITHUB_OUTPUT"
-      #    fi
 
   build:
     needs: setup
@@ -110,7 +102,6 @@ jobs:
       fail-fast: false
       matrix:
         tool: ${{ fromJson(needs.setup.outputs.matrix) }}
-        #arch: [x86_64, x86, aarch64, armv7, armhf]
         arch: ${{ fromJson(needs.setup.outputs.arch_matrix) }}
         include:
           - arch: x86_64
@@ -133,24 +124,6 @@ jobs:
         ALPINE_VERSION=$(grep '^ALPINE_VERSION=' config.sh | cut -d= -f2 | tr -d '"')
         echo "version=${ALPINE_VERSION}" >> "$GITHUB_OUTPUT"
         echo "ALPINE_VERSION=${ALPINE_VERSION}" >> "$GITHUB_ENV"
-
-    #- name: Prepare ccache directory and config
-    #  run: |
-    #        mkdir -p "${CCACHE_DIR}"
-    #        cat >> "$GITHUB_ENV" << 'EOF'
-    #        CCACHE_NOHASHDIR=true
-    #        CCACHE_NOHARDLINK=true
-    #        CCACHE_NLEVELS=4
-    #        CCACHE_COMPILERCHECK=content
-    #        CCACHE_COMPRESS=1
-    #        CCACHE_COMPRESSLEVEL=7
-    #        CCACHE_INODECACHE=true
-    #        CCACHE_SLOPPINESS=file_macro,locale,time_macros
-    #        CCACHE_NOFILECLONE=true
-    #        CCACHE_DIRECT=true
-    #        CCACHE_DEPEND=true
-    #        EOF
-    #        echo "CCACHE Environment set!"
 
     - name: Set up ccache
       #uses: hendrikmuhs/ccache-action@v1.2
@@ -209,14 +182,6 @@ jobs:
         # Match the key exactly from your (now separate) Base workflow
         key: alpine-prebaked-${{ steps.alpine-version.outputs.version }}-${{ matrix.arch }}-${{ hashFiles('scripts/setup-base-rootfs.sh') }}
         # We don't use restore-keys here because we only want the EXACT prebaked image
-
-    #- name: Check Prebaked Rootfs Status
-    #  run: |
-    #    if [ "${{ steps.cache-prebaked.outputs.cache-hit }}" == "true" ]; then
-    #      echo "::notice::Using Prebaked Rootfs for ${{ matrix.arch }}"
-    #    else
-    #      echo "::notice::Prebaked Rootfs not found. Falling back to standard minirootfs."
-    #    fi
 
     - name: Verify Prebaked Rootfs Filesystem
       run: |
