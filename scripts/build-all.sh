@@ -90,7 +90,6 @@ fi
 
 success_count=0
 failure_count=0
-[ "$RESUME" = false ] && > "$LOG_FILE"
 echo "--- Starting file execution loop ---" | tee -a "$LOG_FILE"
 if [ "$RESUME" = true ]; then
     echo -e "\n--- RESUMING BUILD AT $(date) ---" >> "$LOG_FILE"
@@ -112,10 +111,13 @@ for file in *-static-musl.sh; do
         continue
     fi
 
-    if [ "$RESUME" = true ] && compgen -G "dist/${bin_name}-*" > /dev/null 2>&1; then
-        echo -e "${NEONPINK}Skipping ${SKY}$file${NC} (Binary exists in dist/)" | tee -a "$LOG_FILE"
-        success_count=$((success_count + 1))
-        continue
+    if [ "$RESUME" = true ]; then
+        arch_suffix="${ARCH:+-${ARCH}}"
+        if compgen -G "dist/${bin_name}-*${arch_suffix}.tar.xz" > /dev/null 2>&1; then
+            echo -e "${NEONPINK}Skipping ${SKY}$file${NC} (Binary exists in dist/)" | tee -a "$LOG_FILE"
+            success_count=$((success_count + 1))
+            continue
+        fi
     fi
 
     echo -e "${LAGOON}Processing file: ${LEMON}$file${NC}" | tee -a "$LOG_FILE"

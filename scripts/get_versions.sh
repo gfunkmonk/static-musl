@@ -16,7 +16,7 @@ echo -e "${YELLOW}Yellow${BWHITE} = Other method (curl dist folder, etc)${NC}"
 echo -e "${PURPLE}#################################################################${NC}"
 echo -e "\n"
 
-SEVENZIP_VER=${GREEN}$(get_version release "mcmilk/7-Zip-zstd" "${RED}FALLBACK${NC}")
+SEVENZIP_VER=${GREEN}$(get_version release "mcmilk/7-Zip-zstd" "" "${RED}FALLBACK${NC}")
 echo -e "${BWHITE}7zz: ${SEVENZIP_VER}${NC}"
 
 ARIA2_VER=${GREEN}$(get_version release "aria2/aria2" '.tag_name | ltrimstr("release-")' "${RED}FALLBACK${NC}")

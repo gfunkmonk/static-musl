@@ -147,8 +147,9 @@ setup_arch() {
 check_cache() {
     local cache_file="${VER_CACHE_DIR}/${1}.cache"
     if [[ -f "$cache_file" ]]; then
-        local last_mod=$(stat -c %Y "$cache_file" 2>/dev/null || stat -f %m "$cache_file")
-        local now=$(date +%s)
+        local last_mod now
+        last_mod=$(stat -c %Y "$cache_file" 2>/dev/null || stat -f %m "$cache_file")
+        now=$(date +%s)
         if (( now - last_mod < VER_CACHE_TTL )); then
             cat "$cache_file"
             return 0
@@ -209,8 +210,9 @@ get_git_version() {
         [[ -n "$cached_val" ]] && { echo "$cached_val"; return 0; }
     fi
 
-    local raw_output=$("${CURL}" -fsSL --retry 3 --retry-delay 2 --connect-timeout 10 --max-time 30 "$url")
-    local version=$(echo "$raw_output" | grep -oaE "$pattern" | sort -V | tail -n 1)
+    local raw_output version
+    raw_output=$("${CURL}" -fsSL --retry 3 --retry-delay 2 --connect-timeout 10 --max-time 30 "$url")
+    version=$(echo "$raw_output" | grep -oaE "$pattern" | sort -V | tail -n 1)
 
     if [[ -n "$version" ]]; then
         # Strip prefix, convert underscores to dots, normalize 'p' suffix (e.g. 10.3.P1 → 10.3p1)
@@ -368,7 +370,8 @@ download_source() {
 
       # Parse and display the actual error
       if [ -s "${error_log}" ]; then
-        local error_msg=$(head -n 1 "${error_log}" | sed 's/^curl: //')
+        local error_msg
+        error_msg=$(head -n 1 "${error_log}" | sed 's/^curl: //')
         echo -e "${TOMATO}  └─ Error: ${error_msg}${NC}" >&2
       else
         # Map common curl exit codes to human-readable messages
