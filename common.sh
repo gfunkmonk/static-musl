@@ -301,7 +301,7 @@ unmount_chroot() {
 # setup_cleanup: register unmount trap for chroot bind mounts #
 ###############################################################
 setup_cleanup() {
-  trap unmount_chroot EXIT
+  trap unmount_chroot EXIT INT TERM
 }
 
 #####################################################################
@@ -409,6 +409,10 @@ setup_alpine_chroot() {
     sudo rm -fr "./${CHROOTDIR}"
   fi
   if [ -f "minirootfs/${PREBAKED_IMAGE}" ]; then
+      age=$(( $(date +%s) - $(stat -c %Y "minirootfs/${PREBAKED_IMAGE}") ))
+      if (( age > 2592000 )); then  # 30 days
+        echo -e "${LEMON}= WARNING: prebaked image is >30 days old, consider rebuilding${NC}"
+      fi
       echo -e "${CARIBBEAN}= Found pre-baked image: ${PREBAKED_IMAGE}. Extracting...${NC}"
       mkdir -p "./${CHROOTDIR}"
       tar -xf minirootfs/"${PREBAKED_IMAGE}" -C "./${CHROOTDIR}"
@@ -620,18 +624,18 @@ package_output() {
   local version_suffix=""
   [ -n "${PACKAGE_VERSION:-}" ] && version_suffix="-${PACKAGE_VERSION}"
   local filename="${tool}${version_suffix}-${ARCH}"
-  install -D -m 755 "${binary}" "dist/${filename}"
   if command -v file >/dev/null 2>&1; then
     echo -e "\n"
-    echo -e "${JUNEBUD}= Verifying binary: ${filename}${NC}"
-    verify_binary_arch "dist/${filename}"
-    if file "dist/${filename}" | grep -Ei "interpreter|dynamically linked" >/dev/null; then
+    echo -e "${JUNEBUD}= Verifying binary: ${binary}${NC}"
+    verify_binary_arch "${binary}"
+    if file "${binary}" | grep -Ei "interpreter|dynamically linked" >/dev/null; then
         echo -e "${UGLY}!! WARNING: Binary is DYNAMICALLY linked !!${NC}"
-        file "dist/${filename}"
+        file "${binary}"
     else
         echo -e "${PINK}= Verified: Binary is statically linked.${NC}"
     fi
   fi
+  install -D -m 755 "${binary}" "dist/${filename}"
   if [ "${USE_STRIP}" = "true" ]; then
       echo -e "${LTVIOLET}= Stripping ${filename}...${NC}"
       strip "dist/${filename}" 2>/dev/null || true

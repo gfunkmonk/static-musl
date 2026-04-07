@@ -40,6 +40,7 @@ on:
           - htop
           - less
           - lftp
+          - mc
           - nano
           - netcat
           - nmap
@@ -80,7 +81,7 @@ jobs:
         id: set-matrix
         run: |
           if [[ "${{ github.event_name }}" == "schedule" || "${{ inputs.tool }}" == "all" || "${{ inputs.tool }}" == "" ]]; then
-            echo 'matrix=["7zz","aria2c","axel","bash","bsdtar","curl","dash","dropbear","fping","gawk","hexcurse","htop","less","lftp","nano","netcat","nmap","oksh","openssh","pigz","ripgrep","rsync","sed","screen","socat","tar","tmux","tnftp","upx","vim","wget","wget2","xz","zsh","zstd"]' >> "$GITHUB_OUTPUT"
+            echo 'matrix=["7zz","aria2c","axel","bash","bsdtar","curl","dash","dropbear","fping","gawk","hexcurse","htop","less","lftp","mc","nano","netcat","nmap","oksh","openssh","pigz","ripgrep","rsync","sed","screen","socat","tar","tmux","tnftp","upx","vim","wget","wget2","xz","zsh","zstd"]' >> "$GITHUB_OUTPUT"
           else
             echo 'matrix=["${{ inputs.tool }}"]' >> "$GITHUB_OUTPUT"
           fi

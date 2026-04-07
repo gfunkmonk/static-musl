@@ -1,0 +1,21 @@
+Last-Update: 2017-06-29
+Forwarded: no
+Bug-Debian: http://bugs.debian.org/413258
+Author: Patrick Winnertz <winnie@debian.org>
+Reviewed-by: Dmitry Smirnov <onlyjob@member.fsf.org>
+Updated-by: Denis Briand <debian@denis-briand.fr>
+Description: Disable internal editor by default
+
+--- a/src/setup.c
++++ b/src/setup.c
+@@ -178,9 +178,9 @@
+ 
+ /* If true use the internal viewer */
+ gboolean use_internal_view = TRUE;
+ /* If set, use the builtin editor */
+-gboolean use_internal_edit = TRUE;
++gboolean use_internal_edit = FALSE;
+ 
+ #ifdef HAVE_CHARSET
+ /* Numbers of (file I/O) and (input/display) codepages. -1 if not selected */
+ int default_source_codepage = -1;
