@@ -4,6 +4,7 @@
 RESUME=false
 DRY_RUN=false
 SELECTED_TOOLS=""
+PARALLEL_JOBS=1
 
 JUNEBUD="\033[38;2;189;218;87m"
 SKY="\033[38;2;135;206;250m"
@@ -27,16 +28,15 @@ usage() {
   echo -e "${BWHITE}Usage: ${NC}./$(basename "$0") [OPTIONS]"
   echo -e ""
   echo -e "${BWHITE}Options:${NC}"
-  echo -e "  ${SKY}--tool <name(s)>${NC}    Build specific tool(s). Supports comma-separated list."
-  echo -e "                       Example: ${NEONPINK}--tool curl,wget,nano${NC}"
+  echo -e "  ${SKY}--parallel <n>${NC}     Number of concurrent build jobs."
   echo -e "  ${SKY}--resume${NC}           Skip tools that already have a binary in ${NC}dist/."
-  echo -e "                       Appends to existing logs instead of overwriting."
   echo -e "  ${SKY}--list-tools${NC}       Show all available build scripts and their last version."
+  echo -e "  ${SKY}--tool <name(s)>${NC}   Build specific tool(s). Supports comma-separated list."
+  echo -e "                       Example: ${NEONPINK}--tool curl,wget,nano${NC}"
   echo -e "  ${SKY}--dry-run${NC}          Show which scripts would be executed without running them."
+  echo -e "  ${SKY}--arch <arch>${NC}      Target architecture (x86_64, aarch64, armv7, armhf, x86)."
+  echo -e "                       Overrides ARCH environment variable."
   echo -e "  ${SKY}--help${NC}             Display this help message and exit."
-  echo -e ""
-  echo -e "${BWHITE}Environment Variables:${NC}"
-  echo -e "  ${NEONGREEN}ARCH${NC}               Target architecture (e.g., x86_64, aarch64)."
   echo -e ""
   exit 0
 }
@@ -53,6 +53,14 @@ while [[ $# -gt 0 ]]; do
     --resume)
       RESUME=true
       ;;
+    --parallel)
+      PARALLEL_JOBS="${2:?--parallel requires a number}"
+      shift
+      ;;
+    --arch)
+      export ARCH="$2"
+      shift
+      ;;
     --dry-run)
       DRY_RUN=true
       ;;
@@ -65,7 +73,6 @@ while [[ $# -gt 0 ]]; do
       echo "------------------------------------------------"
       for script in *-static-musl.sh; do
         b_name=$(echo "$script" | sed 's/-static-musl//; s/\.sh//')
-        # Find latest version in dist/ (e.g., curl-8.6.0-x86_64.tar.xz)
         latest=$(ls dist/${b_name}-*-*.tar.xz 2>/dev/null | tail -n 1 | sed "s|dist/||; s|${b_name}-||; s|-${ARCH:-.*}.tar.xz||")
         printf "${PEACH}%-15s${NC} %s\n" "$b_name" "${latest:-[No build found]}"
       done
@@ -81,6 +88,15 @@ done
 
 LOG_DIR="${PWD}/logs"
 LOG_FILE="${LOG_DIR}/build_log.txt"
+STATUS_DIR=$(mktemp -d)
+
+# Cleanup on exit
+cleanup() {
+  rm -rf "$STATUS_DIR"
+  # Kill background jobs if interrupted
+  [ "$(jobs -pr)" ] && jobs -pr | xargs -r kill 2>/dev/null
+}
+trap cleanup EXIT
 
 mkdir -p "$LOG_DIR/builds"
 if [ "$RESUME" = false ]; then
@@ -90,7 +106,8 @@ fi
 
 success_count=0
 failure_count=0
-echo "--- Starting file execution loop ---" | tee -a "$LOG_FILE"
+current_jobs=0
+echo -e "--- Starting file execution loop (${NEONBLUE}$PARALLEL_JOBS${NC} jobs) ---" | tee -a "$LOG_FILE"
 if [ "$RESUME" = true ]; then
     echo -e "\n--- RESUMING BUILD AT $(date) ---" >> "$LOG_FILE"
 fi
@@ -99,45 +116,66 @@ fi
 for file in *-static-musl.sh; do
     [ -f "$file" ] || continue
     bin_name=$(echo "$file" | sed 's/-static-musl//; s/\.sh//')
-    if [[ -n "$SELECTED_TOOLS" ]]; then
-        if [[ ! ",$SELECTED_TOOLS," =~ ",$bin_name," ]]; then
-            continue
-        fi
-    fi
 
-    if [ "$DRY_RUN" = true ]; then
-        echo -e "${HIGHLIGHTER}[DRY-RUN] ${BWHITE}Would build: ${NEONGREEN}${file}${NC}"
-        success_count=$((success_count + 1))
-        continue
+    if [[ -n "$SELECTED_TOOLS" ]]; then
+        if [[ ! ",$SELECTED_TOOLS," =~ ",$bin_name," ]]; then continue; fi
     fi
 
     if [ "$RESUME" = true ]; then
         arch_pattern="${ARCH:+-${ARCH}}"
         if compgen -G "dist/${bin_name}-*${arch_pattern}.tar.xz" > /dev/null 2>&1; then
             echo -e "${NEONPINK}Skipping ${SKY}$file${NC} (Binary exists in dist/)" | tee -a "$LOG_FILE"
-            success_count=$((success_count + 1))
+            touch "$STATUS_DIR/${bin_name}.0"
             continue
         fi
     fi
 
-    echo -e "${LAGOON}Processing file: ${LEMON}$file${NC}" | tee -a "$LOG_FILE"
-    chmod +x "$file"
-
-    ./"$file" 2>&1 | tee -a "${LOG_DIR}/builds/${bin_name}.txt"
-    exit_status=${PIPESTATUS[0]}
-    if [ $exit_status -eq 0 ]; then
-        echo -e "${JUNEBUD}SUCCESS: ${VIOLET}$file${NC}" | tee -a "$LOG_FILE"
-        success_count=$((success_count + 1))
-    else
-        echo -e " ${NEONRED}FAILURE: ${LEMON}$file${NC}" | tee -a "$LOG_FILE"
-        failure_count=$((failure_count + 1))
-        echo -e "${ORANGE}Stopping build. Fix error and run with --resume to continue.${NC}"
-        break
+    if [ "$DRY_RUN" = true ]; then
+        echo -e "${HIGHLIGHTER}[DRY-RUN] ${BWHITE}Would build: ${NEONGREEN}${file}${NC}"
+        touch "$STATUS_DIR/${bin_name}.0"
+        continue
     fi
-    echo "-----------------------------------" | tee -a "$LOG_FILE"
+
+    # Parallel Job Control
+    (
+        # Prevent chroot collision by giving each job a unique directory name
+        export CHROOTDIR="chroot-${ARCH:-native}-${bin_name}"
+
+        echo -e "${LAGOON}Started: ${LEMON}$file${BWHITE} (Log: ${bin_name}.txt)${NC}" | tee -a "$LOG_FILE"
+        chmod +x "$file"
+
+        # Execute and capture exit status
+        ./"$file" > "${LOG_DIR}/builds/${bin_name}.txt" 2>&1
+        exit_status=$?
+
+        if [ $exit_status -eq 0 ]; then
+            echo -e "${JUNEBUD}SUCCESS: ${VIOLET}$file${NC}" | tee -a "$LOG_FILE"
+        else
+            echo -e " ${NEONRED}FAILURE: ${LEMON}$file ${BWHITE}(Check ${bin_name}.txt)${NC}" | tee -a "$LOG_FILE"
+        fi
+
+        # Write exit status to a file so the parent can count it
+        echo "$exit_status" > "$STATUS_DIR/${bin_name}.$exit_status"
+    ) &
+
+    current_jobs=$((current_jobs + 1))
+
+    # Wait for the next available slot if the parallel limit is reached
+    if [[ $current_jobs -ge $PARALLEL_JOBS ]]; then
+        wait -n
+        current_jobs=$((current_jobs - 1))
+    fi
 done
 
-echo -e "${MINT}--- Execution Summary ---${NC}" | tee -a "$LOG_FILE"
+# Wait for all remaining background jobs to finish
+wait
+
+# Process results from the status directory
+success_count=$(ls "$STATUS_DIR" 2>/dev/null | grep -c "\.0$" || echo 0)
+failure_count=$(ls "$STATUS_DIR" 2>/dev/null | grep -v "\.0$" | wc -l || echo 0)
+
+echo "-----------------------------------" | tee -a "$LOG_FILE"
+echo -e "\n${MINT}--- Execution Summary ---${NC}" | tee -a "$LOG_FILE"
 echo -e "${HOTPINK}Total files processed: $((success_count + failure_count))${NC}" | tee -a "$LOG_FILE"
 echo -e "${SKY}Successful executions: $success_count${NC}" | tee -a "$LOG_FILE"
 echo -e "${NEONRED}Failed executions: $failure_count${NC}" | tee -a "$LOG_FILE"

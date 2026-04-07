@@ -318,7 +318,7 @@ install_host_deps() {
   echo -e "${SEA}= install dependencies${NC}"
   local DEBIAN_DEPS=(binutils coreutils patch sed)
   [ -n "${QEMU_ARCH}" ] && DEBIAN_DEPS+=(qemu-user-static)
-  sudo apt-get update -qy > /dev/null && sudo apt-get install -qy --no-install-recommends "${DEBIAN_DEPS[@]}"
+  sudo flock /var/lib/apt/lists/lock -c 'apt-get update -qq && sudo apt-get install -qy --no-install-recommends "${DEBIAN_DEPS[@]}"'
 }
 
 ####################################################################
@@ -573,6 +573,68 @@ run_build_setup() {
   mount_chroot
 }
 
+#######################################################################
+# rust_set_cross_target: sets RUST_TARGET for ARM cross-compile,      #
+# or leaves it empty (meaning: build natively in the Alpine chroot).  #
+# Call after run_build_setup (which calls setup_arch internally).      #
+#######################################################################
+rust_set_cross_target() {
+  case "${ARCH}" in
+    armhf) RUST_TARGET="arm-unknown-linux-musleabihf"   ;;
+    armv7) RUST_TARGET="armv7-unknown-linux-musleabihf" ;;
+    *)     RUST_TARGET=""                               ;;
+  esac
+}
+
+#######################################################################
+# rust_host_cross_build TOOL VERSION TARBALL SRC_DIR BIN_NAME         #
+# Cross-compiles a Cargo project on the host runner using             #
+# cargo-zigbuild. Only call this when RUST_TARGET is non-empty        #
+# (set by rust_set_cross_target).                                      #
+#                                                                      #
+# BIN_NAME is the filename inside target/<RUST_TARGET>/release/.       #
+#######################################################################
+rust_host_cross_build() {
+  local tool="$1" version="$2" tarball="$3" src_dir="$4" bin_name="$5"
+
+  echo -e "${SLATE}= Cross-compiling ${tool} on host (QEMU-arm too slow / no Alpine Rust pkg for ${ARCH})${NC}"
+  echo -e "${ORANGE}= Installing zig (musl cross-linker) via pip${NC}"
+  pip3 install --user --quiet ziglang
+  export PATH="${HOME}/.local/bin:${PATH}"
+
+  if ! command -v rustup >/dev/null 2>&1; then
+    if command -v apt-get >/dev/null 2>&1; then
+      sudo apt-get install -qy --no-install-recommends rustup
+    else
+      echo -e "${CRIMSON}= ERROR: rustup not found and apt-get unavailable${NC}" >&2
+      exit 1
+    fi
+  fi
+  # shellcheck source=/dev/null
+  source "${HOME}/.cargo/env" 2>/dev/null || true
+
+  rustup target add "${RUST_TARGET}"
+  if ! command -v cargo-zigbuild >/dev/null 2>&1; then
+    cargo install cargo-zigbuild --locked
+  fi
+
+  echo -e "${LIME}= Extracting ${tool} source${NC}"
+  local build_dir
+  build_dir=$(mktemp -d)
+  tar xf "distfiles/${tarball}" -C "${build_dir}"
+
+  echo -e "${VIOLET}= Building ${tool} ${version} for ${ARCH} (cross-compilation on host)${NC}"
+  pushd "${build_dir}/${src_dir}/"
+  CARGO_PROFILE_RELEASE_OPT_LEVEL="z" CARGO_PROFILE_RELEASE_LTO="true" \
+  CARGO_PROFILE_RELEASE_STRIP="symbols" CARGO_PROFILE_RELEASE_CODEGEN_UNITS="1" \
+  RUSTFLAGS="-C target-feature=+crt-static" \
+    cargo zigbuild --release --target "${RUST_TARGET}"
+  popd
+
+  package_output "${tool}" "${build_dir}/${src_dir}/target/${RUST_TARGET}/release/${bin_name}"
+  rm -rf "${build_dir}"
+}
+
 #############################################################
 # verify_binary_arch BINARY                                 #
 # Reads the ELF Machine field and checks it matches ARCH.  #
@@ -686,3 +748,10 @@ package_output() {
     echo -e "${COOLGRAY}KEEP_CHROOT is true. ${MAUVE}Preserving: ${CHROOTDIR}${NC}"
   fi
 }
+
+# Cleanup mounts on failure
+cleanup_on_fail() {
+  echo -e "${TOMATO}= Build failed. Cleaning up...${NC}"
+  unmount_chroot
+}
+trap cleanup_on_fail ERR
