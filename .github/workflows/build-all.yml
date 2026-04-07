@@ -310,6 +310,11 @@ jobs:
         arch="${base##*-}"
         version="${base#${{ matrix.tool }}-}"
         version="${version%-${arch}}"
+        {
+          echo "SHA_SUMS<<EOF"
+          sha256sum *.tar.xz
+          echo "EOF"
+        } >> "$GITHUB_ENV"
         echo "version=${version}" >> "$GITHUB_OUTPUT"
         echo "TOOL_VERSION=${version}" >> "$GITHUB_ENV"
 
@@ -338,5 +343,10 @@ jobs:
 
           **Architectures:** x86_64, x86, aarch64, armv7, armhf
           **Built with:** Alpine Linux ${{ env.ALPINE_VERSION }}
+
+          **SHA256 Checksums:**
+          ```text
+          ${{ env.SHA_SUMS }}
+          ```
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
