@@ -20,6 +20,7 @@ Build scripts that produce fully static, multi-architecture binaries using musl 
 | htop | latest | Interactive process viewer |
 | less | latest | pager program similar to more |
 | lftp | latest | Command line ftp client |
+| mc | latest | a visual, dual-pane file manager |
 | nano | latest | Small command-line text editor |
 | netcat | latest | TCP/IP Swiss Army knife |
 | nmap | latest | Network scanning & discovery tool |
