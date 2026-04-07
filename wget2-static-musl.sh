@@ -31,8 +31,8 @@ echo -e "${PEACH}= Configure source${NC}"
 ./configure  CC="${CC}" --with-ssl=openssl \
   --disable-nls --disable-rpath --sysconfdir=/etc --disable-silent-rules --disable-ipv6 --enable-year2038 \
   --disable-shared --enable-static --disable-doc --with-bzip2 --enable-manylibs --with-lzma --with-brotlidec \
-  LDFLAGS='${BLDFLAGS} -static-pie -lidn2 -lunistring' PKG_CONFIG='${PKGCFG}' \
-  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fPIE -Wno-unterminated-string-initialization'
+  LDFLAGS='${BLDFLAGS} ${PIE} -lidn2 -lunistring' PKG_CONFIG='${PKGCFG}' \
+  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${PIE} -Wno-unterminated-string-initialization'
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc)
 echo -e "\n${CARIBBEAN}= ccache statistics:${NC}"

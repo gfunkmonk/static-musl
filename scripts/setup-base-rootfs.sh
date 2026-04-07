@@ -15,7 +15,7 @@ echo -e "${ORANGE}= Installing base toolchain...${NC}"
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
 apk update
 apk add --no-cache build-base mold ccache patch sed automake autoconf clang
-apk update --no-cache --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main mold musl-dev
+apk upgrade --no-cache --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main mold musl-dev
 EOF
 
 if [ ${#EXTRA_PACKAGES[@]} -gt 0 ]; then

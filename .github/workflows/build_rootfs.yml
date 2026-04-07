@@ -37,7 +37,6 @@ jobs:
         uses: actions/cache@v5
         with:
           path: minirootfs/alpine-base-${{ matrix.arch }}.tar.zst
-          # Key MUST match the one in your main build workflow
           key: alpine-prebaked-${{ steps.alpine-version.outputs.version }}-${{ matrix.arch }}-${{ hashFiles('scripts/setup-base-rootfs.sh') }}
 
       - name: Run Setup Script

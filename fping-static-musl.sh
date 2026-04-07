@@ -26,8 +26,8 @@ tar xf ${FPING_TARBALL}
 cd fping-${FPING_VERSION}/
 echo -e "${LAGOON}= Configure source${NC}"
 ./configure CC="${CC}" --disable-ipv6 \
-  LDFLAGS='${BLDFLAGS} ${MOLD} -no-pie' \
-  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fno-PIE'
+  LDFLAGS='${BLDFLAGS} ${MOLD} ${NOPIE}' \
+  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${NOPIE}'
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc)
 echo -e "\n${CARIBBEAN}= ccache statistics:${NC}"

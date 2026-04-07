@@ -33,7 +33,7 @@ echo -e "${PEACH}= Configure source${NC}"
 ./configure CC="${CC}" \
   --sysconfdir=/etc --disable-nls --disable-utf8 --disable-tiny --enable-nanorc --enable-color \
   --enable-extra --enable-largefile --enable-libmagic --disable-justify \
-  LDFLAGS='${BLDFLAGS} ${MOLD} -no-pie' PKG_CONFIG='${PKGCFG}' CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fno-PIE'
+  LDFLAGS='${BLDFLAGS} ${MOLD} ${NOPIE}' PKG_CONFIG='${PKGCFG}' CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${NOPIE}'
 echo -e "${VIOLET}= Building...${NC}"
 CC="${CC}" make -j\$(nproc)
 echo -e "\n${CARIBBEAN}= ccache statistics:${NC}"

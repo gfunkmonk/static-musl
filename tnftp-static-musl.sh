@@ -28,8 +28,8 @@ cd tnftp-${TNFTP_VERSION}/
 echo -e "${PEACH}= Configure source${NC}"
 ./configure --disable-ipv6 --enable-ssl --with-socks=no --enable-editcomplete \
   --disable-shared --enable-static \
-  LDFLAGS='${BLDFLAGS} ${MOLD} -static-pie' PKG_CONFIG='${PKGCFG}' \
-  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fPIE'
+  LDFLAGS='${BLDFLAGS} ${MOLD} ${PIE}' PKG_CONFIG='${PKGCFG}' \
+  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${PIE}'
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc)
 echo -e "\n${CARIBBEAN}= ccache statistics:${NC}"

@@ -38,8 +38,8 @@ echo -e "${CHARTREUSE}= Configure source${NC}"
   --disable-lastlog --disable-utmp --disable-utmpx --disable-wtmp --disable-wtmpx \
   --disable-pututline --disable-pututxline --enable-bundled-libtom --disable-pam \
   --enable-zlib --enable-static \
-  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -Wno-incompatible-pointer-types -Wno-undef' \
-  LDFLAGS='${BLDFLAGS} ${MOLD}' PKG_CONFIG='${PKGCFG}'
+  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${NOPIE} -Wno-incompatible-pointer-types -Wno-undef' \
+  LDFLAGS='${BLDFLAGS} ${MOLD} ${NOPIE}' PKG_CONFIG='${PKGCFG}'
 echo -e "${PURPLE_BLUE}= Building...${NC}"
 CC="${CC}" make -j\$(nproc) MULTI=1 STATIC=1
 cp dropbearmulti dropbear

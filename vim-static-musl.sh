@@ -33,8 +33,8 @@ echo -e "${PEACH}= Configure source${NC}"
   --disable-gui --disable-libsodium --disable-netbeans --disable-nls --disable-rightleft --disable-selinux \
   --disable-smack --disable-sysmouse --disable-xsmp --enable-largefile --enable-multibyte --enable-terminal \
   --enable-year2038 --with-features=huge --with-tlib=ncursesw  --without-gnome --without-x --without-wayland \
-  LDFLAGS='${BLDFLAGS} ${MOLD} -no-pie' PKG_CONFIG='${PKGCFG}' \
-  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fno-PIE'
+  LDFLAGS='${BLDFLAGS} ${MOLD} ${NOPIE}' PKG_CONFIG='${PKGCFG}' \
+  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${NOPIE}'
 echo -e "${VIOLET}= Building...${NC}"
 CC="${CC}" make -j\$(nproc)
 echo -e "\n${CARIBBEAN}= ccache statistics:${NC}"

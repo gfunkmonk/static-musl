@@ -112,23 +112,23 @@ setup_arch() {
   case "${ARCH}" in
     x86_64)
       QEMU_ARCH=""
-      ARCH_FLAGS="-march=x86-64 -mtune=generic"
+      ARCH_FLAGS="${X8664_FLAGS}"
       ;;
     x86)
       QEMU_ARCH="i386"
-      ARCH_FLAGS="-march=pentium-m -mtune=generic"
+      ARCH_FLAGS="${X86_FLAGS}"
       ;;
     aarch64)
       QEMU_ARCH="aarch64"
-      ARCH_FLAGS="-march=armv8-a"
+      ARCH_FLAGS="${AARCH64_FLAGS}"
       ;;
     armv7)
       QEMU_ARCH="arm"
-      ARCH_FLAGS="-march=armv7-a -mfpu=neon-vfpv4 -mfloat-abi=hard -marm"
+      ARCH_FLAGS="${ARMV7_FLAGS}"
       ;;
     armhf)
       QEMU_ARCH="arm"
-      ARCH_FLAGS="-march=armv6kz -mfloat-abi=hard -mfpu=vfp -marm"
+      ARCH_FLAGS="${ARMHF_FLAGS}"
       ;;
     *)
       echo -e "${LAGOON}Unknown architecture: ${HOTPINK}${ARCH}${NC}" >&2
@@ -204,29 +204,19 @@ get_git_version() {
     local url="$1" pattern="$2" strip_prefix="$3" fallback="$4"
     local cache_key="git_${url//[^[:alnum:]]/_}"
 
-    # 1. Try Cache (CRITICAL: Delete your /tmp/ files before testing this)
     local cached_val
     if cached_val=$(check_cache "$cache_key"); then
         [[ -n "$cached_val" ]] && { echo "$cached_val"; return 0; }
     fi
 
-    # 2. Fetch
     local raw_output=$("${CURL}" -fsSL --retry 3 --retry-delay 2 --connect-timeout 10 --max-time 30 "$url")
     local version=$(echo "$raw_output" | grep -oaE "$pattern" | sort -V | tail -n 1)
 
     if [[ -n "$version" ]]; then
-        # --- THE CORRECT FIX ---
-        # 1. Strip the prefix from the RAW version (before underscores become dots)
-        # This handles the "V_" correctly.
+        # Strip prefix, convert underscores to dots, normalize 'p' suffix (e.g. 10.3.P1 → 10.3p1)
         version="${version#$strip_prefix}"
-
-        # 2. Now convert remaining underscores to dots
         version="${version//_/.}"
-
-        # 3. Final cleanup for 'p' suffix and any trailing dots
-        # This turns 10.3.P1 into 10.3p1
         version=$(echo "$version" | sed -E 's/\.[Pp]/p/; s/\.$//')
-        # -----------------------
 
         write_cache "$cache_key" "$version"
         echo "$version"
@@ -571,21 +561,6 @@ run_build_setup() {
   mount_chroot
 }
 
-#####################################
-#  helper to verify arch of binary  #
-#####################################
-verify_binary_arch() {
-  local binary="$1"
-  if ! command -v readelf >/dev/null 2>&1; then return; fi
-  local elf_machine
-  elf_machine=$(readelf -h "${binary}" 2>/dev/null | awk '/Machine:/{print $NF}')
-  case "${ARCH}" in
-    x86_64)  [[ "${elf_machine}" == "X86-64" ]]  || echo -e "${TOMATO}!! ARCH MISMATCH: got ${elf_machine}, expected X86-64${NC}" ;;
-    x86)     [[ "${elf_machine}" == "80386" ]]    || echo -e "${TOMATO}!! ARCH MISMATCH: got ${elf_machine}, expected 80386${NC}" ;;
-    aarch64) [[ "${elf_machine}" == "AArch64" ]]  || echo -e "${TOMATO}!! ARCH MISMATCH: got ${elf_machine}, expected AArch64${NC}" ;;
-    armv7|armhf) [[ "${elf_machine}" == "ARM" ]]  || echo -e "${TOMATO}!! ARCH MISMATCH: got ${elf_machine}, expected ARM${NC}" ;;
-  esac
-}
 #############################################################
 # verify_binary_arch BINARY                                 #
 # Reads the ELF Machine field and checks it matches ARCH.  #

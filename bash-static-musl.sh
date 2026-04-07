@@ -96,8 +96,8 @@ patch -p1 --fuzz=4 < ../bash_make-the-bash-fc-builtin-more-reliable-for-scriptin
 echo -e "${PEACH}= Configure source${NC}"
 ./configure \
   --disable-nls --without-bash-malloc --with-curses --enable-static-link \
-  LDFLAGS='${BLDFLAGS} ${MOLD} -static-pie' PKG_CONFIG='${PKGCFG}' \
-  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fPIE -Wno-discarded-qualifiers'
+  LDFLAGS='${BLDFLAGS} ${MOLD} ${PIE}' PKG_CONFIG='${PKGCFG}' \
+  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${PIE} -Wno-discarded-qualifiers'
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc)
 echo -e "\n${CARIBBEAN}= ccache statistics:${NC}"

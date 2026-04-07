@@ -22,6 +22,10 @@ EXTRA="-fshort-enums -fno-ident -fno-unwind-tables -fno-asynchronous-unwind-tabl
 # -fno-unwind-tables: omit exception unwinding tables (size reduction)
 LTO="-flto=auto -ffat-lto-objects"
 
+# PIE Flags add to both CFLAGS AND LDFLAGS!!
+PIE="-static-pie -fPIE"
+NOPIE="-no-pie -fno-PIE"
+
 # Linker Flags
 MOLD="-fuse-ld=mold"
 BFD="-fuse-ld=bfd"
@@ -34,6 +38,13 @@ CXX="${CXX:-g++}"
 
 # Pkg-config
 PKGCFG="pkg-config --static"
+
+# ARCH_FLAGS
+X8664_FLAGS="-march=x86-64 -mtune=generic"
+X86_FLAGS="-march=pentium-m -mtune=generic"
+AARCH64_FLAGS="-march=armv8-a"
+ARMV7_FLAGS="-march=armv7-a -mfpu=neon-vfpv4 -mfloat-abi=hard -marm"
+ARMHF_FLAGS="-march=armv6kz -mfloat-abi=hard -mfpu=vfp -marm"
 
 ######### Variables ###########
 # Alpine minirootfs version   #

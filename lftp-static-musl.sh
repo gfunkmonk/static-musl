@@ -37,11 +37,11 @@ autoupdate
 ./configure CC="${CC}" CXX="${CXX}" LIBS='-l:libreadline.a -l:libncursesw.a' --with-openssl=yes --without-gnutls \
   --enable-static --enable-threads=posix --disable-nls --disable-shared --disable-rpath --disable-silent-rules \
   --disable-ipv6 --enable-year2038 --with-readline=yes --with-expat=yes  \
-  LDFLAGS='${BLDFLAGS} ${MOLD} -static-pie' PKG_CONFIG='${PKGCFG}' \
-  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fPIE -std=c17 -Wno-unterminated-string-initialization -Wno-deprecated-declarations' \
-  CXXFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fPIE -std=c++20 -Wno-deprecated-declarations -Wno-error=template-id-cdtor'
+  LDFLAGS='${BLDFLAGS} ${MOLD} ${PIE}' PKG_CONFIG='${PKGCFG}' \
+  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${PIE} -std=c17 -Wno-unterminated-string-initialization -Wno-deprecated-declarations' \
+  CXXFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${PIE} -std=c++20 -Wno-deprecated-declarations -Wno-error=template-id-cdtor'
 echo -e "${VIOLET}= Building...${NC}"
-make -j\$(nproc) LDFLAGS='-all-static ${BLDFLAGS} ${MOLD} -static-pie'
+make -j\$(nproc) LDFLAGS='-all-static ${BLDFLAGS} ${MOLD} ${PIE}'
 echo -e "\n${CARIBBEAN}= ccache statistics:${NC}"
 ccache -s | tail -n 10
 EOF

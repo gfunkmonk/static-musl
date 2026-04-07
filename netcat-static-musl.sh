@@ -35,8 +35,8 @@ cp ../base64.c .
 sed -i 's/^SRCS=.*/& base64.c/' Makefile
 echo -e "${PEACH}= Building...${NC}"
 make CC="${CC}" \
-  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fno-PIE' \
-  LDFLAGS='${BLDFLAGS} ${MOLD} -no-pie' \
+  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${NOPIE}' \
+  LDFLAGS='${BLDFLAGS} ${MOLD} ${NOPIE}' \
   LIBS='-lbsd -lmd -lresolv' \
   -j\$(nproc)
 echo -e "\n${CARIBBEAN}= ccache statistics:${NC}"
