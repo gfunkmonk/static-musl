@@ -624,7 +624,7 @@ package_output() {
     exit 1
   fi
   mv "${temp_archive}" "dist/${filename}.tar.xz"
-  echo -e "${MISTYROSE}= All done! Binary: dist/${filename} ($(du -sh "dist/${filename}" | cut -f1))${NC}"
+  echo -e "${MISTYROSE}= All done! Binary: ${BWHITE}dist/${filename}${NAVAJO} ($(du -sh "dist/${filename}" | cut -f1))${NC}"
   if [ "${KEEP_CHROOT}" = "false" ]; then
     if grep -qF "$(pwd)/${CHROOTDIR}" /proc/mounts; then
       unmount_chroot
