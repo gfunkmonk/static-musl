@@ -106,6 +106,9 @@ echo -e "${BWHITE}sed: ${SED_VER}${NC}"
 SOCAT_VER=${GREEN}$(get_git_version "https://repo.or.cz/socat.git/refs/tags" "tag-1\.[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)*" "tag-" "${RED}FALLBACK${NC}")
 echo -e "${BWHITE}socat: ${SOCAT_VER}${NC}"
 
+SYSTEMCTL_TUI_VER=${GREEN}$(get_version release "rgwood/systemctl-tui" '.tag_name | ltrimstr("v")' "${RED}FALLBACK${NC}")
+echo -e "${BWHITE}systemctl-tui: ${SYSTEMCTL_TUI_VER}${NC}"
+
 #TAR_VER=${GREEN}$(get_git_version "https://cgit.git.savannah.gnu.org/cgit/tar.git/refs/tags" "v[0-9]+\.[0-9]+(\.[0-9]+)*" "v" "${RED}FALLBACK${NC}")
 TAR_VER=${YELLOW}$("${CURL}" -s https://ftp.gnu.org/gnu/tar/ | grep -oP 'tar-\K[0-9]+\.[0-9]+(\.[0-9]+)?' | sort -V | tail -n 1)
 echo -e "${BWHITE}tar: ${TAR_VER}${NC}"

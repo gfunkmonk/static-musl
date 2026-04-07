@@ -34,6 +34,7 @@ Build scripts that produce fully static, multi-architecture binaries using musl 
 | sed | latest | Stream editor for filtering/transforming text |
 | screen | latest | Screen is a mature terminal multiplexer |
 | socat | latest | Socat is a flexible, multi-purpose relay tool |
+| systemctl-tui | latest | TUI for interacting with systemd services |
 | tar | latest | GNU tar archive utility |
 | tnftp | latest | a port of the NetBSD FTP client |
 | tmux | latest | Tmux is a terminal multiplexer |
