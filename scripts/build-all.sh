@@ -2,13 +2,22 @@
 
 # Default: do not resume unless flag is passed
 RESUME=false
+DRY_RUN=false
 
-# Check for --resume flag
-for arg in "$@"; do
-  if [ "$arg" == "--resume" ]; then
-    RESUME=true
-    shift
-  fi
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --resume)
+      RESUME=true
+      ;;
+    --dry-run)
+      DRY_RUN=true
+      ;;
+    *)
+      echo "Unknown argument: $1" >&2
+      exit 1
+      ;;
+  esac
+  shift
 done
 
 # Change to the repository root
@@ -27,7 +36,7 @@ LOG_FILE="${LOG_DIR}/build_log.txt"
 # Note: > "$LOG_FILE" below will still truncate the main build_log.txt, 
 # which is usually what you want so the summary doesn't double up.
 # If you want the main log to append during resume, change > to >>
-[ "$RESUME" = true ] && exec_redir=">>" || exec_redir=">>"
+[ "$RESUME" = true ] && exec_redir=">>" || exec_redir=">"
 
 JUNEBUD="\033[38;2;189;218;87m"
 SKY="\033[38;2;135;206;250m"
@@ -39,6 +48,8 @@ TOMATO="\033[38;2;255;99;71m"
 CHARTREUSE="\033[38;2;127;255;0m"
 PEACH="\033[38;2;246;161;146m"
 LAGOON="\033[38;2;142;235;236m"
+HIGHLIGHTER="\033[38;2;248;255;15m"
+BWHITE="\033[1;37m"
 NC="\033[0m"
 
 success_count=0
@@ -53,6 +64,12 @@ for file in *-static-musl.sh; do
         # 1. Determine the binary name from the script name
         # e.g., curl-static-musl.sh -> curl
         bin_name=$(echo "$file" | sed 's/-static-musl//; s/\.sh//')
+
+        if [ "$DRY_RUN" = true ]; then
+            echo -e "${HIGHLIGHTER}[DRY-RUN] ${BWHITE}Would build: ${CHARTREUSE}${file}${NC}"
+            success_count=$((success_count + 1))
+            continue
+        fi
 
         # 2. RESUME LOGIC: If flag is set AND binary exists, skip it
         if [ "$RESUME" = true ] && compgen -G "dist/${bin_name}-*" > /dev/null 2>&1; then

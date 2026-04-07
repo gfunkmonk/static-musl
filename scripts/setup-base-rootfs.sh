@@ -28,8 +28,7 @@ sudo chroot "./${CHROOTDIR}/" /bin/sh -c "rm -rf /var/cache/apk/*"
 
 echo -e "${LIME}= Saving snapshot to alpine-base-${ARCH}.tar.zst...${NC}"
 unmount_chroot
-sudo tar -cf "alpine-base-${ARCH}.tar" -C "${CHROOTDIR}" .
-zstd -T0 -13 --rm alpine-base-${ARCH}.tar
+sudo tar -cf - -C "${CHROOTDIR}" . | zstd -T0 -13 -o "alpine-base-${ARCH}.tar.zst"
 mkdir -p minirootfs/
 mv "alpine-base-${ARCH}.tar.zst" minirootfs/
 

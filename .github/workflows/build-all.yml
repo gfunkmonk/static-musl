@@ -15,6 +15,18 @@ on:
         description: 'Extra Alpine packages (space separated, e.g., "cmake ninja")'
         type: string
         default: ''
+      arch:
+        description: "Architecture to build (choose 'all' to build every arch)"
+        required: true
+        default: all
+        type: choice
+        options:
+          - all
+          - x86_64
+          - x86
+          - aarch64
+          - armv7
+          - armhf
       tool:
         description: "Tool to build and release (choose 'all' to build every tool)"
         required: true
@@ -57,6 +69,10 @@ on:
           - xz
           - zsh
           - zstd
+      make_release:
+        description: 'Create/Overwrite GitHub Release?'
+        type: boolean
+        default: true
 
 permissions:
   contents: read
@@ -67,7 +83,7 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
-      - name: Determine tool matrix
+      - name: Determine tool and arch matrix
         id: set-matrix
         run: |
           if [[ "${{ github.event_name }}" == "schedule" || "${{ inputs.tool }}" == "all" || "${{ inputs.tool }}" == "" ]]; then
@@ -75,6 +91,20 @@ jobs:
           else
             echo 'matrix=["${{ inputs.tool }}"]' >> "$GITHUB_OUTPUT"
           fi
+
+          if [[ "${{ github.event_name }}" == "schedule" || "${{ inputs.arch }}" == "all" || "${{ inputs.arch }}" == "" ]]; then
+            echo 'arch_matrix=["x86_64","x86","aarch64","armv7","armhf"]' >> "$GITHUB_OUTPUT"
+          else
+            echo 'arch_matrix=["${{ inputs.arch }}"]' >> "$GITHUB_OUTPUT"
+          fi
+      #- name: Determine tool matrix
+      #  id: set-matrix
+      #  run: |
+      #    if [[ "${{ github.event_name }}" == "schedule" || "${{ inputs.tool }}" == "all" || "${{ inputs.tool }}" == "" ]]; then
+      #      echo 'matrix=["7zz","aria2c","axel","bash","bsdtar","curl","dash","dropbear","fping","gawk","hexcurse","htop","less","lftp","nano","netcat","nmap","oksh","openssh","pigz","ripgrep","rsync","sed","screen","socat","tar","tmux","tnftp","upx","vim","wget","wget2","xz","zsh","zstd"]' >> "$GITHUB_OUTPUT"
+      #    else
+      #      echo 'matrix=["${{ inputs.tool }}"]' >> "$GITHUB_OUTPUT"
+      #    fi
 
   build:
     needs: setup
@@ -87,7 +117,8 @@ jobs:
       fail-fast: false
       matrix:
         tool: ${{ fromJson(needs.setup.outputs.matrix) }}
-        arch: [x86_64, x86, aarch64, armv7, armhf]
+        #arch: [x86_64, x86, aarch64, armv7, armhf]
+        arch: ${{ fromJson(needs.setup.outputs.arch_matrix) }}
         include:
           - arch: x86_64
             runner: ubuntu-latest
@@ -237,7 +268,9 @@ jobs:
   release:
     needs: [setup, build]
     runs-on: ubuntu-latest
-    if: ${{ !cancelled() }}
+    if: |
+      !cancelled() &&
+      (github.event_name == 'schedule' || github.event.inputs.make_release == 'true')
     permissions:
       contents: write
     strategy:

@@ -571,6 +571,66 @@ run_build_setup() {
   mount_chroot
 }
 
+#####################################
+#  helper to verify arch of binary  #
+#####################################
+verify_binary_arch() {
+  local binary="$1"
+  if ! command -v readelf >/dev/null 2>&1; then return; fi
+  local elf_machine
+  elf_machine=$(readelf -h "${binary}" 2>/dev/null | awk '/Machine:/{print $NF}')
+  case "${ARCH}" in
+    x86_64)  [[ "${elf_machine}" == "X86-64" ]]  || echo -e "${TOMATO}!! ARCH MISMATCH: got ${elf_machine}, expected X86-64${NC}" ;;
+    x86)     [[ "${elf_machine}" == "80386" ]]    || echo -e "${TOMATO}!! ARCH MISMATCH: got ${elf_machine}, expected 80386${NC}" ;;
+    aarch64) [[ "${elf_machine}" == "AArch64" ]]  || echo -e "${TOMATO}!! ARCH MISMATCH: got ${elf_machine}, expected AArch64${NC}" ;;
+    armv7|armhf) [[ "${elf_machine}" == "ARM" ]]  || echo -e "${TOMATO}!! ARCH MISMATCH: got ${elf_machine}, expected ARM${NC}" ;;
+  esac
+}
+#############################################################
+# verify_binary_arch BINARY                                 #
+# Reads the ELF Machine field and checks it matches ARCH.  #
+# Emits a warning on mismatch; never aborts the build.     #
+#############################################################
+verify_binary_arch() {
+  local binary="$1"
+  if ! command -v readelf >/dev/null 2>&1; then
+    echo -e "${NAVAJO}= verify_binary_arch: readelf not found, skipping ELF check${NC}"
+    return 0
+  fi
+  local machine
+  machine=$(readelf -h "${binary}" 2>/dev/null | grep -i "Machine:" | sed 's/.*Machine:[[:space:]]*//')
+  if [[ -z "${machine}" ]]; then
+    echo -e "${CAMEL}= verify_binary_arch: could not read ELF header from ${binary}${NC}"
+    return 0
+  fi
+  local expected_ok=false
+  case "${ARCH}" in
+    x86_64)
+      [[ "${machine}" =~ [Xx]86-64 ]] && expected_ok=true
+      ;;
+    x86)
+      [[ "${machine}" =~ 80386 ]] && expected_ok=true
+      ;;
+    aarch64)
+      [[ "${machine}" =~ [Aa][Aa]rch64 ]] && expected_ok=true
+      ;;
+    armv7|armhf)
+      [[ "${machine}" =~ ^ARM ]] && expected_ok=true
+      ;;
+    *)
+      echo -e "${TAWNY}= verify_binary_arch: no check defined for ARCH='${ARCH}', skipping${NC}"
+      return 0
+      ;;
+  esac
+  if "${expected_ok}"; then
+    echo -e "${MINT}= ELF arch OK: ${machine} (expected for ${ARCH})${NC}"
+  else
+    echo -e "${TOMATO}!! WARNING: ELF arch mismatch !!${NC}" >&2
+    echo -e "${TOMATO}   ARCH=${ARCH} but binary reports: ${machine}${NC}" >&2
+    echo -e "${TOMATO}   Binary: ${binary}${NC}" >&2
+  fi
+}
+
 #########################################
 # package_output TOOL BINARY            #
 # Copies the built binary to dist/,     #
@@ -589,6 +649,7 @@ package_output() {
   if command -v file >/dev/null 2>&1; then
     echo -e "\n"
     echo -e "${JUNEBUD}= Verifying binary: ${filename}${NC}"
+    verify_binary_arch "dist/${filename}"
     if file "dist/${filename}" | grep -Ei "interpreter|dynamically linked" >/dev/null; then
         echo -e "${UGLY}!! WARNING: Binary is DYNAMICALLY linked !!${NC}"
         file "dist/${filename}"
@@ -597,7 +658,6 @@ package_output() {
     fi
   fi
   if [ "${USE_STRIP}" = "true" ]; then
-      #echo -e "\n"
       echo -e "${LTVIOLET}= Stripping ${filename}...${NC}"
       strip "dist/${filename}" 2>/dev/null || true
   fi
@@ -624,7 +684,11 @@ package_output() {
     exit 1
   fi
   mv "${temp_archive}" "dist/${filename}.tar.xz"
-  echo -e "${MISTYROSE}= All done! Binary: ${BWHITE}dist/${filename}${NAVAJO} ($(du -sh "dist/${filename}" | cut -f1))${NC}"
+  #echo -e "${MISTYROSE}= All done! Binary: ${BWHITE}dist/${filename}${NAVAJO} ($(du -sh "dist/${filename}" | cut -f1))${NC}"
+  local raw_sz compressed_sz
+  raw_sz=$(du -sh "dist/${filename}" | cut -f1)
+  compressed_sz=$(du -sh "dist/${filename}.tar.xz" | cut -f1)
+  echo -e "${TOMATO}= All done!${MISTYROSE} Binary: ${BWHITE}dist/${filename}: ${CARIBBEAN}${raw_sz}${NC} → ${CHARTREUSE}${compressed_sz}${NC} ${BWHITE}(xz)${NC}"
   if [ "${KEEP_CHROOT}" = "false" ]; then
     if grep -qF "$(pwd)/${CHROOTDIR}" /proc/mounts; then
       unmount_chroot
