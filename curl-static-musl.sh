@@ -35,10 +35,10 @@ patch -p1 --fuzz=4 < ../curl.patch
 echo -e "${PEACH}= Configure source${NC}"
 ./configure CC='clang' --disable-shared --enable-static --disable-ldap --disable-ipv6 --enable-unix-sockets \
   --with-ssl --with-libssh2 --disable-docs --disable-manual --without-libpsl \
-  LDFLAGS='${BLDFLAGS} ${PIE}' PKG_CONFIG='${PKGCFG}' \
-  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${PIE} -Wno-unterminated-string-initialization'
+  LDFLAGS='${BLDFLAGS} ${LPIE}' PKG_CONFIG='${PKGCFG}' \
+  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${CPIE} -Wno-unterminated-string-initialization'
 echo -e "${VIOLET}= Building...${NC}"
-CC='clang' make -j\$(nproc) V=1 LDFLAGS='-all-static ${BLDFLAGS} ${PIE}'
+CC='clang' make -j\$(nproc) V=1 LDFLAGS='-all-static ${BLDFLAGS} ${LPIE}'
 echo -e "\n${CARIBBEAN}= ccache statistics:${NC}"
 ccache -s | tail -n 10
 EOF

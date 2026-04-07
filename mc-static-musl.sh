@@ -36,10 +36,10 @@ echo -e "${PEACH}= Configure source${NC}"
   --disable-nls --disable-tests --disable-doxygen-doc --without-gnutls --without-mclib \
   --without-x --enable-charset --disable-vfs-sftp --disable-vfs-undelfs --enable-static \
   --disable-shared --prefix=/usr --sysconfdir=/etc --libexecdir=/usr/lib \
-  LDFLAGS='${BLDFLAGS} ${MOLD} ${NOPIE}' PKG_CONFIG='${PKGCFG}' \
-  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${NOPIE}'
+  LDFLAGS='${BLDFLAGS} ${MOLD} ${LNOPIE}' PKG_CONFIG='${PKGCFG}' \
+  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${CNOPIE}'
 echo -e "${VIOLET}= Building...${NC}"
-CC="${CC}" make -j\$(nproc) LDFLAGS='-all-static ${BLDFLAGS} ${MOLD} ${NOPIE}'
+CC="${CC}" make -j\$(nproc) LDFLAGS='-all-static ${BLDFLAGS} ${MOLD} ${LNOPIE}'
 echo -e "\n${CARIBBEAN}= ccache statistics:${NC}"
 ccache -s | tail -n 10
 EOF

@@ -25,8 +25,8 @@ mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${PIGZ_TARBALL}
 cd pigz-${PIGZ_VERSION}/
-sed -i 's/CFLAGS=-O3 -Wall -Wextra -Wno-unknown-pragmas -Wcast-qual/CFLAGS=${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${NOPIE}/g' Makefile
-sed -i 's/LDFLAGS=/LDFLAGS=${BLDFLAGS} ${MOLD} ${NOPIE}/g' Makefile
+sed -i 's/CFLAGS=-O3 -Wall -Wextra -Wno-unknown-pragmas -Wcast-qual/CFLAGS=${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${CNOPIE}/g' Makefile
+sed -i 's/LDFLAGS=/LDFLAGS=${BLDFLAGS} ${MOLD} ${LNOPIE}/g' Makefile
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc)
 echo -e "\n${CARIBBEAN}= ccache statistics:${NC}"

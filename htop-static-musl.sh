@@ -31,8 +31,8 @@ patch -p1 --fuzz=4 < ../htop.patch
 echo -e "${PEACH}= Configure source${NC}"
 ./configure CC="${CC}" \
   --enable-unicode --enable-static --enable-affinity --enable-delayacct \
-  LDFLAGS='${BLDFLAGS} ${MOLD} ${NOPIE}' PKG_CONFIG='${PKGCFG}' \
-  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${NOPIE}'
+  LDFLAGS='${BLDFLAGS} ${MOLD} ${LNOPIE}' PKG_CONFIG='${PKGCFG}' \
+  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${CNOPIE}'
 echo -e "${VIOLET}= Building...${NC}"
 CC="${CC}" make -j\$(nproc)
 echo -e "\n${CARIBBEAN}= ccache statistics:${NC}"
