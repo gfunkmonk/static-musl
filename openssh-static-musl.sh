@@ -27,8 +27,8 @@ tar xf ${OPENSSH_TARBALL}
 cd openssh-${OPENSSH_VERSION}/
 echo -e "${PEACH}= Configure source${NC}"
 ./configure --with-privsep-user=nobody \
-  LIBS='-pthread' LDFLAGS='${BLDFLAGS} ${NOPIE}' PKG_CONFIG='${PKGCFG}' \
-  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${NOPIE} -Wno-unterminated-string-initialization'
+  LIBS='-pthread' LDFLAGS='${BLDFLAGS} -no-pie' PKG_CONFIG='${PKGCFG}' \
+  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fno-pie -Wno-unterminated-string-initialization'
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc)
 echo -e "\n${CARIBBEAN}= ccache statistics:${NC}"
