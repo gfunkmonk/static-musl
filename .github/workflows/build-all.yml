@@ -82,6 +82,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
+      arch_matrix: ${{ steps.set-matrix.outputs.arch_matrix }}
     steps:
       - name: Determine tool and arch matrix
         id: set-matrix
@@ -310,6 +311,7 @@ jobs:
         arch="${base##*-}"
         version="${base#${{ matrix.tool }}-}"
         version="${version%-${arch}}"
+        cd dist
         {
           echo "SHA_SUMS<<EOF"
           sha256sum *.tar.xz
