@@ -120,7 +120,7 @@ fi
 success_count=0
 failure_count=0
 current_jobs=0
-echo -e "--- Starting file execution loop (${NEONBLUE}$PARALLEL_JOBS${NC} jobs) ---" | tee -a "$LOG_FILE"
+echo -e "--- Starting file execution loop (${NEONGREEN}$PARALLEL_JOBS${NC} jobs) ---" | tee -a "$LOG_FILE"
 if [ "$RESUME" = true ]; then
     echo -e "\n--- RESUMING BUILD AT $(date) ---" >> "$LOG_FILE"
 fi
