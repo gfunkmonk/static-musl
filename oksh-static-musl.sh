@@ -25,9 +25,9 @@ echo -e "${LIME}= Extracting source${NC}"
 tar xf ${OKSH_TARBALL}
 cd oksh-${OKSH_VERSION}/
 echo -e "${PEACH}= Configure source${NC}"
-./configure --cc=clang --cflags="${BCFLAGS} ${ARCH_FLAGS} ${EXTRA}" \
+./configure --cc=clang --cflags="${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${NOPIE}" \
   --enable-curses --enable-static --enable-lto \
-  LDFLAGS='${BLDFLAGS} ${MOLD}' PKG_CONFIG='${PKGCFG}'
+  LDFLAGS='${BLDFLAGS} ${MOLD} ${NOPIE}' PKG_CONFIG='${PKGCFG}'
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc)
 echo -e "\n${CARIBBEAN}= ccache statistics:${NC}"

@@ -3,7 +3,9 @@ set -euo pipefail
 . "$(dirname "${BASH_SOURCE[0]}")/common.sh"
 
 echo -e "${MINT}= fetching latest gawk version${NC}"
-GAWK_VERSION=$(get_git_version "https://cgit.git.savannah.gnu.org/cgit/gawk.git/refs/tags" "[0-9]+\.[0-9]+(\.[0-9]+)*" "gawk-" "${FALLBACK_GAWK}")
+#GAWK_VERSION=$(get_git_version "https://cgit.git.savannah.gnu.org/cgit/gawk.git/refs/tags" "[0-9]+\.[0-9]+(\.[0-9]+)*" "gawk-" "${FALLBACK_GAWK}")
+GAWK_VERSION=$("${CURL}" -s https://ftp.gnu.org/gnu/gawk/ | grep -oP 'gawk-\K[0-9]+\.[0-9]+(\.[0-9]+)?' | sort -V | tail -n 1)
+[[ -z "${GAWK_VERSION}" ]] && { echo -e "${TAWNY}= ftp.gnu.org fetch failed, using fallback ${FALLBACK_GAWK}${NC}" >&2; GAWK_VERSION="${FALLBACK_GAWK}"; }
 echo -e "${JUNEBUD}= building gawk version: ${GAWK_VERSION}${NC}"
 PACKAGE_VERSION="${GAWK_VERSION}"
 GAWK_TARBALL="gawk-${GAWK_VERSION}.tar.xz"
@@ -31,8 +33,8 @@ patch -p1 --fuzz=4 < ../gawk-5.4.0-no-assertions-for-pma.patch
 patch -p1 --fuzz=4 < ../gawk-5.4.0-Small-efficiency-fix-in-array.c.patch
 echo -e "${PEACH}= Configure source${NC}"
 ./configure --disable-nls --disable-rpath \
-  LDFLAGS='${BLDFLAGS} ${MOLD} -no-pie' PKG_CONFIG='${PKGCFG}' \
-  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fno-pie'
+  LDFLAGS='${BLDFLAGS} ${MOLD} ${NOPIE}' PKG_CONFIG='${PKGCFG}' \
+  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${NOPIE}'
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc)
 echo -e "\n${CARIBBEAN}= ccache statistics:${NC}"

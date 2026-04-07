@@ -3,7 +3,7 @@ set -euo pipefail
 . "$(dirname "${BASH_SOURCE[0]}")/common.sh"
 
 echo -e "${MINT}= fetching latest socat version${NC}"
-SOCAT_VERSION=$(get_git_version "https://repo.or.cz/socat.git/refs/tags" "tag-1[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)*" "tag-" "${FALLBACK_SOCAT}")
+SOCAT_VERSION=$(get_git_version "https://repo.or.cz/socat.git/refs/tags" "tag-1\.[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)*" "tag-" "${FALLBACK_SOCAT}")
 echo -e "${JUNEBUD}= building socat version: ${SOCAT_VERSION}${NC}"
 PACKAGE_VERSION="${SOCAT_VERSION}"
 SOCAT_TARBALL="socat-${SOCAT_VERSION}.tar.gz"
@@ -31,8 +31,8 @@ echo -e "${LAGOON}= Applying custom patch${NC}"
 patch -p1 --fuzz=4 < ../hotfix-const-correctness.patch
 echo -e "${PEACH}= Configure source${NC}"
 ./configure --enable-openssl --disable-ip6 --enable-readline --enable-largefile --enable-default-ipv=4 \
-  LDFLAGS='${BLDFLAGS} ${MOLD} -no-pie' PKG_CONFIG='${PKGCFG}' \
-  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fno-PIE'
+  LDFLAGS='${BLDFLAGS} ${MOLD} ${NOPIE}' PKG_CONFIG='${PKGCFG}' \
+  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${NOPIE}'
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc)
 echo -e "\n${CARIBBEAN}= ccache statistics:${NC}"

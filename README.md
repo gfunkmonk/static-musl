@@ -10,19 +10,27 @@ Build scripts that produce fully static, multi-architecture binaries using musl 
 | aria2c | latest | Multi-protocol download utility |
 | axel | latest | Parallel download accelerator |
 | bash | latest | Bash (Bourne Again SHell) |
+| bat | latest | bat is a cat clone "with wings" |
 | bsdtar | latest | Archive tool (libarchive) |
 | curl | latest | Data transfer tool |
 | dash | latest | POSIX shell |
 | dropbear | latest | A relatively small SSH server and client. |
+| envx | latest | environment variable manager |
+| fping | latest | A fancy ping tool |
 | gawk | latest | a tool for processing text data |
+| hexcurse | latest | ncurses based hex editor |
 | htop | latest | Interactive process viewer |
 | less | latest | pager program similar to more |
 | lftp | latest | Command line ftp client |
+| mc | latest | a visual, dual-pane file manager |
 | nano | latest | Small command-line text editor |
+| netcat | latest | TCP/IP Swiss Army knife |
 | nmap | latest | Network scanning & discovery tool |
 | oksh | latest | OpenBSD ksh shell |
 | openssh | latest | OpenSSH ssh client |
 | pigz | latest | Parallel implementation of GZip |
+| ripgrep | latest | a line-oriented recursive search tool |
+| rsync | latest | rsync synchronizes files locally or remotely |
 | sed | latest | Stream editor for filtering/transforming text |
 | screen | latest | Screen is a mature terminal multiplexer |
 | socat | latest | Socat is a flexible, multi-purpose relay tool |

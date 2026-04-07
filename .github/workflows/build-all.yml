@@ -7,6 +7,18 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
     inputs:
+      arch:
+        description: "Architecture to build (choose 'all' to build every arch)"
+        required: true
+        default: all
+        type: choice
+        options:
+          - all
+          - x86_64
+          - x86
+          - aarch64
+          - armv7
+          - armhf
       tool:
         description: "Tool to build and release (choose 'all' to build every tool)"
         required: true
@@ -18,19 +30,27 @@ on:
           - aria2c
           - axel
           - bash
+          - bat
           - bsdtar
           - curl
           - dash
           - dropbear
+          - envx
+          - fping
           - gawk
+          - hexcurse
           - htop
           - less
           - lftp
+          - mc
           - nano
+          - netcat
           - nmap
           - oksh
           - openssh
           - pigz
+          - ripgrep
+          - rsync
           - sed
           - screen
           - socat
@@ -44,6 +64,10 @@ on:
           - xz
           - zsh
           - zstd
+      make_release:
+        description: 'Create/Overwrite GitHub Release?'
+        type: boolean
+        default: true
 
 permissions:
   contents: read
@@ -53,19 +77,27 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
+      arch_matrix: ${{ steps.set-matrix.outputs.arch_matrix }}
     steps:
-      - name: Determine tool matrix
+      - name: Determine tool and arch matrix
         id: set-matrix
         run: |
           if [[ "${{ github.event_name }}" == "schedule" || "${{ inputs.tool }}" == "all" || "${{ inputs.tool }}" == "" ]]; then
-            echo 'matrix=["7zz","aria2c","axel","bash","bsdtar","curl","dash","dropbear","gawk","htop","less","lftp","nano","nmap","oksh","openssh","pigz","sed","screen","socat","tar","tmux","tnftp","upx","vim","wget","wget2","xz","zsh","zstd"]' >> "$GITHUB_OUTPUT"
+            echo 'matrix=["7zz","aria2c","axel","bash","bat","bsdtar","curl","dash","dropbear","envx","fping","gawk","hexcurse","htop","less","lftp","mc","nano","netcat","nmap","oksh","openssh","pigz","ripgrep","rsync","sed","screen","socat","tar","tmux","tnftp","upx","vim","wget","wget2","xz","zsh","zstd"]' >> "$GITHUB_OUTPUT"
           else
             echo 'matrix=["${{ inputs.tool }}"]' >> "$GITHUB_OUTPUT"
+          fi
+
+          if [[ "${{ github.event_name }}" == "schedule" || "${{ inputs.arch }}" == "all" || "${{ inputs.arch }}" == "" ]]; then
+            echo 'arch_matrix=["x86_64","x86","aarch64","armv7","armhf"]' >> "$GITHUB_OUTPUT"
+          else
+            echo 'arch_matrix=["${{ inputs.arch }}"]' >> "$GITHUB_OUTPUT"
           fi
 
   build:
     needs: setup
     runs-on: ${{ matrix.runner }}
+    timeout-minutes: 90
     env:
       CCACHE_DIR: ${{ github.workspace }}/.ccache
       CCACHE_CHROOT_DIR: /ccache
@@ -73,7 +105,7 @@ jobs:
       fail-fast: false
       matrix:
         tool: ${{ fromJson(needs.setup.outputs.matrix) }}
-        arch: [x86_64, x86, aarch64, armv7, armhf]
+        arch: ${{ fromJson(needs.setup.outputs.arch_matrix) }}
         include:
           - arch: x86_64
             runner: ubuntu-latest
@@ -96,40 +128,12 @@ jobs:
         echo "version=${ALPINE_VERSION}" >> "$GITHUB_OUTPUT"
         echo "ALPINE_VERSION=${ALPINE_VERSION}" >> "$GITHUB_ENV"
 
-    #- name: Prepare ccache directory and config
-    #  run: |
-    #        mkdir -p "${CCACHE_DIR}"
-    #        cat >> "$GITHUB_ENV" << 'EOF'
-    #        CCACHE_NOHASHDIR=true
-    #        CCACHE_NOHARDLINK=true
-    #        CCACHE_NLEVELS=4
-    #        CCACHE_COMPILERCHECK=content
-    #        CCACHE_COMPRESS=1
-    #        CCACHE_COMPRESSLEVEL=7
-    #        CCACHE_INODECACHE=true
-    #        CCACHE_SLOPPINESS=file_macro,locale,time_macros
-    #        CCACHE_NOFILECLONE=true
-    #        CCACHE_DIRECT=true
-    #        CCACHE_DEPEND=true
-    #        EOF
-    #        echo "CCACHE Environment set!"
-
     - name: Set up ccache
-      #uses: hendrikmuhs/ccache-action@v1.2
-      #with:
-      #  create-symlink: true
-      #  key: ccache-${{ steps.alpine-version.outputs.version }}-${{ matrix.arch }}-${{ matrix.tool }}-${{ hashFiles(format('{0}-static-musl.sh', matrix.tool)) }}
-      #  restore-keys: |
-      #    ccache-${{ steps.alpine-version.outputs.version }}-${{ matrix.arch }}-${{ matrix.tool }}-
-      #    ccache-${{ steps.alpine-version.outputs.version }}-${{ matrix.arch }}-
-      #  append-timestamp: false
-      #  max-size: 3G
       uses: Chocobo1/setup-ccache-action@v1
       with:
         update_packager_index: true
         install_ccache: true
         prepend_symlinks_to_path: true
-        # Include common.sh in the hash so flag changes invalidate the cache
         override_cache_key: ccache-${{ steps.alpine-version.outputs.version }}-${{ matrix.arch }}-${{ matrix.tool }}-${{ hashFiles(format('{0}-static-musl.sh', matrix.tool), 'common.sh') }}
         override_cache_key_fallback: |
           ccache-${{ steps.alpine-version.outputs.version }}-${{ matrix.arch }}-${{ matrix.tool }}-
@@ -163,6 +167,22 @@ jobs:
         path: minirootfs/alpine-minirootfs-*.tar.gz
         key: alpine-rootfs-${{ steps.alpine-version.outputs.version }}-${{ matrix.arch }}
 
+    - name: Try to Restore Prebaked Alpine rootfs
+      id: cache-prebaked
+      uses: actions/cache/restore@v5
+      with:
+        path: minirootfs/alpine-base-${{ matrix.arch }}.tar.zst
+        key: alpine-prebaked-${{ steps.alpine-version.outputs.version }}-${{ matrix.arch }}
+
+    - name: Verify Prebaked Rootfs Filesystem
+      run: |
+        if [ -f "minirootfs/alpine-base-${{ matrix.arch }}.tar.zst" ]; then
+          echo "::notice title=Rootfs Status::Found Prebaked Image for ${{ matrix.arch }}"
+        else
+          echo "::notice title=Rootfs Status::Prebaked Image MISSING - Falling back to standard minirootfs"
+          ls -lh minirootfs/
+        fi
+
     - name: Build ${{ matrix.tool }} for ${{ matrix.arch }}
       run: |
         chmod +x ${{ matrix.tool }}-static-musl.sh
@@ -188,7 +208,6 @@ jobs:
         version="${base#${{ matrix.tool }}-}"
         version="${version%-${{ matrix.arch }}}"
 
-        # Output with proper formatting
         {
           echo "file=${file}"
           echo "name=${name}"
@@ -201,12 +220,14 @@ jobs:
       with:
         name: ${{ steps.artifact-info.outputs.name }}
         path: ${{ steps.artifact-info.outputs.file }}
-        compression-level: 0  # Already compressed with xz
+        compression-level: 0
 
   release:
     needs: [setup, build]
     runs-on: ubuntu-latest
-    if: ${{ !cancelled() }}
+    if: |
+      !cancelled() &&
+      (github.event_name == 'schedule' || github.event.inputs.make_release == 'true')
     permissions:
       contents: write
     strategy:
@@ -246,6 +267,12 @@ jobs:
         arch="${base##*-}"
         version="${base#${{ matrix.tool }}-}"
         version="${version%-${arch}}"
+        cd dist
+        {
+          echo "SHA_SUMS<<EOF"
+          sha256sum *.tar.xz
+          echo "EOF"
+        } >> "$GITHUB_ENV"
         echo "version=${version}" >> "$GITHUB_OUTPUT"
         echo "TOOL_VERSION=${version}" >> "$GITHUB_ENV"
 
@@ -259,7 +286,6 @@ jobs:
       continue-on-error: true
 
     - name: Create Release
-      #uses: softprops/action-gh-release@v2
       uses: xiechangan123/action-gh-release@master
       with:
         name: "${{ matrix.tool }} ${{ steps.release-version.outputs.version }}"
@@ -274,5 +300,10 @@ jobs:
 
           **Architectures:** x86_64, x86, aarch64, armv7, armhf
           **Built with:** Alpine Linux ${{ env.ALPINE_VERSION }}
+
+          **SHA256 Checksums:**
+          ```text
+          ${{ env.SHA_SUMS }}
+          ```
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

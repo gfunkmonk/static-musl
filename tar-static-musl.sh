@@ -3,7 +3,9 @@ set -euo pipefail
 . "$(dirname "${BASH_SOURCE[0]}")/common.sh"
 
 echo -e "${MINT}= fetching latest tar version${NC}"
-TAR_VERSION=$(get_git_version "https://cgit.git.savannah.gnu.org/cgit/tar.git/refs/tags" "v[0-9]+\.[0-9]+(\.[0-9]+)*" "v" "${FALLBACK_TAR}")
+#TAR_VERSION=$(get_git_version "https://cgit.git.savannah.gnu.org/cgit/tar.git/refs/tags" "v[0-9]+\.[0-9]+(\.[0-9]+)*" "v" "${FALLBACK_TAR}")
+TAR_VERSION=$("${CURL}" -s https://ftp.gnu.org/gnu/tar/ | grep -oP 'tar-\K[0-9]+\.[0-9]+(\.[0-9]+)?' | sort -V | tail -n 1)
+[[ -z "${TAR_VERSION}" ]] && { echo -e "${TAWNY}= ftp.gnu.org fetch failed, using fallback ${FALLBACK_TAR}${NC}" >&2; TAR_VERSION="${FALLBACK_TAR}"; }
 echo -e "${JUNEBUD}= building tar version: ${TAR_VERSION}${NC}"
 PACKAGE_VERSION="${TAR_VERSION}"
 TAR_TARBALL="tar-${TAR_VERSION}.tar.xz"
@@ -49,8 +51,8 @@ echo -e "${PEACH}= Configure source${NC}"
 FORCE_UNSAFE_CONFIGURE=1 ./configure CC="${CC}" \
   --disable-nls --disable-rpath --enable-largefile --disable-silent-rules \
   --disable-gcc-warnings --without-selinux \
-  LDFLAGS='${BLDFLAGS} ${MOLD} -no-pie' PKG_CONFIG='${PKGCFG}' \
-  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fno-PIE'
+  LDFLAGS='${BLDFLAGS} ${MOLD} ${NOPIE}' PKG_CONFIG='${PKGCFG}' \
+  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${NOPIE}'
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc)
 echo -e "\n${CARIBBEAN}= ccache statistics:${NC}"

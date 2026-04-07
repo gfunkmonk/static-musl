@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+set -euo pipefail
+. "$(dirname "${BASH_SOURCE[0]}")/common.sh"
+
+echo -e "${LEMON}= fetching latest rsync version${NC}"
+RSYNC_VERSION=$(get_version release "RsyncProject/rsync" '.tag_name | ltrimstr("v")' "${FALLBACK_RSYNC}")
+echo -e "${LAGOON}= building rsync version: ${RSYNC_VERSION}${NC}"
+PACKAGE_VERSION="${RSYNC_VERSION}"
+RSYNC_TARBALL="rsync-${RSYNC_VERSION}.tar.gz"
+RSYNC_MIRRORS=(
+  "https://github.com/RsyncProject/rsync/releases/download/v${RSYNC_VERSION}/rsync-${RSYNC_VERSION}.tar.gz"
+  "https://rsync.samba.org/ftp/rsync/rsync-${RSYNC_VERSION}.tar.gz"
+)
+
+run_build_setup "rsync" "${RSYNC_VERSION}" "${RSYNC_TARBALL}" \
+  "CVE-2025-10158.patch" \
+  "disable_reconfigure_req.diff" \
+  "gcc_15.patch" \
+  "reproducible-build.patch" \
+  -- "${RSYNC_MIRRORS[@]}"
+
+sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
+set -e
+echo -e "${ORANGE}= Installing dependencies...${NC}"
+apk update && apk add build-base ccache mold pkgconfig clang acl-dev acl-static attr-dev zstd-dev zstd-static openssl-libs-static openssl-dev git
+apk upgrade musl-dev mold --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
+#mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
+echo -e "${CANARY}= Build & install xxHash${NC}"
+git clone https://github.com/Cyan4973/xxHash.git
+cd xxHash
+PREFIX=/usr CC="${CC}" make LDFLAGS='${BLDFLAGS} ${MOLD} ${NOPIE} ${PIE}' PKG_CONFIG='${PKGCFG}' CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${NOPIE} ${PIE}'
+PREFIX=/usr CC="${CC}" make install LDFLAGS='${BLDFLAGS} ${MOLD} ${NOPIE} ${PIE}' PKG_CONFIG='${PKGCFG}' CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${NOPIE} ${PIE}'
+cd ..
+echo -e "${REBECCA}= Build & install lz4${NC}"
+git clone https://github.com/lz4/lz4.git
+cd lz4
+PREFIX=/usr CC="${CC}" make LDFLAGS='${BLDFLAGS} ${MOLD} ${NOPIE} ${PIE}' PKG_CONFIG='${PKGCFG}' CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${NOPIE} ${PIE}'
+PREFIX=/usr CC="${CC}" make install LDFLAGS='${BLDFLAGS} ${MOLD} ${NOPIE} ${PIE}' PKG_CONFIG='${PKGCFG}' CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${NOPIE} ${PIE}'
+cd ..
+echo -e "${LIME}= Extracting source${NC}"
+tar xf ${RSYNC_TARBALL}
+cd rsync-${RSYNC_VERSION}/
+echo -e "${LAGOON}= Applying custom patch${NC}"
+patch -p1 --fuzz=4 < ../CVE-2025-10158.patch
+patch -p1 --fuzz=4 < ../disable_reconfigure_req.diff
+patch -p1 --fuzz=4 < ../gcc_15.patch
+patch -p1 --fuzz=4 < ../reproducible-build.patch
+echo -e "${PEACH}= Configure source${NC}"
+./configure CC="${CC}" --disable-ipv6 --disable-roll-simd --with-included-zlib=no --disable-md5-asm \
+  LDFLAGS='${BLDFLAGS} ${MOLD} ${PIE}' PKG_CONFIG='${PKGCFG}' EXEEXT='-static' \
+  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${PIE} -Wno-maybe-uninitialized -Wno-unused-variable -Wno-unused-parameter \
+  -Wno-calloc-transposed-args -Wno-unused-but-set-variable -Wno-old-style-definition'
+echo -e "${VIOLET}= Building...${NC}"
+CC="${CC}" make -j\$(nproc)
+echo -e "\n${CARIBBEAN}= ccache statistics:${NC}"
+ccache -s | tail -n 10
+EOF
+
+package_output "rsync" "./${CHROOTDIR}/rsync-${RSYNC_VERSION}/rsync"

@@ -3,7 +3,7 @@ set -euo pipefail
 . "$(dirname "${BASH_SOURCE[0]}")/common.sh"
 
 echo -e "${MINT}= fetching latest wget version${NC}"
-WGET_VERSION=$(get_git_version "https://cgit.git.savannah.gnu.org/cgit/wget.git/refs/tags" "v[0-9]+\.[0-9]+(\.[0-9]+)*" "v" "${FALLBACK_WGET}")
+WGET_VERSION=$(get_gitlab_version "gnuwget/wget" "${FALLBACK_WGET}")
 echo -e "${JUNEBUD}= building wget version: ${WGET_VERSION}${NC}"
 PACKAGE_VERSION="${WGET_VERSION}"
 WGET_TARBALL="wget-${WGET_VERSION}.tar.gz"
@@ -35,8 +35,8 @@ patch -p1 --fuzz=4 < ../wget-passive-ftp.patch
 echo -e "${PEACH}= Configure source${NC}"
 ./configure CC="${CC}" --with-ssl=openssl --disable-nls --disable-rpath --sysconfdir=/etc --disable-silent-rules  \
   --disable-ipv6 --enable-year2038  --with-cares --with-openssl=yes \
-  LDFLAGS='${BLDFLAGS} -no-pie -lidn2 -lunistring' PKG_CONFIG='${PKGCFG}' \
-  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fno-PIE -Wno-unterminated-string-initialization' \
+  LDFLAGS='${BLDFLAGS}  -lidn2 -lunistring' PKG_CONFIG='${PKGCFG}' \
+  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${NOPIE} -Wno-unterminated-string-initialization' \
   PERL=/usr/bin/perl
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc)

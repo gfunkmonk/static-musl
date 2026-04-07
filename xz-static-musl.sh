@@ -30,10 +30,10 @@ echo -e "${PEACH}= Configure source${NC}"
 ./configure CC='clang' --enable-static --disable-shared --disable-nls --enable-small \
   --enable-threads=yes --disable-silent-rules --disable-rpath --enable-lzip-decoder \
   --enable-year2038 --enable-largefile \
-  LDFLAGS='${BLDFLAGS} ${MOLD} -static-pie' PKG_CONFIG='${PKGCFG}' \
-  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} -fPIE -Wno-unterminated-string-initialization'
+  LDFLAGS='${BLDFLAGS} ${MOLD} ${PIE}' PKG_CONFIG='${PKGCFG}' \
+  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${PIE} -Wno-unterminated-string-initialization'
 echo -e "${VIOLET}= Building...${NC}"
-CC='clang' make -j\$(nproc) V=1 LDFLAGS='-all-static ${BLDFLAGS} ${MOLD} -static-pie'
+CC='clang' make -j\$(nproc) V=1 LDFLAGS='-all-static ${BLDFLAGS} ${MOLD} ${PIE}'
 echo -e "\n${CARIBBEAN}= ccache statistics:${NC}"
 ccache -s | tail -n 10
 EOF
