@@ -180,7 +180,7 @@ jobs:
           echo "::notice title=Rootfs Status::Found Prebaked Image for ${{ matrix.arch }}"
         else
           echo "::notice title=Rootfs Status::Prebaked Image MISSING - Falling back to standard minirootfs"
-          ls -lh minirootfs/
+          #ls -lh minirootfs/
         fi
 
     - name: Build ${{ matrix.tool }} for ${{ matrix.arch }}

@@ -22,9 +22,13 @@ EXTRA="-fshort-enums -fno-ident -fno-unwind-tables -fno-asynchronous-unwind-tabl
 # -fno-unwind-tables: omit exception unwinding tables (size reduction)
 LTO="-flto=auto -ffat-lto-objects"
 
-# PIE Flags add to both CFLAGS AND LDFLAGS!!
-PIE="-static-pie -fPIE"
-NOPIE="-no-pie -fno-PIE"
+# PIE Flags
+### CFLAGS
+CPIE="-fPIE"
+CNOPIE="-fno-PIE"
+### LDFLAGS
+LPIE="-static-pie"
+LNOPIE="-no-pie"
 
 # Linker Flags
 MOLD="-fuse-ld=mold"
