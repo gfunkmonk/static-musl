@@ -12,15 +12,10 @@ ZSH_MIRRORS=(
   "https://www.zsh.org/pub/zsh-${ZSH_VERSION}.tar.xz"
   "https://ftp.funet.fi/pub/unix/shells/zsh/zsh-${ZSH_VERSION}.tar.xz"
   "http://ftp.oregonstate.edu/pub/slackware/slackware/patches/source/zsh/zsh-${ZSH_VERSION}.tar.xz"
+  "https://mirrors.slackware.com/slackware/slackware-current/source/ap/zsh/zsh-${ZSH_VERSION}.tar.xz"
 )
 
 run_build_setup "zsh" "${ZSH_VERSION}" "${ZSH_TARBALL}" \
-  "cherry-pick-0bb140f9-52999-import-OLDPWD-from-environment-if-set.patch" \
-  "cherry-pick-3e3cfabc-revert-38150-and-fix-in-calling-function-cfp_matcher_range-instead.patch" \
-  "cherry-pick-4b7a9fd0-additional-typset--p--m-fix-for-namespaces.patch" \
-  "cherry-pick-10bdbd8b-51877-do-not-build-pcre-module-if-pcre2-config-is-not-found.patch" \
-  "cherry-pick-b62e91134-51723-migrate-pcre-module-to-pcre2.patch" \
-  "cross-compile.diff" \
   -- "${ZSH_MIRRORS[@]}"
 
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
@@ -32,13 +27,13 @@ mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${ZSH_TARBALL}
 cd zsh-${ZSH_VERSION}/
-echo -e "${LAGOON}= Applying custom patch${NC}"
-patch -p1 --fuzz=6 < ../cherry-pick-b62e91134-51723-migrate-pcre-module-to-pcre2.patch
-patch -p1 --fuzz=6 < ../cherry-pick-0bb140f9-52999-import-OLDPWD-from-environment-if-set.patch
-patch -p1 --fuzz=6 < ../cherry-pick-3e3cfabc-revert-38150-and-fix-in-calling-function-cfp_matcher_range-instead.patch
-patch -p1 --fuzz=6 < ../cherry-pick-4b7a9fd0-additional-typset--p--m-fix-for-namespaces.patch
-patch -p1 --fuzz=6 < ../cherry-pick-10bdbd8b-51877-do-not-build-pcre-module-if-pcre2-config-is-not-found.patch
-patch -p1 --fuzz=6 < ../cross-compile.diff
+if [ -d ../patches ]; then
+   echo -e "${NEONPINK}= Applying custom patch(es)${NC}"
+   for p in ../patches/*; do
+       echo -e "${NEONBLUE}Applying \$(basename "\$p")...${NC}"
+       patch -p1 --fuzz=4 < "\$p"
+   done
+fi
 echo -e "${PEACH}= Configure source${NC}"
 ./configure CC='clang' --enable-max-jobtable-size=256 --enable-etcdir=/etc/zsh --enable-function-subdirs --with-tcsetpgrp --enable-cap \
   --enable-pcre --disable-ansi2knr --disable-dynamic --disable-dynamic-nss --enable-libc-musl --enable-maildir-support  --enable-gdbm \

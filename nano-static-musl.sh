@@ -11,10 +11,11 @@ NANO_TARBALL="nano-${NANO_VERSION}.tar.xz"
 NANO_MIRRORS=(
   "https://www.nano-editor.org/dist/v8/nano-${NANO_VERSION}.tar.xz"
   "https://fossies.org/linux/misc/nano-${NANO_VERSION}.tar.xz"
+  "https://gnu.mirror.constant.com/nano/nano-${NANO_VERSION}.tar.xz"
+  "https://mirrors.slackware.com/slackware/slackware64-current/source/ap/nano/nano-${NANO_VERSION}.tar.xz"
 )
 
 run_build_setup "nano" "${NANO_VERSION}" "${NANO_TARBALL}" \
-  "nano-colors.patch" \
   -- "${NANO_MIRRORS[@]}"
 
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
@@ -26,8 +27,13 @@ mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${NANO_TARBALL}
 cd nano-${NANO_VERSION}/
-echo -e "${LAGOON}= Applying custom patch${NC}"
-patch -p1 --fuzz=4 < ../nano-colors.patch
+if [ -d ../patches ]; then
+   echo -e "${NEONPINK}= Applying custom patch(es)${NC}"
+   for p in ../patches/*; do
+       echo -e "${NEONBLUE}Applying \$(basename "\$p")...${NC}"
+       patch -p1 --fuzz=4 < "\$p"
+   done
+fi
 echo -e "${PEACH}= Configure source${NC}"
 ./configure CC="${CC}" \
   --sysconfdir=/etc --disable-nls --disable-utf8 --disable-tiny --enable-nanorc --enable-color \

@@ -13,7 +13,6 @@ VIM_MIRRORS=(
 )
 
 run_build_setup "vim" "${VIM_VERSION}" "${VIM_TARBALL}" \
-  "vim.patch" \
   -- "${VIM_MIRRORS[@]}"
 
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
@@ -25,8 +24,13 @@ mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${VIM_TARBALL}
 cd vim-${VIM_VERSION}/
-echo -e "${LAGOON}= Applying custom patch${NC}"
-patch -p1 --fuzz=4 < ../vim.patch
+if [ -d ../patches ]; then
+   echo -e "${NEONPINK}= Applying custom patch(es)${NC}"
+   for p in ../patches/*; do
+       echo -e "${NEONBLUE}Applying \$(basename "\$p")...${NC}"
+       patch -p1 --fuzz=4 < "\$p"
+   done
+fi
 sed -i 's#emsg(_(e_failed_to_source_defaults));#(void)0;#g' src/main.c
 echo -e "${PEACH}= Configure source${NC}"
 ./configure CC="${CC}" --disable-arabic --disable-canberra --disable-darwin --disable-farsi --disable-gpm --disable-gtktest \

@@ -47,6 +47,10 @@ TOMATO="\033[38;2;255;99;71m"
 TURQUOISE="\033[38;2;64;224;208m"
 UGLY="\033[38;2;122;115;115m"
 VIOLET="\033[38;2;143;0;255m"
+NEONPINK="\033[38;2;255;19;240m"
+NEONBLUE="\033[38;2;4;218;255m"
+NEONRED="\033[38;2;255;49;49m"
+NEONGREEN="\033[38;2;57;255;20m"
 NC="\033[0m"
 
 ######################
@@ -526,23 +530,13 @@ setup_alpine_chroot() {
   done
 }
 
-#############################################################
-# copy_patches TOOL patch1 [patch2 ...]                     #
-# Copies named patch files from patches/TOOL/ into chroot.  #
-#############################################################
+#####################################################################
+# copy_patches TOOL                                                 #
+# Copies all patch files from patches/TOOL/ into chroot/patches/    #
+#####################################################################
 copy_patches() {
-  local tool="$1"; shift
-  if [ ! -d "patches/${tool}" ]; then
-    echo -e "${TOMATO}= ERROR: patches directory not found: patches/${tool}${NC}" >&2
-    exit 1
-  fi
-  for patch in "$@"; do
-    if [ ! -f "patches/${tool}/${patch}" ]; then
-      echo -e "${TOMATO}= ERROR: patch file not found: patches/${tool}/${patch}${NC}" >&2
-      exit 1
-    fi
-    cp "patches/${tool}/${patch}" "./${CHROOTDIR}/${patch}"
-  done
+    mkdir -p "${CHROOTDIR}/patches/"
+    sudo cp -r "patches/$1/." "${CHROOTDIR}/patches/" 2>/dev/null || true
 }
 
 ############################################################
@@ -599,21 +593,16 @@ mount_chroot() {
 }
 
 ######################################################################################
-# run_build_setup TOOL VERSION TARBALL [PATCH...] -- MIRROR [MIRROR...]              #
-# Runs the full pre-chroot setup sequence. Patches and mirrors are separated by --.  #
-# Usage (no patches):                                                                #
-#   run_build_setup "curl" "8.19.0" "curl-8.19.0.tar.xz" -- "https://..." [...]     #
-# Usage (with patches):                                                              #
-#   run_build_setup "wget" "1.25.0" "wget.tar.gz" "wget.patch" -- "https://..." [...]#
+# run_build_setup TOOL VERSION TARBALL -- MIRROR [MIRROR...]                         #
+# Runs the full pre-chroot setup sequence. Patches are automatically discovered      #
+# from patches/TOOL/ directory.                                                      #
+#                                                                                    #
+# Usage:                                                                             #
+#    run_build_setup "curl" "8.19.0" "curl-8.19.0.tar.xz" -- "https://..." [...]     #
 ######################################################################################
 run_build_setup() {
   local tool="$1" version="$2" tarball="$3"
   shift 3
-  local patches=()
-  while [[ $# -gt 0 && "$1" != "--" ]]; do
-    patches+=("$1")
-    shift
-  done
   [[ $# -gt 0 && "$1" == "--" ]] && shift
   local mirrors=("$@")
   if [[ ${#mirrors[@]} -gt 0 ]]; then
@@ -625,7 +614,7 @@ run_build_setup() {
   install_host_deps
   download_source "${tool}" "${version}" "${tarball}" "${mirrors[@]}"
   setup_alpine_chroot "${tarball}"
-  [[ ${#patches[@]} -gt 0 ]] && copy_patches "${tool}" "${patches[@]}"
+  copy_patches "${tool}"
   setup_qemu
   mount_chroot
 }
@@ -797,6 +786,11 @@ package_output() {
   if [ "${KEEP_CHROOT}" = "false" ]; then
     if grep -qF "$(pwd)/${CHROOTDIR}" /proc/mounts; then
       unmount_chroot
+    fi
+    # SAFETY CHECK: Do not rm -rf if mounts still exist
+    if grep -qF "$(pwd)/${CHROOTDIR}" /proc/mounts; then
+      echo -e "${CRIMSON}ERROR: Mounts still active in ${CHROOTDIR}. Skipping rm -rf for safety!${NC}" >&2
+      return 1
     fi
     echo -e "${PURPLE_BLUE}= Cleaning up chroot: ${ORANGE}${CHROOTDIR}${NC}"
     sudo rm -rf "${CHROOTDIR}"

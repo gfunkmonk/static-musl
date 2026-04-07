@@ -17,7 +17,6 @@ WGET_MIRRORS=(
 )
 
 run_build_setup "wget" "${WGET_VERSION}" "${WGET_TARBALL}" \
-  "wget-passive-ftp.patch" \
   -- "${WGET_MIRRORS[@]}"
 
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
@@ -30,8 +29,13 @@ mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${WGET_TARBALL}
 cd wget-${WGET_VERSION}/
-echo -e "${LAGOON}= Applying custom patch${NC}"
-patch -p1 --fuzz=4 < ../wget-passive-ftp.patch
+if [ -d ../patches ]; then
+   echo -e "${NEONPINK}= Applying custom patch(es)${NC}"
+   for p in ../patches/*; do
+       echo -e "${NEONBLUE}Applying \$(basename "\$p")...${NC}"
+       patch -p1 --fuzz=4 < "\$p"
+   done
+fi
 echo -e "${PEACH}= Configure source${NC}"
 ./configure CC="${CC}" --with-ssl=openssl --disable-nls --disable-rpath --sysconfdir=/etc --disable-silent-rules  \
   --disable-ipv6 --enable-year2038  --with-cares --with-openssl=yes \

@@ -11,10 +11,10 @@ LFTP_MIRRORS=(
   "https://github.com/lavv17/lftp/releases/download/v${LFTP_VERSION}/lftp-${LFTP_VERSION}.tar.gz"
   "https://fossies.org/linux/misc/lftp-${LFTP_VERSION}.tar.gz"
   "https://ftp.fau.de/macports/distfiles/lftp/lftp-${LFTP_VERSION}.tar.gz"
+  "http://gentoo.oregonstate.edu/distfiles/8f/lftp-${LFTP_VERSION}.tar.gz"
 )
 
 run_build_setup "lftp" "${LFTP_VERSION}" "${LFTP_TARBALL}" \
-  "lftp.patch" \
   -- "${LFTP_MIRRORS[@]}"
 
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
@@ -28,8 +28,13 @@ mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${LFTP_TARBALL}
 cd lftp-${LFTP_VERSION}/
-echo -e "${LAGOON}= Applying custom patch${NC}"
-patch -p1 --fuzz=4 < ../lftp.patch
+if [ -d ../patches ]; then
+   echo -e "${NEONPINK}= Applying custom patch(es)${NC}"
+   for p in ../patches/*; do
+       echo -e "${NEONBLUE}Applying \$(basename "\$p")...${NC}"
+       patch -p1 --fuzz=4 < "\$p"
+   done
+fi
 sed -i 's/-lreadline/-lreadline -lncurses/g' m4/lftp_lib_readline.m4
 echo -e "${PEACH}= Configure source${NC}"
 autoreconf -f -i

@@ -14,9 +14,6 @@ SEVENZIP_MIRRORS=(
 )
 
 run_build_setup "7zz" "${SEVENZIP_VERSION}" "${SEVENZIP_TARBALL}" \
-  "7z-0003-Disable-local-echo-display-when-in-input-passwords-C.patch" \
-  "7z-0004-Use-system-locale-to-select-codepage-for-legacy-zip-.patch" \
-  "7z-0005-Fix-BROTLI_MODEL-attribute-for-loongarch64.patch" \
   -- "${SEVENZIP_MIRRORS[@]}"
 
 # Map repo ARCH to 7zip Linux makefile; source extracts flat so we wrap in a versioned dir
@@ -63,10 +60,13 @@ export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${SEVENZIP_TARBALL}
 cd 7-Zip-zstd-${SEVENZIP_SHORT}/
-echo -e "${LAGOON}= Applying custom patches${NC}"
-patch -p1 --fuzz=4 < ../7z-0003-Disable-local-echo-display-when-in-input-passwords-C.patch
-patch -p1 --fuzz=4 < ../7z-0004-Use-system-locale-to-select-codepage-for-legacy-zip-.patch
-patch -p1 --fuzz=4 < ../7z-0005-Fix-BROTLI_MODEL-attribute-for-loongarch64.patch
+if [ -d ../patches ]; then
+   echo -e "${NEONPINK}= Applying custom patch(es)${NC}"
+   for p in ../patches/*; do
+       echo -e "${NEONBLUE}Applying \$(basename "\$p")...${NC}"
+       patch -p1 --fuzz=4 < "\$p"
+   done
+fi
 sed -i 's/CFLAGS_BASE = -O2/CFLAGS_BASE = ${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${CNOPIE} -Wno-sign-conversion/g' CPP/7zip/7zip_gcc.mak
 sed -i 's/LDFLAGS = -Wall/LDFLAGS = ${BLDFLAGS} ${MOLD} ${LNOPIE}/g' CPP/7zip/7zip_gcc.mak
 cd CPP/7zip/Bundles/Alone2

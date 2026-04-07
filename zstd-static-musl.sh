@@ -10,13 +10,9 @@ ZSTD_TARBALL="zstd-${ZSTD_VERSION}.tar.zst"
 ZSTD_MIRRORS=(
   "https://github.com/facebook/zstd/releases/download/v${ZSTD_VERSION}/zstd-${ZSTD_VERSION}.tar.zst"
   "https://www.paldo.org/paldo/sources/zstd/zstd-${ZSTD_VERSION}.tar.zst"
-  "https://master.dl.sourceforge.net/project/zstandard.mirror/v${ZSTD_VERSION}/zstd-${ZSTD_VERSION}.tar.zst"
 )
 
 run_build_setup "zstd" "${ZSTD_VERSION}" "${ZSTD_TARBALL}" \
-  "i486-no-cpuid.patch" \
-  "zstd-1.5.6-gcc2.patch" \
-  "zstd-1.5.6.patch" \
   -- "${ZSTD_MIRRORS[@]}"
 
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
@@ -28,10 +24,13 @@ mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH
 echo -e "${LIME}= Extracting source${NC}"
 7zz x -so ${ZSTD_TARBALL} | tar xf -
 cd zstd-${ZSTD_VERSION}/
-echo -e "${LAGOON}= Applying custom patch${NC}"
-patch -p1 --fuzz=4 < ../i486-no-cpuid.patch
-patch -p1 --fuzz=4 < ../zstd-1.5.6-gcc2.patch
-patch -p1 --fuzz=4 < ../zstd-1.5.6.patch
+if [ -d ../patches ]; then
+   echo -e "${NEONPINK}= Applying custom patch(es)${NC}"
+   for p in ../patches/*; do
+       echo -e "${NEONBLUE}Applying \$(basename "\$p")...${NC}"
+       patch -p1 --fuzz=4 < "\$p"
+   done
+fi
 echo -e "${PEACH}= Configure source${NC}"
 export LDFLAGS="${BLDFLAGS} ${MOLD} ${LNOPIE} -static-libgcc -static-libstdc++ "
 export CFLAGS="${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${CNOPIE} -static-libgcc -static-libstdc++ "

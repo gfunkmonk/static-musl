@@ -13,11 +13,10 @@ NMAP_MIRRORS=(
   "https://nmap.org/dist/nmap-${NMAP_VERSION}.tar.bz2"
   "https://fossies.org/linux/misc/nmap-${NMAP_VERSION}.tar.bz2"
   "https://ftp2.osuosl.org/pub/blfs/development/n/nmap-${NMAP_VERSION}.tar.bz2"
+  "https://ftp.ludd.ltu.se/mirrors/blfs/conglomeration/nmap/nmap-${NMAP_VERSION}.tar.bz2"
 )
 
 run_build_setup "nmap" "${NMAP_VERSION}" "${NMAP_TARBALL}" \
-  "dont_define_strlcat_in_libdnet.patch" \
-  "upstream-Fix-incompatible-pointer-type-error.patch" \
   -- "${NMAP_MIRRORS[@]}"
 
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
@@ -30,9 +29,13 @@ mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${NMAP_TARBALL}
 cd nmap-${NMAP_VERSION}/
-echo -e "${LAGOON}= Applying custom patch${NC}"
-patch -p1 --fuzz=4 < ../dont_define_strlcat_in_libdnet.patch
-patch -p1 --fuzz=4 < ../upstream-Fix-incompatible-pointer-type-error.patch
+if [ -d ../patches ]; then
+   echo -e "${NEONPINK}= Applying custom patch(es)${NC}"
+   for p in ../patches/*; do
+       echo -e "${NEONBLUE}Applying \$(basename "\$p")...${NC}"
+       patch -p1 --fuzz=4 < "\$p"
+   done
+fi
 echo -e "${PEACH}= Configure source${NC}"
 ./configure CC='${CC} -static' CXX='${CXX} -static -static-libstdc++' \
   --without-ndiff --without-zenmap --without-nmap-update --with-pcap=linux \

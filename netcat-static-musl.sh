@@ -14,8 +14,6 @@ NETCAT_MIRRORS=(
 )
 
 run_build_setup "netcat" "${NETCAT_VERSION}" "${NETCAT_TARBALL}" \
-  "b64.patch" \
-  "base64.c" \
   -- "${NETCAT_MIRRORS[@]}"
 
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
@@ -29,9 +27,14 @@ tar xf ${NETCAT_TARBALL}
 cd netcat-openbsd-debian-${NETCAT_VERSION}/
 echo -e "${LAGOON}= Applying Debian patch series${NC}"
 while read -r p; do patch -Np1 < debian/patches/"\$p"; done < debian/patches/series
-echo -e "${LAGOON}= Applying Alpine b64 patch${NC}"
-patch -Np1 < ../b64.patch
-cp ../base64.c .
+mv ../patches/base64.c .
+if [ -d ../patches ]; then
+   echo -e "${NEONPINK}= Applying custom patch(es)${NC}"
+   for p in ../patches/*; do
+       echo -e "${NEONBLUE}Applying \$(basename "\$p")...${NC}"
+       patch -p1 --fuzz=4 < "\$p"
+   done
+fi
 sed -i 's/^SRCS=.*/& base64.c/' Makefile
 echo -e "${PEACH}= Building...${NC}"
 make CC="${CC}" \

@@ -14,8 +14,6 @@ MC_MIRRORS=(
   "https://mirrors.mit.edu/macports/distfiles/mc/mc-${MC_VERSION}.tar.xz"
 )
 run_build_setup "mc" "${MC_VERSION}" "${MC_TARBALL}" \
-  "2987.patch" \
-  "disable_internal_editor.patch" \
   -- "${MC_MIRRORS[@]}"
 
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
@@ -28,9 +26,13 @@ mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${MC_TARBALL}
 cd mc-${MC_VERSION}/
-echo -e "${LAGOON}= Applying custom patch${NC}"
-patch -p1 --fuzz=4 < ../2987.patch
-patch -p1 --fuzz=4 < ../disable_internal_editor.patch
+if [ -d ../patches ]; then
+   echo -e "${NEONPINK}= Applying custom patch(es)${NC}"
+   for p in ../patches/*; do
+       echo -e "${NEONBLUE}Applying \$(basename "\$p")...${NC}"
+       patch -p1 --fuzz=4 < "\$p"
+   done
+fi
 echo -e "${PEACH}= Configure source${NC}"
 ./configure CC="${CC}" \
   --disable-nls --disable-tests --disable-doxygen-doc --without-gnutls --without-mclib \

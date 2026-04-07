@@ -16,7 +16,6 @@ SOCAT_MIRRORS=(
 )
 
 run_build_setup "socat" "${SOCAT_VERSION}" "${SOCAT_TARBALL}" \
-  "hotfix-const-correctness.patch" \
   -- "${SOCAT_MIRRORS[@]}"
 
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
@@ -29,8 +28,13 @@ mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${SOCAT_TARBALL}
 cd socat-${SOCAT_VERSION}/
-echo -e "${LAGOON}= Applying custom patch${NC}"
-patch -p1 --fuzz=4 < ../hotfix-const-correctness.patch
+if [ -d ../patches ]; then
+   echo -e "${NEONPINK}= Applying custom patch(es)${NC}"
+   for p in ../patches/*; do
+       echo -e "${NEONBLUE}Applying \$(basename "\$p")...${NC}"
+       patch -p1 --fuzz=4 < "\$p"
+   done
+fi
 echo -e "${PEACH}= Configure source${NC}"
 ./configure --enable-openssl --disable-ip6 --enable-readline --enable-largefile --enable-default-ipv=4 \
   LDFLAGS='${BLDFLAGS} ${MOLD} ${LNOPIE}' PKG_CONFIG='${PKGCFG}' \

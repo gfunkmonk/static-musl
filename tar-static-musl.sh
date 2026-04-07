@@ -16,14 +16,6 @@ TAR_MIRRORS=(
 )
 
 run_build_setup "tar" "${TAR_VERSION}" "${TAR_TARBALL}" \
-  "tar.patch" \
-  "tar-1.28-atime-rofs.patch" \
-  "tar-1.28-vfatTruncate.patch" \
-  "tar-1.29-wildcards.patch" \
-  "tar-1.35-CVE-2025-45582.patch" \
-  "tar-1.35-padding-zeros.patch" \
-  "tar-1.35-revert-fix-savannah-bug-633567.patch" \
-  "tar-oldgnu-unknown-mode-bits.patch" \
   -- "${TAR_MIRRORS[@]}"
 
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
@@ -36,15 +28,13 @@ mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${TAR_TARBALL}
 cd tar-${TAR_VERSION}/
-echo -e "${LAGOON}= Applying custom patch${NC}"
-patch -p1 --fuzz=4 < ../tar.patch
-patch -p1 --fuzz=4 < ../tar-1.28-atime-rofs.patch
-patch -p1 --fuzz=4 < ../tar-1.28-vfatTruncate.patch
-patch -p1 --fuzz=4 < ../tar-1.29-wildcards.patch
-patch -p1 --fuzz=4 < ../tar-1.35-CVE-2025-45582.patch
-patch -p1 --fuzz=4 < ../tar-1.35-padding-zeros.patch
-patch -p1 --fuzz=4 < ../tar-1.35-revert-fix-savannah-bug-633567.patch
-patch -p1 --fuzz=4 < ../tar-oldgnu-unknown-mode-bits.patch
+if [ -d ../patches ]; then
+   echo -e "${NEONPINK}= Applying custom patch(es)${NC}"
+   for p in ../patches/*; do
+       echo -e "${NEONBLUE}Applying \$(basename "\$p")...${NC}"
+       patch -p1 --fuzz=4 < "\$p"
+   done
+fi
 autoreconf -f -i
 echo -e "${PEACH}= Configure source${NC}"
 FORCE_UNSAFE_CONFIGURE=1 ./configure CC="${CC}" \

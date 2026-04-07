@@ -24,6 +24,13 @@ mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${OKSH_TARBALL}
 cd oksh-${OKSH_VERSION}/
+if [ -d ../patches ]; then
+   echo -e "${NEONPINK}= Applying custom patch(es)${NC}"
+   for p in ../patches/*; do
+       echo -e "${NEONBLUE}Applying \$(basename "\$p")...${NC}"
+       patch -p1 --fuzz=4 < "\$p"
+   done
+fi
 echo -e "${PEACH}= Configure source${NC}"
 ./configure --cc=clang --cflags="${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${CNOPIE}" \
   --enable-curses --enable-static --enable-lto \
