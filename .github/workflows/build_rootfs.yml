@@ -43,6 +43,6 @@ jobs:
       - name: Run Setup Script
         run: |
           chmod +x scripts/setup-base-rootfs.sh
-          sudo ./scripts/setup-base-rootfs.sh "${{ inputs.extra_packages }}"
+          sudo ./scripts/setup-base-rootfs.sh ${{ inputs.extra_packages }}
         env:
           ARCH: ${{ matrix.arch }}
