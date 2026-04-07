@@ -33,9 +33,9 @@ patch -p1 --fuzz=4 < ../dash-SHELL-Disable-sh-c-command-sh-c-exec-command.patch
 autoreconf -f -i
 echo -e "${PEACH}= Configure source${NC}"
 ./configure --enable-static \
-  LDFLAGS='${BLDFLAGS} ${MOLD} ${PIE}' \
+  LDFLAGS='${BLDFLAGS} ${MOLD} ${LPIE}' \
   PKG_CONFIG='${PKGCFG}' \
-  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${PIE} -fstack-clash-protection -Wno-maybe-uninitialized'
+  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${CPIE} -fstack-clash-protection -Wno-maybe-uninitialized'
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc)
 echo -e "\n${CARIBBEAN}= ccache statistics:${NC}"

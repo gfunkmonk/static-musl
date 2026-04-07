@@ -31,8 +31,8 @@ echo -e "${LAGOON}= Applying custom patch${NC}"
 patch -p1 --fuzz=4 < ../hotfix-const-correctness.patch
 echo -e "${PEACH}= Configure source${NC}"
 ./configure --enable-openssl --disable-ip6 --enable-readline --enable-largefile --enable-default-ipv=4 \
-  LDFLAGS='${BLDFLAGS} ${MOLD} ${NOPIE}' PKG_CONFIG='${PKGCFG}' \
-  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${NOPIE}'
+  LDFLAGS='${BLDFLAGS} ${MOLD} ${LNOPIE}' PKG_CONFIG='${PKGCFG}' \
+  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${CNOPIE}'
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc)
 echo -e "\n${CARIBBEAN}= ccache statistics:${NC}"

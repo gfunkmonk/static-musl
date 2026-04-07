@@ -42,10 +42,10 @@ patch -p1 --fuzz=6 < ../cross-compile.diff
 echo -e "${PEACH}= Configure source${NC}"
 ./configure CC='clang' --enable-max-jobtable-size=256 --enable-etcdir=/etc/zsh --enable-function-subdirs --with-tcsetpgrp --enable-cap \
   --enable-pcre --disable-ansi2knr --disable-dynamic --disable-dynamic-nss --enable-libc-musl --enable-maildir-support  --enable-gdbm \
-  --with-term-lib="ncursesw tinfo" --enable-ldflags='${BLDFLAGS} ${MOLD} ${NOPIE}' \
-  --enable-cflags='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${NOPIE} -Wno-unused-variable -Wno-implicit-function-declaration' \
-  LDFLAGS='${BLDFLAGS} ${MOLD} ${NOPIE}' PKG_CONFIG='${PKGCFG}' \
-  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${NOPIE} -Wno-unused-variable -Wno-implicit-function-declaration'
+  --with-term-lib="ncursesw tinfo" --enable-ldflags='${BLDFLAGS} ${MOLD} ${LNOPIE}' \
+  --enable-cflags='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${CNOPIE} -Wno-unused-variable -Wno-implicit-function-declaration' \
+  LDFLAGS='${BLDFLAGS} ${MOLD} ${LNOPIE}' PKG_CONFIG='${PKGCFG}' \
+  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${CNOPIE} -Wno-unused-variable -Wno-implicit-function-declaration'
 echo -e "${VIOLET}= Building...${NC}"
 CC='clang' make -j\$(nproc)
 echo -e "\n${CARIBBEAN}= ccache statistics:${NC}"

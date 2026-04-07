@@ -4,7 +4,7 @@ set -euo pipefail
 
 echo -e "${MINT}= fetching latest mc version${NC}"
 MC_VERSION=$("${CURL}" -s https://ftp.osuosl.org/pub/midnightcommander/ | grep -oP 'mc-\K[0-9]+\.[0-9]+(\.[0-9]+)?' | sort -V | tail -n 1)
-[[ -z "${MC_VERSION}" ]] && { echo -e "${TAWNY}= mc source fetch failed, using fallback ${FALLBACK_MC}${NC}" >&2; MC_VERSION="${FALLBACK_SED}"; }
+[[ -z "${MC_VERSION}" ]] && { echo -e "${TAWNY}= mc source fetch failed, using fallback ${FALLBACK_MC}${NC}" >&2; MC_VERSION="${FALLBACK_MC}"; }
 echo -e "${JUNEBUD}= building mc version: ${MC_VERSION}${NC}"
 PACKAGE_VERSION="${MC_VERSION}"
 MC_TARBALL="mc-${MC_VERSION}.tar.xz"
@@ -36,10 +36,10 @@ echo -e "${PEACH}= Configure source${NC}"
   --disable-nls --disable-tests --disable-doxygen-doc --without-gnutls --without-mclib \
   --without-x --enable-charset --disable-vfs-sftp --disable-vfs-undelfs --enable-static \
   --disable-shared --prefix=/usr --sysconfdir=/etc --libexecdir=/usr/lib \
-  LDFLAGS='${BLDFLAGS} ${MOLD} ${NOPIE}' PKG_CONFIG='${PKGCFG}' \
-  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${NOPIE}'
+  LDFLAGS='${BLDFLAGS} ${MOLD} ${LNOPIE}' PKG_CONFIG='${PKGCFG}' \
+  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${CNOPIE}'
 echo -e "${VIOLET}= Building...${NC}"
-CC="${CC}" make -j\$(nproc) LDFLAGS='-all-static ${BLDFLAGS} ${MOLD} ${NOPIE}'
+CC="${CC}" make -j\$(nproc) LDFLAGS='-all-static ${BLDFLAGS} ${MOLD} ${LNOPIE}'
 echo -e "\n${CARIBBEAN}= ccache statistics:${NC}"
 ccache -s | tail -n 10
 EOF

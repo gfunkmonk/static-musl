@@ -67,16 +67,16 @@ echo -e "${LAGOON}= Applying custom patches${NC}"
 patch -p1 --fuzz=4 < ../7z-0003-Disable-local-echo-display-when-in-input-passwords-C.patch
 patch -p1 --fuzz=4 < ../7z-0004-Use-system-locale-to-select-codepage-for-legacy-zip-.patch
 patch -p1 --fuzz=4 < ../7z-0005-Fix-BROTLI_MODEL-attribute-for-loongarch64.patch
-sed -i 's/CFLAGS_BASE = -O2/CFLAGS_BASE = ${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${NOPIE} -Wno-sign-conversion/g' CPP/7zip/7zip_gcc.mak
-sed -i 's/LDFLAGS = -Wall/LDFLAGS = ${BLDFLAGS} ${MOLD} ${NOPIE}/g' CPP/7zip/7zip_gcc.mak
+sed -i 's/CFLAGS_BASE = -O2/CFLAGS_BASE = ${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${CNOPIE} -Wno-sign-conversion/g' CPP/7zip/7zip_gcc.mak
+sed -i 's/LDFLAGS = -Wall/LDFLAGS = ${BLDFLAGS} ${MOLD} ${LNOPIE}/g' CPP/7zip/7zip_gcc.mak
 cd CPP/7zip/Bundles/Alone2
 mkdir -p b/g
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc) \
   CFLAGS_BASE_LIST='-c -D_7ZIP_AFFINITY_DISABLE=1 -DZ7_AFFINITY_DISABLE=1 -D_GNU_SOURCE=1' \
   CFLAGS_WARN_WALL='-Wall -Wextra' ${MAKE_OPTS} PLATFORM=${PLATFORM} COMPL_STATIC=1 \
-  CC='${CC} ${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${NOPIE} -Wno-sign-conversion' \
-  CXX='${CXX} ${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${NOPIE} -Wno-sign-conversion'
+  CC='${CC} ${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${CNOPIE} -Wno-sign-conversion' \
+  CXX='${CXX} ${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${CNOPIE} -Wno-sign-conversion'
 binary=\$(find . \( -name '7zzs' -o -name '7zz' \) -type f | head -n1)
 [ -n "\$binary" ] || { echo "Error: 7zzs or 7zz binary not found after build" >&2; exit 1; }
 cp -va "\$binary" 7zz

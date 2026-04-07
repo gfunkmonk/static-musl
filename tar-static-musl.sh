@@ -51,8 +51,8 @@ echo -e "${PEACH}= Configure source${NC}"
 FORCE_UNSAFE_CONFIGURE=1 ./configure CC="${CC}" \
   --disable-nls --disable-rpath --enable-largefile --disable-silent-rules \
   --disable-gcc-warnings --without-selinux \
-  LDFLAGS='${BLDFLAGS} ${MOLD} ${NOPIE}' PKG_CONFIG='${PKGCFG}' \
-  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${NOPIE}'
+  LDFLAGS='${BLDFLAGS} ${MOLD} ${LNOPIE}' PKG_CONFIG='${PKGCFG}' \
+  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${CNOPIE}'
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc)
 echo -e "\n${CARIBBEAN}= ccache statistics:${NC}"

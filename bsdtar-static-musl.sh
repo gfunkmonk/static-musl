@@ -33,7 +33,7 @@ echo -e "${PEACH}= Configure source${NC}"
 ./configure CC="${CC}" --disable-shared --enable-static --enable-bsdtar=static --disable-bsdcat \
   --disable-bsdcpio --with-zlib --disable-maintainer-mode --with-bz2lib --with-lzo2 \
   --disable-dependency-tracking --disable-bsdunzip --disable-rpath --enable-year2038 \
-  LDFLAGS='${BLDFLAGS} ${PIE}' PKG_CONFIG='${PKGCFG}' CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${PIE}'
+  LDFLAGS='${BLDFLAGS} ${LPIE}' PKG_CONFIG='${PKGCFG}' CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${CPIE}'
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc)
 gcc -static -o bsdtar tar/bsdtar-bsdtar.o tar/bsdtar-cmdline.o tar/bsdtar-creation_set.o \

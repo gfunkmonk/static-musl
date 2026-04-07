@@ -22,9 +22,13 @@ EXTRA="-fshort-enums -fno-ident -fno-unwind-tables -fno-asynchronous-unwind-tabl
 # -fno-unwind-tables: omit exception unwinding tables (size reduction)
 LTO="-flto=auto -ffat-lto-objects"
 
-# PIE Flags add to both CFLAGS AND LDFLAGS!!
-PIE="-static-pie -fPIE"
-NOPIE="-no-pie -fno-PIE"
+# PIE Flags
+### CFLAGS
+CPIE="-fPIE"
+CNOPIE="-fno-PIE"
+### LDFLAGS
+LPIE="-static-pie"
+LNOPIE="-no-pie"
 
 # Linker Flags
 MOLD="-fuse-ld=mold"
@@ -114,11 +118,12 @@ FALLBACK_NMAP="7.99"
 FALLBACK_OKSH="7.8"
 FALLBACK_OPENSSH="10.3p1"
 FALLBACK_PIGZ="2.8"
-FALLBACK_RIPGREP="14.1.1"
+FALLBACK_RIPGREP="15.1.0"
 FALLBACK_RSYNC="3.4.1"
 FALLBACK_SCREEN="5.0.1"
 FALLBACK_SED="4.9"
 FALLBACK_SOCAT="1.8.1.1"
+FALLBACK_SYSTEMCTL_TUI="0.5.2"
 FALLBACK_TAR="1.35"
 FALLBACK_TMUX="3.6a"
 FALLBACK_TNFTP="20260211"

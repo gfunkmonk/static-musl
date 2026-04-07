@@ -33,8 +33,8 @@ patch -p1 --fuzz=4 < ../i486-no-cpuid.patch
 patch -p1 --fuzz=4 < ../zstd-1.5.6-gcc2.patch
 patch -p1 --fuzz=4 < ../zstd-1.5.6.patch
 echo -e "${PEACH}= Configure source${NC}"
-export LDFLAGS="${BLDFLAGS} ${MOLD} ${NOPIE} -static-libgcc -static-libstdc++ "
-export CFLAGS="${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${NOPIE} -static-libgcc -static-libstdc++ "
+export LDFLAGS="${BLDFLAGS} ${MOLD} ${LNOPIE} -static-libgcc -static-libstdc++ "
+export CFLAGS="${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${CNOPIE} -static-libgcc -static-libstdc++ "
 export HAVE_LZ4="1" HAVE_ZLIB="1" HAVE_LZMA="1"
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc) zstd-release

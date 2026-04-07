@@ -318,7 +318,34 @@ install_host_deps() {
   echo -e "${SEA}= install dependencies${NC}"
   local DEBIAN_DEPS=(binutils coreutils patch sed)
   [ -n "${QEMU_ARCH}" ] && DEBIAN_DEPS+=(qemu-user-static)
-  sudo apt-get update -qy > /dev/null && sudo apt-get install -qy --no-install-recommends "${DEBIAN_DEPS[@]}"
+  sudo flock /var/lib/apt/lists/lock -c "apt-get update -qq"
+  sudo apt-get install -qy --no-install-recommends "${DEBIAN_DEPS[@]}"
+}
+
+#######################################################
+# Helper function to rank mirrors by connection speed #
+#######################################################
+get_fastest_mirrors() {
+    local mirrors=("$@")
+    if [[ ${#mirrors[@]} -le 1 ]]; then
+        echo "${mirrors[@]}"
+        return
+    fi
+    echo -e "${SKY}= Ranking ${#mirrors[@]} mirrors by latency...${NC}" >&2
+    local tmp_dir
+    tmp_dir=$(mktemp -d)
+    local pids=() i=0
+    for url in "${mirrors[@]}"; do
+        (
+            latency=$("${CURL}" -o /dev/null -s -w "%{time_connect}\n" --connect-timeout 2 -I "$url" 2>/dev/null || echo "9.999")
+            echo "$latency $url"
+        ) > "${tmp_dir}/${i}" &
+        pids+=($!)
+        i=$((i + 1))
+    done
+    for pid in "${pids[@]}"; do wait "$pid" 2>/dev/null || true; done
+    cat "${tmp_dir}"/* 2>/dev/null | sort -n | awk '{print $2}'
+    rm -rf "${tmp_dir}"
 }
 
 ####################################################################
@@ -439,16 +466,16 @@ setup_alpine_chroot() {
       else
         echo -e "${CANARY}= download alpine rootfs and checksum${NC}"
         "${CURL}" -fsSL --retry 3 --retry-delay 2 --connect-timeout 10 --max-time 120 \
-        -o minirootfs/"${ALPINE_TARBALL}" "${ALPINE_URL}" \
-        || { echo -e "${CRIMSON}= ERROR: failed to download Alpine rootfs${NC}" >&2; exit 1; }
-      "${CURL}" -fsSL --retry 3 --retry-delay 2 --connect-timeout 10 --max-time 120 \
-      -o minirootfs/"${ALPINE_TARBALL}.sha256" "${ALPINE_URL}.sha256" \
-      || { echo -e "${CRIMSON}= ERROR: failed to download Alpine rootfs checksum${NC}" >&2; exit 1; }
-      if ! ( cd minirootfs && sha256sum -c "${ALPINE_TARBALL}.sha256" --status ); then
-        echo -e "${CRIMSON}= ERROR: Downloaded Alpine rootfs failed checksum verification${NC}" >&2
-        exit 1
+          -o minirootfs/"${ALPINE_TARBALL}" "${ALPINE_URL}" \
+          || { echo -e "${CRIMSON}= ERROR: failed to download Alpine rootfs${NC}" >&2; exit 1; }
+        "${CURL}" -fsSL --retry 3 --retry-delay 2 --connect-timeout 10 --max-time 120 \
+          -o minirootfs/"${ALPINE_TARBALL}.sha256" "${ALPINE_URL}.sha256" \
+          || { echo -e "${CRIMSON}= ERROR: failed to download Alpine rootfs checksum${NC}" >&2; exit 1; }
+        if ! ( cd minirootfs && sha256sum -c "${ALPINE_TARBALL}.sha256" --status ); then
+          echo -e "${CRIMSON}= ERROR: Downloaded Alpine rootfs failed checksum verification${NC}" >&2
+          exit 1
+        fi
       fi
-    fi
     echo -e "${SKY}= extract rootfs${NC}"
     mkdir -p "${CHROOTDIR}"
     tar xf minirootfs/"${ALPINE_TARBALL}" -C "${CHROOTDIR}"/
@@ -563,6 +590,10 @@ run_build_setup() {
   done
   [[ $# -gt 0 && "$1" == "--" ]] && shift
   local mirrors=("$@")
+  if [[ ${#mirrors[@]} -gt 0 ]]; then
+      mapfile -t mirrors < <(get_fastest_mirrors "${mirrors[@]}")
+      echo -e "${CANARY}= Fastest mirror: ${PEACH}${mirrors[0]}${NC}"
+  fi
   setup_arch
   setup_cleanup
   install_host_deps
@@ -571,6 +602,68 @@ run_build_setup() {
   [[ ${#patches[@]} -gt 0 ]] && copy_patches "${tool}" "${patches[@]}"
   setup_qemu
   mount_chroot
+}
+
+#######################################################################
+# rust_set_cross_target: sets RUST_TARGET for ARM cross-compile,      #
+# or leaves it empty (meaning: build natively in the Alpine chroot).  #
+# Call after run_build_setup (which calls setup_arch internally).      #
+#######################################################################
+rust_set_cross_target() {
+  case "${ARCH}" in
+    armhf) RUST_TARGET="arm-unknown-linux-musleabihf"   ;;
+    armv7) RUST_TARGET="armv7-unknown-linux-musleabihf" ;;
+    *)     RUST_TARGET=""                               ;;
+  esac
+}
+
+#######################################################################
+# rust_host_cross_build TOOL VERSION TARBALL SRC_DIR BIN_NAME         #
+# Cross-compiles a Cargo project on the host runner using             #
+# cargo-zigbuild. Only call this when RUST_TARGET is non-empty        #
+# (set by rust_set_cross_target).                                      #
+#                                                                      #
+# BIN_NAME is the filename inside target/<RUST_TARGET>/release/.       #
+#######################################################################
+rust_host_cross_build() {
+  local tool="$1" version="$2" tarball="$3" src_dir="$4" bin_name="$5"
+
+  echo -e "${SLATE}= Cross-compiling ${tool} on host (QEMU-arm too slow / no Alpine Rust pkg for ${ARCH})${NC}"
+  echo -e "${ORANGE}= Installing zig (musl cross-linker) via pip${NC}"
+  pip3 install --user --quiet ziglang
+  export PATH="${HOME}/.local/bin:${PATH}"
+
+  if ! command -v rustup >/dev/null 2>&1; then
+    if command -v apt-get >/dev/null 2>&1; then
+      sudo apt-get install -qy --no-install-recommends rustup
+    else
+      echo -e "${CRIMSON}= ERROR: rustup not found and apt-get unavailable${NC}" >&2
+      exit 1
+    fi
+  fi
+  # shellcheck source=/dev/null
+  source "${HOME}/.cargo/env" 2>/dev/null || true
+
+  rustup target add "${RUST_TARGET}"
+  if ! command -v cargo-zigbuild >/dev/null 2>&1; then
+    cargo install cargo-zigbuild --locked
+  fi
+
+  echo -e "${LIME}= Extracting ${tool} source${NC}"
+  local build_dir
+  build_dir=$(mktemp -d)
+  tar xf "distfiles/${tarball}" -C "${build_dir}"
+
+  echo -e "${VIOLET}= Building ${tool} ${version} for ${ARCH} (cross-compilation on host)${NC}"
+  pushd "${build_dir}/${src_dir}/"
+  CARGO_PROFILE_RELEASE_OPT_LEVEL="z" CARGO_PROFILE_RELEASE_LTO="true" \
+  CARGO_PROFILE_RELEASE_STRIP="symbols" CARGO_PROFILE_RELEASE_CODEGEN_UNITS="1" \
+  RUSTFLAGS="-C target-feature=+crt-static" \
+    cargo zigbuild --release --target "${RUST_TARGET}"
+  popd
+
+  package_output "${tool}" "${build_dir}/${src_dir}/target/${RUST_TARGET}/release/${bin_name}"
+  rm -rf "${build_dir}"
 }
 
 #############################################################
@@ -671,7 +764,6 @@ package_output() {
     exit 1
   fi
   mv "${temp_archive}" "dist/${filename}.tar.xz"
-  #echo -e "${MISTYROSE}= All done! Binary: ${BWHITE}dist/${filename}${NAVAJO} ($(du -sh "dist/${filename}" | cut -f1))${NC}"
   local raw_sz compressed_sz
   raw_sz=$(du -sh "dist/${filename}" | cut -f1)
   compressed_sz=$(du -sh "dist/${filename}.tar.xz" | cut -f1)
@@ -686,3 +778,10 @@ package_output() {
     echo -e "${COOLGRAY}KEEP_CHROOT is true. ${MAUVE}Preserving: ${CHROOTDIR}${NC}"
   fi
 }
+
+# Cleanup mounts on failure
+cleanup_on_fail() {
+  echo -e "${TOMATO}= Build failed. Cleaning up...${NC}"
+  unmount_chroot
+}
+trap cleanup_on_fail ERR
