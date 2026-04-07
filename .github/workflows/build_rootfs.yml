@@ -1,0 +1,48 @@
+name: Build Base Rootfs
+
+on:
+  workflow_dispatch:
+    inputs:
+      extra_packages:
+        description: 'Extra Alpine packages'
+        type: string
+        default: ''
+
+jobs:
+  prepare-rootfs:
+    strategy:
+      matrix:
+        arch: [x86_64, x86, aarch64, armv7, armhf]
+        include:
+          - arch: x86_64
+            runner: ubuntu-latest
+          - arch: x86
+            runner: ubuntu-latest
+          - arch: aarch64
+            runner: ubuntu-24.04-arm
+          - arch: armv7
+            runner: ubuntu-24.04-arm
+          - arch: armhf
+            runner: ubuntu-24.04-arm
+
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Read Alpine version
+        id: alpine
+        run: echo "version=$(grep '^ALPINE_VERSION=' config.sh | cut -d= -f2 | tr -d '"')" >> "$GITHUB_OUTPUT"
+
+      - name: Build and Cache Rootfs
+        uses: actions/cache@v5
+        with:
+          path: minirootfs/alpine-base-${{ matrix.arch }}.tar.zst
+          # Key MUST match the one in your main build workflow
+          key: alpine-prebaked-${{ steps.alpine.outputs.version }}-${{ matrix.arch }}-${{ hashFiles('scripts/setup-base-rootfs.sh') }}-${{ inputs.extra_packages }}
+
+      - name: Run Setup Script
+        run: |
+          chmod +x scripts/setup-base-rootfs.sh
+          sudo ./scripts/setup-base-rootfs.sh "${{ inputs.extra_packages }}"
+        env:
+          ARCH: ${{ matrix.arch }}
