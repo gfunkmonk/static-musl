@@ -219,7 +219,10 @@ jobs:
           alpine-prebaked-${{ steps.alpine-version.outputs.version }}-${{ matrix.arch }}-${{ hashFiles('scripts/setup-base-rootfs.sh') }}-
 
     - name: Build Prebaked Rootfs
-      if: steps.cache-prebaked.outputs.cache-hit != 'true' || github.event.inputs.rebuild_base == 'true' || github.event.inputs.extra_packages != ''
+      if: |
+        steps.cache-prebaked.outputs.cache-hit != 'true' ||
+        inputs.rebuild_base == true ||
+        (inputs.extra_packages != null && inputs.extra_packages != '')
       run: |
         chmod +x scripts/setup-base-rootfs.sh
         sudo ./scripts/setup-base-rootfs.sh ${{ github.event.inputs.extra_packages }}
