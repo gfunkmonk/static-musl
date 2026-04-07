@@ -112,8 +112,8 @@ for file in *-static-musl.sh; do
     fi
 
     if [ "$RESUME" = true ]; then
-        arch_suffix="${ARCH:+-${ARCH}}"
-        if compgen -G "dist/${bin_name}-*${arch_suffix}.tar.xz" > /dev/null 2>&1; then
+        arch_pattern="${ARCH:+-${ARCH}}"
+        if compgen -G "dist/${bin_name}-*${arch_pattern}.tar.xz" > /dev/null 2>&1; then
             echo -e "${NEONPINK}Skipping ${SKY}$file${NC} (Binary exists in dist/)" | tee -a "$LOG_FILE"
             success_count=$((success_count + 1))
             continue
