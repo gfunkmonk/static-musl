@@ -318,7 +318,28 @@ install_host_deps() {
   echo -e "${SEA}= install dependencies${NC}"
   local DEBIAN_DEPS=(binutils coreutils patch sed)
   [ -n "${QEMU_ARCH}" ] && DEBIAN_DEPS+=(qemu-user-static)
-  sudo flock /var/lib/apt/lists/lock -c 'apt-get update -qq && sudo apt-get install -qy --no-install-recommends "${DEBIAN_DEPS[@]}"'
+  sudo flock /var/lib/apt/lists/lock -c "apt-get update -qq"
+  sudo apt-get install -qy --no-install-recommends "${DEBIAN_DEPS[@]}"'
+}
+
+#######################################################
+# Helper function to rank mirrors by connection speed #
+#######################################################
+get_fastest_mirrors() {
+    local mirrors=("$@")
+    local temp_results
+    temp_results=$(mktemp)
+    if [[ ${#mirrors[@]} -le 1 ]]; then
+        echo "${mirrors[@]}"
+        return
+    fi
+    echo -e "${SKY}= Ranking ${#mirrors[@]} mirrors by latency...${NC}" >&2
+    for url in "${mirrors[@]}"; do
+        latency=$(curl -o /dev/null -s -w "%{time_connect}\n" --connect-timeout 2 -I "$url" || echo "9.999")
+        echo "$latency $url" >> "$temp_results"
+    done
+    sort -n "$temp_results" | awk '{print $2}'
+    rm -f "$temp_results"
 }
 
 ####################################################################
@@ -563,6 +584,10 @@ run_build_setup() {
   done
   [[ $# -gt 0 && "$1" == "--" ]] && shift
   local mirrors=("$@")
+  if [[ ${#mirrors[@]} -gt 0 ]]; then
+      mirrors=($(get_fastest_mirrors "${mirrors[@]}"))
+      echo -e "${CANARY}= Fastest mirror: ${PEACH}${mirrors[0]}${NC}"
+  fi
   setup_arch
   setup_cleanup
   install_host_deps
