@@ -28,14 +28,14 @@ apk upgrade musl-dev mold --repository=https://dl-cdn.alpinelinux.org/alpine/edg
 echo -e "${CANARY}= Build & install xxHash${NC}"
 git clone https://github.com/Cyan4973/xxHash.git
 cd xxHash
-PREFIX=/usr CC="${CC}" make LDFLAGS='${BLDFLAGS} ${MOLD} ${LNOPIE}' PKG_CONFIG='${PKGCFG}' CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${CNOPIE}'
-PREFIX=/usr CC="${CC}" make install LDFLAGS='${BLDFLAGS} ${MOLD} ${LNOPIE}' PKG_CONFIG='${PKGCFG}' CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${CNOPIE}'
+PREFIX=/usr CC="${CC}" make LDFLAGS='${BLDFLAGS} ${MOLD} ${LPIE}' PKG_CONFIG='${PKGCFG}' CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${CPIE}'
+PREFIX=/usr CC="${CC}" make install LDFLAGS='${BLDFLAGS} ${MOLD} ${LPIE}' PKG_CONFIG='${PKGCFG}' CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${CPIE}'
 cd ..
 echo -e "${REBECCA}= Build & install lz4${NC}"
 git clone https://github.com/lz4/lz4.git
 cd lz4
-PREFIX=/usr CC="${CC}" make LDFLAGS='${BLDFLAGS} ${MOLD} ${LNOPIE}' PKG_CONFIG='${PKGCFG}' CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${CNOPIE}'
-PREFIX=/usr CC="${CC}" make install LDFLAGS='${BLDFLAGS} ${MOLD} ${LNOPIE}' PKG_CONFIG='${PKGCFG}' CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${CNOPIE}'
+PREFIX=/usr CC="${CC}" make LDFLAGS='${BLDFLAGS} ${MOLD} ${LPIE}' PKG_CONFIG='${PKGCFG}' CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${CPIE}'
+PREFIX=/usr CC="${CC}" make install LDFLAGS='${BLDFLAGS} ${MOLD} ${LPIE}' PKG_CONFIG='${PKGCFG}' CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${CPIE}'
 cd ..
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${RSYNC_TARBALL}
