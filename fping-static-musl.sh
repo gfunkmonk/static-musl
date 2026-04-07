@@ -26,7 +26,7 @@ tar xf ${FPING_TARBALL}
 cd fping-${FPING_VERSION}/
 echo -e "${LAGOON}= Configure source${NC}"
 ./configure CC="${CC}" --disable-ipv6 \
-  LDFLAGS='${BLDFLAGS} ${MOLD} ${LNOPIE}' \
+  LDFLAGS='${BLDFLAGS} ${MOLD} ${LNOPIE}' PKG_CONFIG='${PKGCFG}' \
   CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${CNOPIE}'
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc)

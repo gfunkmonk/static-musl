@@ -28,6 +28,7 @@ echo -e "${MAUVE}= Extracting source${NC}"
 7zz x -so ${WGET2_TARBALL} | tar xf -
 cd wget2-${WGET2_VERSION}/
 echo -e "${PEACH}= Configure source${NC}"
+# NO MOLD -- DOESN'T BUILD WITH MOLD #
 ./configure  CC="${CC}" --with-ssl=openssl \
   --disable-nls --disable-rpath --sysconfdir=/etc --disable-silent-rules --disable-ipv6 --enable-year2038 \
   --disable-shared --enable-static --disable-doc --with-bzip2 --enable-manylibs --with-lzma --with-brotlidec \
