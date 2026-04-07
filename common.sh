@@ -5,42 +5,48 @@ CONF_FILE="${SCRIPT_DIR}"/config.sh
 [[ -f "${CONF_FILE}" ]] && source "${CONF_FILE}"
 
 ##### Colors ################
-BWHITE="\033[1;37m"
-ORANGE="\033[38;2;255;165;0m"
-LEMON="\033[38;2;255;244;79m"
-TAWNY="\033[38;2;204;78;0m"
-HELIOTROPE="\033[38;2;223;115;255m"
-VIOLET="\033[38;2;143;0;255m"
-MINT="\033[38;2;152;255;152m"
 AQUA="\033[38;2;18;254;202m"
-TOMATO="\033[38;2;255;99;71m"
-PEACH="\033[38;2;246;161;146m"
-LAGOON="\033[38;2;142;235;236m"
-HOTPINK="\033[38;2;255;105;180m"
-LIME="\033[38;2;204;255;0m"
-OCHRE="\033[38;2;204;119;34m"
-SLATE="\033[38;2;109;129;150m"
-SKY="\033[38;2;135;206;250m"
-JUNEBUD="\033[38;2;189;218;87m"
-NAVAJO="\033[38;2;255;222;173m"
+BLOOD="\033[38;2;102;6;6m"
 BOYSENBERRY="\033[38;2;135;50;96m"
-CORAL="\033[38;2;240;128;128m"
+BWHITE="\033[1;37m"
 CAMEL="\033[38;2;193;154;107m"
-INDIGO="\033[38;2;111;0;255m"
+CANARY="\033[38;2;255;255;153m"
+CARIBBEAN="\033[38;2;0;204;153m"
 CHARTREUSE="\033[38;2;127;255;0m"
+COOLGRAY="\033[38;2;140;146;172m"
+CORAL="\033[38;2;240;128;128m"
+CRIMSON="\033[38;2;220;20;60m"
+GOLDENROD="\033[38;2;218;165;32m"
+HELIOTROPE="\033[38;2;223;115;255m"
+HIGHLIGHTER="\033[38;2;248;255;15m"
+HOTPINK="\033[38;2;255;105;180m"
+INDIGO="\033[38;2;111;0;255m"
+JUNEBUD="\033[38;2;189;218;87m"
+LAGOON="\033[38;2;142;235;236m"
+LEMON="\033[38;2;255;244;79m"
+LTVIOLET="\033[38;2;207;159;255m"
+LIME="\033[38;2;204;255;0m"
+MAUVE="\033[38;2;224;175;255m"
+MINT="\033[38;2;152;255;152m"
+MISTYROSE="\033[38;2;255;226;223m"
+MOSS="\033[38;2;138;154;91m"
+NAVAJO="\033[38;2;255;222;173m"
+OCHRE="\033[38;2;204;119;34m"
+ORANGE="\033[38;2;255;165;0m"
+PEACH="\033[38;2;246;161;146m"
+PINK="\033[38;2;255;45;192m"
 PURPLE_BLUE="\033[38;2;147;130;255m"
 REBECCA="\033[38;2;102;51;153m"
+SAND="\033[38;2;194;178;128m"
+SEA="\033[38;2;32;178;170m"
+SKY="\033[38;2;135;206;250m"
+SLATE="\033[38;2;109;129;150m"
+TAWNY="\033[38;2;204;78;0m"
 TEAL="\033[38;2;0;128;128m"
+TOMATO="\033[38;2;255;99;71m"
 TURQUOISE="\033[38;2;64;224;208m"
-BLOOD="\033[38;2;102;6;6m"
 UGLY="\033[38;2;122;115;115m"
-CARIBBEAN="\033[38;2;0;204;153m"
-CRIMSON="\033[38;2;220;20;60m"
-CANARY="\033[38;2;255;255;153m"
-MISTYROSE="\033[38;2;255;226;223m"
-MAUVE="\033[38;2;224;175;255m"
-MOSS="\033[38;2;138;154;91m"
-COOLGRAY="\033[38;2;140;146;172m"
+VIOLET="\033[38;2;143;0;255m"
 NC="\033[0m"
 
 ######################
@@ -213,10 +219,10 @@ get_git_version() {
         # 1. Strip the prefix from the RAW version (before underscores become dots)
         # This handles the "V_" correctly.
         version="${version#$strip_prefix}"
-        
+
         # 2. Now convert remaining underscores to dots
         version="${version//_/.}"
-        
+
         # 3. Final cleanup for 'p' suffix and any trailing dots
         # This turns 10.3.P1 into 10.3p1
         version=$(echo "$version" | sed -E 's/\.[Pp]/p/; s/\.$//')
@@ -246,14 +252,14 @@ get_gitlab_version() {
     # We URL-encode the path and use JQ to grab the first 'name' field
     local url="https://gitlab.com/api/v4/projects/${project_path//\//%2F}/repository/tags"
     local version
-    
+
     version=$("${CURL}" -fsSL --connect-timeout 10 --max-time 30 "$url" | "${JQ}" -r '.[0].name // empty' 2>/dev/null)
 
     # 3. Process and Save
     if [[ -n "$version" && "$version" != "null" ]]; then
         # Strip leading 'v' if present (common in GitLab tags)
         version="${version#v}"
-        
+
         write_cache "$cache_key" "$version"
         echo "$version"
     else
@@ -312,8 +318,8 @@ setup_cleanup() {
 # install_host_deps: install required packages on the Ubuntu runner #
 #####################################################################
 install_host_deps() {
-  echo -e "${AQUA}= install dependencies${NC}"
-  local DEBIAN_DEPS=(binutils)
+  echo -e "${SEA}= install dependencies${NC}"
+  local DEBIAN_DEPS=(binutils coreutils patch sed)
   [ -n "${QEMU_ARCH}" ] && DEBIAN_DEPS+=(qemu-user-static)
   sudo apt-get update -qy > /dev/null && sudo apt-get install -qy --no-install-recommends "${DEBIAN_DEPS[@]}"
 }
@@ -409,7 +415,7 @@ setup_alpine_chroot() {
       echo -e "${TOMATO}ERROR: Mounts still active in ${CHROOTDIR}. Deletion ${BLOOD}BLOCKED!${NC}" >&2
       exit 1
     fi
-    echo -e "${CORAL}= chroot dir exist! Removing it now.${NC}"
+    echo -e "${GOLDENROD}= chroot dir exist! Removing it now.${NC}"
     sudo rm -fr "./${CHROOTDIR}"
   fi
   if [ -f "minirootfs/${PREBAKED_IMAGE}" ]; then
@@ -422,20 +428,22 @@ setup_alpine_chroot() {
         echo -e "${INDIGO}minirootfs dir does not exist. Creating it now.${NC}"
         mkdir -p minirootfs/
       fi
-      if [ -f minirootfs/"${ALPINE_TARBALL}" ]; then
-        echo -e "${SLATE}= Alpine rootfs ${ALPINE_TARBALL} already cached, skipping download${NC}"
-        if [ ! -s minirootfs/"${ALPINE_TARBALL}" ]; then
-          echo -e "${CRIMSON}= ERROR: Cached Alpine rootfs is empty: minirootfs/${ALPINE_TARBALL}${NC}" >&2
+      if [ -f minirootfs/"${ALPINE_TARBALL}" ] && [ -f minirootfs/"${ALPINE_TARBALL}.sha256" ]; then
+        echo -e "${SLATE}= Alpine rootfs ${ALPINE_TARBALL} already cached, verifying checksum...${NC}"
+        if ! ( cd minirootfs && sha256sum -c "${ALPINE_TARBALL}.sha256" --status ); then
+          echo -e "${CRIMSON}= ERROR: Cached Alpine rootfs failed checksum verification: minirootfs/${ALPINE_TARBALL}${NC}" >&2
           exit 1
         fi
       else
-        echo -e "${HELIOTROPE}= download alpine rootfs${NC}"
+        echo -e "${CANARY}= download alpine rootfs and checksum${NC}"
         "${CURL}" -fsSL --retry 3 --retry-delay 2 --connect-timeout 10 --max-time 120 \
         -o minirootfs/"${ALPINE_TARBALL}" "${ALPINE_URL}" \
         || { echo -e "${CRIMSON}= ERROR: failed to download Alpine rootfs${NC}" >&2; exit 1; }
-      # Verify downloaded rootfs is not empty
-      if [ ! -s minirootfs/"${ALPINE_TARBALL}" ]; then
-        echo -e "${CRIMSON}= ERROR: Downloaded Alpine rootfs is empty${NC}" >&2
+      "${CURL}" -fsSL --retry 3 --retry-delay 2 --connect-timeout 10 --max-time 120 \
+      -o minirootfs/"${ALPINE_TARBALL}.sha256" "${ALPINE_URL}.sha256" \
+      || { echo -e "${CRIMSON}= ERROR: failed to download Alpine rootfs checksum${NC}" >&2; exit 1; }
+      if ! ( cd minirootfs && sha256sum -c "${ALPINE_TARBALL}.sha256" --status ); then
+        echo -e "${CRIMSON}= ERROR: Downloaded Alpine rootfs failed checksum verification${NC}" >&2
         exit 1
       fi
     fi
@@ -443,7 +451,7 @@ setup_alpine_chroot() {
     mkdir -p "${CHROOTDIR}"
     tar xf minirootfs/"${ALPINE_TARBALL}" -C "${CHROOTDIR}"/
   fi
-  echo -e "${TURQUOISE}= copy resolv.conf into chroot${NC}"
+  echo -e "${HELIOTROPE}= copy resolv.conf into chroot${NC}"
   cp /etc/resolv.conf "./${CHROOTDIR}/etc/" || \
     echo -e "${TAWNY}= WARNING: failed to copy resolv.conf — DNS may not work inside chroot${NC}"
   if [ "${tarball}" != "base-setup" ]; then
@@ -451,7 +459,7 @@ setup_alpine_chroot() {
     cp distfiles/"${tarball}" "./${CHROOTDIR}/${tarball}"
   fi
   # bundled tools
-  echo -e "${NAVAJO}= install prebuilt tools${NC}"
+  echo -e "${SAND}= install prebuilt tools${NC}"
   local src
   for prebuilt in 7zz upx uasm envx curl jq mold; do
     src="tools/${prebuilt}/${prebuilt}-${ARCH}"
@@ -501,7 +509,7 @@ setup_qemu() {
     else
       echo -e "${CRIMSON}= ERROR: No QEMU binary found for ${QEMU_ARCH}${NC}" >&2
       echo -e "${PEACH}  Architecture: ${QEMU_ARCH}${NC}" >&2
-      echo -e "${CANARY}  Current PATH: $PATH${NC}" >&2
+      echo -e "${NAVAJO}  Current PATH: $PATH${NC}" >&2
       echo -e "${HELIOTROPE}= Install it with:${NC} ${TEAL}sudo apt-get install qemu-user-static or qemu-user-binfmt${NC}" >&2
       exit 1
     fi
@@ -580,29 +588,29 @@ package_output() {
   install -D -m 755 "${binary}" "dist/${filename}"
   if command -v file >/dev/null 2>&1; then
     echo -e "\n"
-    echo -e "${UGLY}= Verifying binary: ${filename}${NC}"
+    echo -e "${JUNEBUD}= Verifying binary: ${filename}${NC}"
     if file "dist/${filename}" | grep -Ei "interpreter|dynamically linked" >/dev/null; then
-        echo -e "${CRIMSON}!! WARNING: Binary is DYNAMICALLY linked !!${NC}"
+        echo -e "${UGLY}!! WARNING: Binary is DYNAMICALLY linked !!${NC}"
         file "dist/${filename}"
     else
-        echo -e "${LIME}= Verified: Binary is statically linked.${NC}"
+        echo -e "${PINK}= Verified: Binary is statically linked.${NC}"
     fi
   fi
   if [ "${USE_STRIP}" = "true" ]; then
       #echo -e "\n"
-      echo -e "${CHARTREUSE}= Stripping ${filename}...${NC}"
+      echo -e "${LTVIOLET}= Stripping ${filename}...${NC}"
       strip "dist/${filename}" 2>/dev/null || true
   fi
   if [ "${USE_UPX}" = "true" ]; then
       if [ -x "${UPX}" ]; then
-          echo -e "${PURPLE_BLUE}= Compressing ${filename} with UPX...${NC}"
+          echo -e "${CHARTREUSE}= Compressing ${filename} with UPX...${NC}"
           ${UPX} ${UPX_FLAGS} "dist/${filename}" || true
       else
           echo -e "${TOMATO}! UPX binary not found at ${UPX}, skipping compression${NC}"
       fi
   fi
   if command -v file >/dev/null 2>&1; then
-    echo -e "${ORANGE} File Info:  $(file "dist/${filename}" | cut -d: -f2-)${NC}"
+    echo -e "${HIGHLIGHTER} File Info:  $(file "dist/${filename}" | cut -d: -f2-)${NC}"
   fi
   local temp_archive="dist/${filename}.tar.xz.tmp.$$"
   if ! tar -C dist -cJf "${temp_archive}" "${filename}"; then
@@ -616,12 +624,12 @@ package_output() {
     exit 1
   fi
   mv "${temp_archive}" "dist/${filename}.tar.xz"
-  echo -e "${JUNEBUD}= All done! Binary: dist/${filename} ($(du -sh "dist/${filename}" | cut -f1))${NC}"
+  echo -e "${MISTYROSE}= All done! Binary: dist/${filename} ($(du -sh "dist/${filename}" | cut -f1))${NC}"
   if [ "${KEEP_CHROOT}" = "false" ]; then
     if grep -qF "$(pwd)/${CHROOTDIR}" /proc/mounts; then
       unmount_chroot
     fi
-    echo -e "${MISTYROSE}= Cleaning up chroot: ${CANARY}${CHROOTDIR}${NC}"
+    echo -e "${PURPLE_BLUE}= Cleaning up chroot: ${ORANGE}${CHROOTDIR}${NC}"
     sudo rm -rf "${CHROOTDIR}"
   else
     echo -e "${COOLGRAY}KEEP_CHROOT is true. ${MAUVE}Preserving: ${CHROOTDIR}${NC}"
