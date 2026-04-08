@@ -63,16 +63,7 @@ usage() {
 
 setup_cross_toolchain() {
     local arch="${ARCH:-x86_64}"
-    local host_arch
-    host_arch=$(uname -m)
-    case "${host_arch}" in
-        x86_64|x86-64|amd64) host_arch="x86_64" ;;
-        i*86)                 host_arch="x86" ;;
-        aarch64|arm64|armv8)  host_arch="aarch64" ;;
-        armv7*)               host_arch="armv7" ;;
-        armv6|arm)            host_arch="armhf" ;;
-    esac
-    [ "$arch" == "$host_arch" ] && return 0
+    [ "$(uname -m)" == "$arch" ] && return 0
 
     local tc_name=""
     case "$arch" in

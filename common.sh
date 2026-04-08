@@ -92,15 +92,6 @@ case "${ARCH}" in
   armv6|arm)    ARCH="armhf" ;;
   *)    echo -e "${MAUVE}= ARCH '${ARCH}' not in normalization map, using as-is${NC}" ;;
 esac
-# HOST_ARCH: the normalized native machine arch (used to decide when QEMU is needed)
-HOST_ARCH=$(uname -m)
-case "${HOST_ARCH}" in
-  x86_64|x86-64|amd64) HOST_ARCH="x86_64" ;;
-  i*86)                 HOST_ARCH="x86" ;;
-  aarch64|arm64|armv8)  HOST_ARCH="aarch64" ;;
-  armv7*)               HOST_ARCH="armv7" ;;
-  armv6|arm)            HOST_ARCH="armhf" ;;
-esac
 
 ####################
 #   Setup tools    #
@@ -129,13 +120,12 @@ setup_arch() {
       RUST_TARGET="x86_64-alpine-linux-musl"
       ;;
     x86)
-      # x86_64/x86 hosts run i386 natively via kernel compat32; only need QEMU on other ISAs
-      [[ "${HOST_ARCH}" == "x86_64" || "${HOST_ARCH}" == "x86" ]] && QEMU_ARCH="" || QEMU_ARCH="i386"
+      QEMU_ARCH="i386"
       ARCH_FLAGS="${X86_FLAGS}"
       RUST_TARGET="i586-alpine-linux-musl"
       ;;
     aarch64)
-      [[ "${HOST_ARCH}" == "aarch64" ]] && QEMU_ARCH="" || QEMU_ARCH="aarch64"
+      QEMU_ARCH="aarch64"
       ARCH_FLAGS="${AARCH64_FLAGS}"
       RUST_TARGET="aarch64-alpine-linux-musl"
       ;;
