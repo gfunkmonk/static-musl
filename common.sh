@@ -113,6 +113,18 @@ done
 # setup_arch: resolve QEMU_ARCH & ARCH_FLAGS from ARCH #
 ########################################################
 setup_arch() {
+  # Determine the host's canonical architecture so we can skip QEMU when the
+  # target matches the host (no emulation needed for native builds).
+  local _host_arch
+  _host_arch=$(uname -m)
+  case "${_host_arch}" in
+    x86_64|amd64)  _host_arch="x86_64"  ;;
+    i*86)          _host_arch="x86"      ;;
+    arm64|aarch64) _host_arch="aarch64"  ;;
+    armv7*)        _host_arch="armv7"    ;;
+    armv6|arm)     _host_arch="armhf"    ;;
+  esac
+
   case "${ARCH}" in
     x86_64)
       QEMU_ARCH=""
@@ -120,12 +132,15 @@ setup_arch() {
       RUST_TARGET="x86_64-alpine-linux-musl"
       ;;
     x86)
-      QEMU_ARCH="i386"
+      # x86_64 (and x86) hosts execute i386 code natively via kernel compat32;
+      # QEMU is only required when the host itself is a different ISA.
+      [[ "${_host_arch}" == "x86_64" || "${_host_arch}" == "x86" ]] && QEMU_ARCH="" || QEMU_ARCH="i386"
       ARCH_FLAGS="${X86_FLAGS}"
       RUST_TARGET="i586-alpine-linux-musl"
       ;;
     aarch64)
-      QEMU_ARCH="aarch64"
+      # Native aarch64 hosts can run Alpine aarch64 chroots without QEMU.
+      [[ "${_host_arch}" == "aarch64" ]] && QEMU_ARCH="" || QEMU_ARCH="aarch64"
       ARCH_FLAGS="${AARCH64_FLAGS}"
       RUST_TARGET="aarch64-alpine-linux-musl"
       ;;
@@ -602,7 +617,7 @@ mount_chroot() {
     export AR="/opt/cross/bin/${CROSS_PREFIX}ar"
     export STRIP="/opt/cross/bin/${CROSS_PREFIX}strip"
     export PATH="/opt/cross/bin:${PATH}"
-    if [ -n "${CLANG_CROSS}" == "false" ]; then
+    if [ "${CLANG_CROSS:-false}" != "true" ]; then
       export CC="/opt/cross/bin/${CROSS_PREFIX}gcc"
       export CXX="/opt/cross/bin/${CROSS_PREFIX}g++"
     else

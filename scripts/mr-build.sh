@@ -63,7 +63,19 @@ usage() {
 
 setup_cross_toolchain() {
     local arch="${ARCH:-x86_64}"
-    [ "$arch" == "x86_64" ] && return 0
+
+    # Determine the canonical host architecture so we can skip downloading a
+    # cross-toolchain when the target already matches the host (native build).
+    local host_arch
+    host_arch=$(uname -m)
+    case "${host_arch}" in
+        x86_64|amd64)  host_arch="x86_64"  ;;
+        arm64|aarch64) host_arch="aarch64"  ;;
+        armv7*)        host_arch="armv7"    ;;
+        armv6|arm)     host_arch="armhf"    ;;
+        i*86)          host_arch="x86"      ;;
+    esac
+    [ "$arch" == "$host_arch" ] && return 0
 
     local tc_name=""
     case "$arch" in
