@@ -10,6 +10,8 @@ FPING_TARBALL="fping-${FPING_VERSION}.tar.gz"
 FPING_MIRRORS=(
   "https://github.com/schweikert/fping/releases/download/v${FPING_VERSION}/fping-${FPING_VERSION}.tar.gz"
   "https://fossies.org/linux/misc/fping-${FPING_VERSION}.tar.gz"
+  "https://www.fping.org/dist/fping-${FPING_VERSION}.tar.gz"
+  "https://mirrors.omnios.org/fping/fping-${FPING_VERSION}.tar.gz"
 )
 
 run_build_setup "fping" "${FPING_VERSION}" "${FPING_TARBALL}" \
@@ -24,6 +26,18 @@ mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${FPING_TARBALL}
 cd fping-${FPING_VERSION}/
+if [ -d ../patches ]; then
+   # Check if directory is not empty
+   if [ "\$(ls -A ../patches 2>/dev/null)" ]; then
+       echo -e "${NEONPINK}= Applying custom patch(es)${NC}"
+       for p in ../patches/*; do
+           if [ -f "\$p" ]; then
+               echo -e "${NEONBLUE}Applying \$(basename "\$p")...${NC}"
+               patch -p1 --fuzz=4 < "\$p"
+           fi
+       done
+   fi
+fi
 echo -e "${LAGOON}= Configure source${NC}"
 ./configure CC="${CC}" --disable-ipv6 \
   LDFLAGS='${BLDFLAGS} ${MOLD} ${LNOPIE}' PKG_CONFIG='${PKGCFG}' \

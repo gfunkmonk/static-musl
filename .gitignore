@@ -6,3 +6,5 @@ dist/
 pasta/
 potato/
 minirootfs/
+toolchains/
+chroot-*/

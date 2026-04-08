@@ -47,6 +47,10 @@ TOMATO="\033[38;2;255;99;71m"
 TURQUOISE="\033[38;2;64;224;208m"
 UGLY="\033[38;2;122;115;115m"
 VIOLET="\033[38;2;143;0;255m"
+NEONPINK="\033[38;2;255;19;240m"
+NEONBLUE="\033[38;2;4;218;255m"
+NEONRED="\033[38;2;255;49;49m"
+NEONGREEN="\033[38;2;57;255;20m"
 NC="\033[0m"
 
 ######################
@@ -93,7 +97,7 @@ esac
 #   Setup tools    #
 ####################
 for tool in jq curl upx; do
-  bundled="tools/${tool}/${tool}-${ARCH}"
+  bundled="${SCRIPT_DIR}/tools/${tool}/${tool}-${ARCH}"
   if [[ -x "$bundled" ]] && "$bundled" --version &>/dev/null; then
     declare "${tool^^}=$bundled"
   elif command -v "$tool" &>/dev/null; then
@@ -151,16 +155,20 @@ setup_arch() {
 ####################################
 check_cache() {
     local cache_file="${VER_CACHE_DIR}/${1}.cache"
-    if [[ -f "$cache_file" ]]; then
-        local last_mod now
-        last_mod=$(stat -c %Y "$cache_file" 2>/dev/null || stat -f %m "$cache_file")
-        now=$(date +%s)
-        if (( now - last_mod < VER_CACHE_TTL )); then
-            cat "$cache_file"
-            return 0
+    local lockfile="${cache_file}.lock"
+    (
+        flock -s 200 2>/dev/null || return 1
+        if [[ -f "$cache_file" ]]; then
+            local last_mod now
+            last_mod=$(stat -c %Y "$cache_file" 2>/dev/null || stat -f %m "$cache_file")
+            now=$(date +%s)
+            if (( now - last_mod < VER_CACHE_TTL )); then
+                cat "$cache_file"
+                return 0
+            fi
         fi
-    fi
-    return 1
+        return 1
+    ) 200>>"$lockfile"
 }
 
 ###########################################
@@ -169,7 +177,14 @@ check_cache() {
 ###########################################
 write_cache() {
     mkdir -p "$VER_CACHE_DIR"
-    echo "$2" > "${VER_CACHE_DIR}/${1}.cache"
+    local cache_file="${VER_CACHE_DIR}/${1}.cache"
+    local lockfile="${cache_file}.lock"
+    local temp_file="${cache_file}.tmp.$$"
+    (
+        flock -x 200 || return 1
+        echo "$2" > "$temp_file"
+        mv "$temp_file" "$cache_file"
+    ) 200>>"$lockfile"
 }
 
 #########################################
@@ -265,6 +280,21 @@ get_gitlab_version() {
     fi
 }
 
+############################
+# get version from the web #
+############################
+get_web_version() {
+  local url="$1"
+  local regex="$2"
+  local version
+  version=$("${CURL}" -s "$url" | grep -oP "$regex" | sort -V | tail -n 1)
+  if [[ -z "$version" ]]; then
+    echo "FAILED"
+    return 1
+  fi
+  echo "$version"
+}
+
 ###############################################################
 # unmount_chroot: safely unmount all bind mounts in chroot    #
 # Called from the EXIT trap (setup_cleanup) and package_output#
@@ -273,6 +303,8 @@ unmount_chroot() {
   local max_attempts=3
   local attempt=0
 
+  # Sync to ensure all writes are finished
+  sync
   while [ $attempt -lt $max_attempts ]; do
     if ! grep -qF "$(pwd)/${CHROOTDIR}" /proc/mounts 2>/dev/null; then
       return 0  # Successfully unmounted
@@ -284,7 +316,7 @@ unmount_chroot() {
       grep -F "$(pwd)/${CHROOTDIR}" /proc/mounts | cut -f2 -d" " | sort -r | xargs -r sudo umount -nfR 2>/dev/null || true
     fi
 
-    sleep 2
+    sleep 3
     (( ++attempt ))
   done
 
@@ -308,7 +340,8 @@ unmount_chroot() {
 # setup_cleanup: register unmount trap for chroot bind mounts #
 ###############################################################
 setup_cleanup() {
-  trap unmount_chroot EXIT INT TERM
+  #trap unmount_chroot EXIT INT TERM
+  trap unmount_chroot EXIT
 }
 
 #####################################################################
@@ -361,6 +394,8 @@ download_source() {
     echo -e "${INDIGO}distfiles dir does not exist. Creating it now.${NC}"
     mkdir -p distfiles/
   fi
+  # Clean up any stale partial download for this tarball
+  rm -f "distfiles/${tarball}.tmp"
   if [ -f "distfiles/${tarball}" ]; then
     echo -e "${SLATE}= ${label}-${version}: distfiles/${tarball} already cached, skipping download${NC}"
     # Verify cached file is not empty
@@ -500,23 +535,13 @@ setup_alpine_chroot() {
   done
 }
 
-#############################################################
-# copy_patches TOOL patch1 [patch2 ...]                     #
-# Copies named patch files from patches/TOOL/ into chroot.  #
-#############################################################
+#####################################################################
+# copy_patches TOOL                                                 #
+# Copies all patch files from patches/TOOL/ into chroot/patches/    #
+#####################################################################
 copy_patches() {
-  local tool="$1"; shift
-  if [ ! -d "patches/${tool}" ]; then
-    echo -e "${TOMATO}= ERROR: patches directory not found: patches/${tool}${NC}" >&2
-    exit 1
-  fi
-  for patch in "$@"; do
-    if [ ! -f "patches/${tool}/${patch}" ]; then
-      echo -e "${TOMATO}= ERROR: patch file not found: patches/${tool}/${patch}${NC}" >&2
-      exit 1
-    fi
-    cp "patches/${tool}/${patch}" "./${CHROOTDIR}/${patch}"
-  done
+    mkdir -p "${CHROOTDIR}/patches/"
+    sudo cp -r "patches/$1/." "${CHROOTDIR}/patches/" 2>/dev/null || true
 }
 
 ############################################################
@@ -570,24 +595,28 @@ mount_chroot() {
     sudo mount --make-slave "./${CHROOTDIR}/${CCACHE_CHROOT_DIR}"
     sudo mkdir -p "./${CHROOTDIR}/${CCACHE_LOG_DIR}"
   fi
+  if [ -n "${CROSS_COMPILE_HOST_PATH:-}" ]; then
+    mkdir -p "${CHROOTDIR}/opt/cross"
+    mountpoint -q "${CHROOTDIR}/opt/cross" || mount --bind --make-slave "$CROSS_COMPILE_HOST_PATH" "${CHROOTDIR}/opt/cross"
+    # Inject the compiler paths into the chroot's environment
+    export CC="/opt/cross/bin/${CROSS_PREFIX}gcc"
+    export AR="/opt/cross/bin/${CROSS_PREFIX}ar"
+    export STRIP="/opt/cross/bin/${CROSS_PREFIX}strip"
+    export PATH="/opt/cross/bin:${PATH}"
+  fi
 }
 
 ######################################################################################
-# run_build_setup TOOL VERSION TARBALL [PATCH...] -- MIRROR [MIRROR...]              #
-# Runs the full pre-chroot setup sequence. Patches and mirrors are separated by --.  #
-# Usage (no patches):                                                                #
-#   run_build_setup "curl" "8.19.0" "curl-8.19.0.tar.xz" -- "https://..." [...]     #
-# Usage (with patches):                                                              #
-#   run_build_setup "wget" "1.25.0" "wget.tar.gz" "wget.patch" -- "https://..." [...]#
+# run_build_setup TOOL VERSION TARBALL -- MIRROR [MIRROR...]                         #
+# Runs the full pre-chroot setup sequence. Patches are automatically discovered      #
+# from patches/TOOL/ directory.                                                      #
+#                                                                                    #
+# Usage:                                                                             #
+#    run_build_setup "curl" "8.19.0" "curl-8.19.0.tar.xz" -- "https://..." [...]     #
 ######################################################################################
 run_build_setup() {
   local tool="$1" version="$2" tarball="$3"
   shift 3
-  local patches=()
-  while [[ $# -gt 0 && "$1" != "--" ]]; do
-    patches+=("$1")
-    shift
-  done
   [[ $# -gt 0 && "$1" == "--" ]] && shift
   local mirrors=("$@")
   if [[ ${#mirrors[@]} -gt 0 ]]; then
@@ -599,7 +628,7 @@ run_build_setup() {
   install_host_deps
   download_source "${tool}" "${version}" "${tarball}" "${mirrors[@]}"
   setup_alpine_chroot "${tarball}"
-  [[ ${#patches[@]} -gt 0 ]] && copy_patches "${tool}" "${patches[@]}"
+  copy_patches "${tool}"
   setup_qemu
   mount_chroot
 }
@@ -732,6 +761,10 @@ package_output() {
     if file "${binary}" | grep -Ei "interpreter|dynamically linked" >/dev/null; then
         echo -e "${UGLY}!! WARNING: Binary is DYNAMICALLY linked !!${NC}"
         file "${binary}"
+        if [ "${REQUIRE_STATIC:-false}" = "true" ]; then
+            echo -e "${CRIMSON}= ERROR: REQUIRE_STATIC=true — refusing dynamic binary${NC}" >&2
+            exit 1
+        fi
     else
         echo -e "${PINK}= Verified: Binary is statically linked.${NC}"
     fi
@@ -771,6 +804,11 @@ package_output() {
   if [ "${KEEP_CHROOT}" = "false" ]; then
     if grep -qF "$(pwd)/${CHROOTDIR}" /proc/mounts; then
       unmount_chroot
+    fi
+    # SAFETY CHECK: Do not rm -rf if mounts still exist
+    if grep -qF "$(pwd)/${CHROOTDIR}" /proc/mounts; then
+      echo -e "${CRIMSON}ERROR: Mounts still active in ${CHROOTDIR}. Skipping rm -rf for safety!${NC}" >&2
+      return 1
     fi
     echo -e "${PURPLE_BLUE}= Cleaning up chroot: ${ORANGE}${CHROOTDIR}${NC}"
     sudo rm -rf "${CHROOTDIR}"

@@ -17,7 +17,6 @@ WGET_MIRRORS=(
 )
 
 run_build_setup "wget" "${WGET_VERSION}" "${WGET_TARBALL}" \
-  "wget-passive-ftp.patch" \
   -- "${WGET_MIRRORS[@]}"
 
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
@@ -30,13 +29,23 @@ mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${WGET_TARBALL}
 cd wget-${WGET_VERSION}/
-echo -e "${LAGOON}= Applying custom patch${NC}"
-patch -p1 --fuzz=4 < ../wget-passive-ftp.patch
+if [ -d ../patches ]; then
+   # Check if directory is not empty
+   if [ "\$(ls -A ../patches 2>/dev/null)" ]; then
+       echo -e "${NEONPINK}= Applying custom patch(es)${NC}"
+       for p in ../patches/*; do
+           if [ -f "\$p" ]; then
+               echo -e "${NEONBLUE}Applying \$(basename "\$p")...${NC}"
+               patch -p1 --fuzz=4 < "\$p"
+           fi
+       done
+   fi
+fi
 echo -e "${PEACH}= Configure source${NC}"
-./configure CC="${CC}" --with-ssl=openssl --disable-nls --disable-rpath --sysconfdir=/etc --disable-silent-rules  \
-  --disable-ipv6 --enable-year2038  --with-cares --with-openssl=yes \
+./configure CC="${CC}" --with-ssl=openssl --disable-nls --disable-rpath --disable-silent-rules  \
+  --disable-ipv6 --enable-year2038  --with-openssl=yes \
   LDFLAGS='${BLDFLAGS} ${LNOPIE} -lidn2 -lunistring' PKG_CONFIG='${PKGCFG}' \
-  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${CNOPIE} -Wno-unterminated-string-initialization' \
+  CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${CNOPIE} -Wno-unterminated-string-initialization -Wno-deprecated-declarations -Wno-return-local-addr' \
   PERL=/usr/bin/perl
 echo -e "${VIOLET}= Building...${NC}"
 make -j\$(nproc)
@@ -45,3 +54,6 @@ ccache -s | tail -n 10
 EOF
 
 package_output "wget" "./${CHROOTDIR}/wget-${WGET_VERSION}/src/wget"
+
+# Force a successful exit code to override any minor cleanup hiccups
+#exit 0

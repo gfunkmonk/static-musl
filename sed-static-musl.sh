@@ -3,23 +3,19 @@ set -euo pipefail
 . "$(dirname "${BASH_SOURCE[0]}")/common.sh"
 
 echo -e "${MINT}= fetching latest sed version${NC}"
-#SED_VERSION=$(get_git_version "https://cgit.git.savannah.gnu.org/cgit/sed.git/refs/tags" "[0-9]+\.[0-9]+(\.[0-9]+)*" "v" "${FALLBACK_SED}")
-SED_VERSION=$("${CURL}" -s https://ftp.gnu.org/gnu/sed/ | grep -oP 'sed-\K[0-9]+\.[0-9]+(\.[0-9]+)?' | sort -V | tail -n 1)
-[[ -z "${SED_VERSION}" ]] && { echo -e "${TAWNY}= ftp.gnu.org fetch failed, using fallback ${FALLBACK_SED}${NC}" >&2; SED_VERSION="${FALLBACK_SED}"; }
-#SED_VERSION=$(get_version tag "mirror/sed" '.[0].name | ltrimstr("v")' "${FALLBACK_SED}")
+SED_VERSION=$(get_web_version "https://ftp.gnu.org/gnu/sed/" "sed-\K[0-9]+\.[0-9]+(\.[0-9]+)?")
+[[ -z "${SED_VERSION}" || "${SED_VERSION}" == "FAILED" ]] && { echo -e "${TAWNY}= ftp.gnu.org fetch failed, using fallback ${FALLBACK_SED}${NC}" >&2; SED_VERSION="${FALLBACK_SED}"; }
 echo -e "${JUNEBUD}= building sed version: ${SED_VERSION}${NC}"
 PACKAGE_VERSION="${SED_VERSION}"
 SED_TARBALL="sed-${SED_VERSION}.tar.xz"
 SED_MIRRORS=(
   "https://ftp.gnu.org/gnu/sed/sed-${SED_VERSION}.tar.xz"
   "https://fossies.org/linux/misc/sed-${SED_VERSION}.tar.xz"
+  "https://artfiles.org/gnu.org/sed/sed-${SED_VERSION}.tar.xz"
+  "https://mirror.team-cymru.com/gnu/sed/sed-${SED_VERSION}.tar.xz"
 )
 
 run_build_setup "sed" "${SED_VERSION}" "${SED_TARBALL}" \
-  "sed-b-flag.patch" \
-  "sed-c-flag.patch" \
-  "sed-covscan-annotations.patch" \
-  "sed-regexp-cache-size.patch" \
   -- "${SED_MIRRORS[@]}"
 
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
@@ -31,11 +27,18 @@ mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${SED_TARBALL}
 cd sed-${SED_VERSION}/
-echo -e "${LAGOON}= Applying custom patch${NC}"
-patch -p1 --fuzz=4 < ../sed-b-flag.patch
-patch -p1 --fuzz=4 < ../sed-c-flag.patch
-patch -p1 --fuzz=4 < ../sed-covscan-annotations.patch
-patch -p1 --fuzz=4 < ../sed-regexp-cache-size.patch
+if [ -d ../patches ]; then
+   # Check if directory is not empty
+   if [ "\$(ls -A ../patches 2>/dev/null)" ]; then
+       echo -e "${NEONPINK}= Applying custom patch(es)${NC}"
+       for p in ../patches/*; do
+           if [ -f "\$p" ]; then
+               echo -e "${NEONBLUE}Applying \$(basename "\$p")...${NC}"
+               patch -p1 --fuzz=4 < "\$p"
+           fi
+       done
+   fi
+fi
 echo -e "${PEACH}= Configure source${NC}"
 ./configure --enable-threads=posix --disable-nls --disable-i18n --disable-rpath \
   --disable-silent-rules --disable-gcc-warnings --without-selinux \

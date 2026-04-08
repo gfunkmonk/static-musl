@@ -9,12 +9,13 @@ PACKAGE_VERSION="${DASH_VERSION}"
 DASH_TARBALL="dash-${DASH_VERSION}.tar.gz"
 DASH_MIRRORS=(
   "https://git.kernel.org/pub/scm/utils/dash/dash.git/snapshot/dash-${DASH_VERSION}.tar.gz"
+  "https://mirror-hk.koddos.net/blfs/svn/d/dash-${DASH_VERSION}.tar.gz"
+  "https://mirror.freedif.org/pub/blfs/conglomeration/dash/dash-${DASH_VERSION}.tar.gz"
+  "https://ftp.ec-m.fr/pub/OpenBSD/distfiles/dash-${DASH_VERSION}.tar.gz"
+  "https://ftp.jaist.ac.jp/pub/Linux/Gentoo/distfiles/7a/dash-${DASH_VERSION}.tar.gz"
 )
 
 run_build_setup "dash" "${DASH_VERSION}" "${DASH_TARBALL}" \
-  "dash.patch" \
-  "dash-cflags-for-build.patch" \
-  "dash-SHELL-Disable-sh-c-command-sh-c-exec-command.patch" \
   -- "${DASH_MIRRORS[@]}"
 
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
@@ -26,10 +27,18 @@ mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${DASH_TARBALL}
 cd dash-${DASH_VERSION}/
-echo -e "${LAGOON}= Applying custom patch${NC}"
-patch -p1 --fuzz=4 < ../dash.patch
-patch -p1 --fuzz=4 < ../dash-cflags-for-build.patch
-patch -p1 --fuzz=4 < ../dash-SHELL-Disable-sh-c-command-sh-c-exec-command.patch
+if [ -d ../patches ]; then
+   # Check if directory is not empty
+   if [ "\$(ls -A ../patches 2>/dev/null)" ]; then
+       echo -e "${NEONPINK}= Applying custom patch(es)${NC}"
+       for p in ../patches/*; do
+           if [ -f "\$p" ]; then
+               echo -e "${NEONBLUE}Applying \$(basename "\$p")...${NC}"
+               patch -p1 --fuzz=4 < "\$p"
+           fi
+       done
+   fi
+fi
 autoreconf -f -i
 echo -e "${PEACH}= Configure source${NC}"
 ./configure --enable-static \

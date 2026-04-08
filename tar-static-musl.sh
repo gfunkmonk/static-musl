@@ -3,9 +3,8 @@ set -euo pipefail
 . "$(dirname "${BASH_SOURCE[0]}")/common.sh"
 
 echo -e "${MINT}= fetching latest tar version${NC}"
-#TAR_VERSION=$(get_git_version "https://cgit.git.savannah.gnu.org/cgit/tar.git/refs/tags" "v[0-9]+\.[0-9]+(\.[0-9]+)*" "v" "${FALLBACK_TAR}")
-TAR_VERSION=$("${CURL}" -s https://ftp.gnu.org/gnu/tar/ | grep -oP 'tar-\K[0-9]+\.[0-9]+(\.[0-9]+)?' | sort -V | tail -n 1)
-[[ -z "${TAR_VERSION}" ]] && { echo -e "${TAWNY}= ftp.gnu.org fetch failed, using fallback ${FALLBACK_TAR}${NC}" >&2; TAR_VERSION="${FALLBACK_TAR}"; }
+TAR_VERSION=$(get_web_version "https://ftp.gnu.org/gnu/tar/" "tar-\K[0-9]+\.[0-9]+(\.[0-9]+)?")
+[[ -z "${TAR_VERSION}" || "${TAR_VERSION}" == "FAILED" ]] && { echo -e "${TAWNY}= ftp.gnu.org fetch failed, using fallback ${FALLBACK_TAR}${NC}" >&2; TAR_VERSION="${FALLBACK_TAR}"; }
 echo -e "${JUNEBUD}= building tar version: ${TAR_VERSION}${NC}"
 PACKAGE_VERSION="${TAR_VERSION}"
 TAR_TARBALL="tar-${TAR_VERSION}.tar.xz"
@@ -17,35 +16,30 @@ TAR_MIRRORS=(
 )
 
 run_build_setup "tar" "${TAR_VERSION}" "${TAR_TARBALL}" \
-  "tar.patch" \
-  "tar-1.28-atime-rofs.patch" \
-  "tar-1.28-vfatTruncate.patch" \
-  "tar-1.29-wildcards.patch" \
-  "tar-1.35-CVE-2025-45582.patch" \
-  "tar-1.35-padding-zeros.patch" \
-  "tar-1.35-revert-fix-savannah-bug-633567.patch" \
-  "tar-oldgnu-unknown-mode-bits.patch" \
   -- "${TAR_MIRRORS[@]}"
 
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
 set -e
 echo -e "${ORANGE}= Installing dependencies...${NC}"
 apk update && apk add build-base mold ccache automake autoconf pkgconfig zlib-dev zlib-static xz-dev xz-static zstd-dev zstd-static lz4-dev \
-lz4-static libbz2 bzip2-static gettext-dev gettext-static texinfo linux-headers
+  lz4-static libbz2 bzip2-static gettext-dev gettext-static texinfo linux-headers
 apk upgrade musl-dev mold --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${TAR_TARBALL}
 cd tar-${TAR_VERSION}/
-echo -e "${LAGOON}= Applying custom patch${NC}"
-patch -p1 --fuzz=4 < ../tar.patch
-patch -p1 --fuzz=4 < ../tar-1.28-atime-rofs.patch
-patch -p1 --fuzz=4 < ../tar-1.28-vfatTruncate.patch
-patch -p1 --fuzz=4 < ../tar-1.29-wildcards.patch
-patch -p1 --fuzz=4 < ../tar-1.35-CVE-2025-45582.patch
-patch -p1 --fuzz=4 < ../tar-1.35-padding-zeros.patch
-patch -p1 --fuzz=4 < ../tar-1.35-revert-fix-savannah-bug-633567.patch
-patch -p1 --fuzz=4 < ../tar-oldgnu-unknown-mode-bits.patch
+if [ -d ../patches ]; then
+   # Check if directory is not empty
+   if [ "\$(ls -A ../patches 2>/dev/null)" ]; then
+       echo -e "${NEONPINK}= Applying custom patch(es)${NC}"
+       for p in ../patches/*; do
+           if [ -f "\$p" ]; then
+               echo -e "${NEONBLUE}Applying \$(basename "\$p")...${NC}"
+               patch -p1 --fuzz=4 < "\$p"
+           fi
+       done
+   fi
+fi
 autoreconf -f -i
 echo -e "${PEACH}= Configure source${NC}"
 FORCE_UNSAFE_CONFIGURE=1 ./configure CC="${CC}" \

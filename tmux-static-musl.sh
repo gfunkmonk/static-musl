@@ -11,6 +11,7 @@ TMUX_MIRRORS=(
   "https://github.com/tmux/tmux/releases/download/${TMUX_VERSION}/tmux-${TMUX_VERSION}.tar.gz"
   "https://fossies.org/linux/misc/tmux-${TMUX_VERSION}.tar.gz"
   "https://sources.voidlinux.org/tmux-${TMUX_VERSION}/tmux-${TMUX_VERSION}.tar.gz"
+  "https://distfiles.icmpv6.org/distfiles/tmux-${TMUX_VERSION}.tar.gz"
 )
 
 UTEMPTER_VERSION="1.2.1"
@@ -24,7 +25,6 @@ UTEMPTER_MIRRORS=(
 download_source "libutempter" "${UTEMPTER_VERSION}" "${UTEMPTER_TARBALL}" "${UTEMPTER_MIRRORS[@]}"
 
 run_build_setup "tmux" "${TMUX_VERSION}" "${TMUX_TARBALL}" \
-  "platform-quirks.patch" \
   -- "${TMUX_MIRRORS[@]}"
 
 cp distfiles/"${UTEMPTER_TARBALL}" "./${CHROOTDIR}/${UTEMPTER_TARBALL}"
@@ -45,8 +45,18 @@ cd ../
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${TMUX_TARBALL}
 cd tmux-${TMUX_VERSION}/
-echo -e "${LAGOON}= Applying custom patch${NC}"
-patch -p1 --fuzz=4 < ../platform-quirks.patch
+if [ -d ../patches ]; then
+   # Check if directory is not empty
+   if [ "\$(ls -A ../patches 2>/dev/null)" ]; then
+       echo -e "${NEONPINK}= Applying custom patch(es)${NC}"
+       for p in ../patches/*; do
+           if [ -f "\$p" ]; then
+               echo -e "${NEONBLUE}Applying \$(basename "\$p")...${NC}"
+               patch -p1 --fuzz=4 < "\$p"
+           fi
+       done
+   fi
+fi
 echo -e "${PEACH}= Configure source${NC}"
 ./configure CC="${CC}" \
   --enable-static --enable-sixel --enable-utempter --enable-jemalloc \

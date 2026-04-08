@@ -16,7 +16,6 @@ ARIA2_MIRRORS=(
 )
 
 run_build_setup "aria2" "${ARIA2_VERSION}" "${ARIA2_TARBALL}" \
-  "aria2.patch" \
   -- "${ARIA2_MIRRORS[@]}"
 
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
@@ -29,8 +28,18 @@ mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${ARIA2_TARBALL}
 cd aria2-${ARIA2_VERSION}/
-echo -e "${LAGOON}= Applying custom patch(es)${NC}"
-patch -p1 --fuzz=4 < ../aria2.patch
+if [ -d ../patches ]; then
+   # Check if directory is not empty
+   if [ "\$(ls -A ../patches 2>/dev/null)" ]; then
+       echo -e "${NEONPINK}= Applying custom patch(es)${NC}"
+       for p in ../patches/*; do
+           if [ -f "\$p" ]; then
+               echo -e "${NEONBLUE}Applying \$(basename "\$p")...${NC}"
+               patch -p1 --fuzz=4 < "\$p"
+           fi
+       done
+   fi
+fi
 echo -e "${PEACH}= Configure source${NC}"
 ./configure CC="${CC}" ARIA2_STATIC=yes --with-ca-bundle=/etc/ssl/certs/ca-certificates.crt \
   --without-gnutls --with-openssl --with-libcares --disable-bittorrent --with-sqlite3 \

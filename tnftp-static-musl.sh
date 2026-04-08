@@ -3,8 +3,8 @@ set -euo pipefail
 . "$(dirname "${BASH_SOURCE[0]}")/common.sh"
 
 echo -e "${VIOLET}= fetching latest tnftp version${NC}"
-TNFTP_VERSION=$("${CURL}" -s https://ftp.netbsd.org/pub/NetBSD/misc/tnftp/ | grep -o 'href="tnftp-[^"]*.gz"' | cut -d'"' -f2 | sort | tail -1 | sed 's/\..*//' | sed 's/tnftp-//')
-[[ -z "${TNFTP_VERSION}" ]] && { echo -e "${TAWNY}= netbsd.org fetch failed, using fallback ${FALLBACK_TNFTP}${NC}" >&2; TNFTP_VERSION="${FALLBACK_TNFTP}"; }
+TNFTP_VERSION=$(get_web_version "https://ftp.netbsd.org/pub/NetBSD/misc/tnftp/" 'href="tnftp-[^"]*.gz"' | cut -d'"' -f2 | sort | tail -1 | sed 's/\..*//' | sed 's/tnftp-//')
+[[ -z "${TNFTP_VERSION}" || "${TNFTP_VERSION}" == "FAILED" ]] && { echo -e "${TAWNY}= netbsd.org fetch failed, using fallback ${FALLBACK_TNFTP}${NC}" >&2; TNFTP_VERSION="${FALLBACK_TNFTP}"; }
 echo -e "${TEAL}= building tnftp version: ${TNFTP_VERSION}${NC}"
 PACKAGE_VERSION="${TNFTP_VERSION}"
 TNFTP_TARBALL="tnftp-${TNFTP_VERSION}.tar.gz"
@@ -25,6 +25,18 @@ mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${TNFTP_TARBALL}
 cd tnftp-${TNFTP_VERSION}/
+if [ -d ../patches ]; then
+   # Check if directory is not empty
+   if [ "\$(ls -A ../patches 2>/dev/null)" ]; then
+       echo -e "${NEONPINK}= Applying custom patch(es)${NC}"
+       for p in ../patches/*; do
+           if [ -f "\$p" ]; then
+               echo -e "${NEONBLUE}Applying \$(basename "\$p")...${NC}"
+               patch -p1 --fuzz=4 < "\$p"
+           fi
+       done
+   fi
+fi
 echo -e "${PEACH}= Configure source${NC}"
 ./configure --disable-ipv6 --enable-ssl --with-socks=no --enable-editcomplete \
   --disable-shared --enable-static \

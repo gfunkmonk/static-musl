@@ -3,19 +3,20 @@ set -euo pipefail
 . "$(dirname "${BASH_SOURCE[0]}")/common.sh"
 
 echo -e "${MINT}= fetching latest nano version${NC}"
-#NANO_VERSION=$(get_git_version "https://cgit.git.savannah.gnu.org/cgit/nano.git/refs/tags" "v[0-9]+\.[0-9]+(\.[0-9]+)*" "v" "${FALLBACK_NANO}")
-NANO_VERSION=$("${CURL}" -s https://ftp.gnu.org/gnu/nano/ | grep -oP 'nano-\K[0-9]+\.[0-9]+(\.[0-9]+)?' | sort -V | tail -n 1)
-[[ -z "${NANO_VERSION}" ]] && { echo -e "${TAWNY}= ftp.gnu.org fetch failed, using fallback ${FALLBACK_NANO}${NC}" >&2; NANO_VERSION="${FALLBACK_NANO}"; }
+NANO_VERSION=$(get_web_version "https://ftp.gnu.org/gnu/nano/" "nano-\K[0-9]+\.[0-9]+(\.[0-9]+)?")
+[[ -z "${NANO_VERSION}" || "${NANO_VERSION}" == "FAILED" ]] && { echo -e "${TAWNY}= ftp.gnu.org fetch failed, using fallback ${FALLBACK_NANO}${NC}" >&2; NANO_VERSION="${FALLBACK_NANO}"; }
 echo -e "${JUNEBUD}= building nano version: ${NANO_VERSION}${NC}"
+NANO_MAJOR="${NANO_VERSION%%.*}"
 PACKAGE_VERSION="${NANO_VERSION}"
 NANO_TARBALL="nano-${NANO_VERSION}.tar.xz"
 NANO_MIRRORS=(
-  "https://www.nano-editor.org/dist/v8/nano-${NANO_VERSION}.tar.xz"
+  "https://www.nano-editor.org/dist/v${NANO_MAJOR}/nano-${NANO_VERSION}.tar.xz"
   "https://fossies.org/linux/misc/nano-${NANO_VERSION}.tar.xz"
+  "https://gnu.mirror.constant.com/nano/nano-${NANO_VERSION}.tar.xz"
+  "https://mirrors.slackware.com/slackware/slackware64-current/source/ap/nano/nano-${NANO_VERSION}.tar.xz"
 )
 
 run_build_setup "nano" "${NANO_VERSION}" "${NANO_TARBALL}" \
-  "nano-colors.patch" \
   -- "${NANO_MIRRORS[@]}"
 
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
@@ -27,8 +28,18 @@ mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${NANO_TARBALL}
 cd nano-${NANO_VERSION}/
-echo -e "${LAGOON}= Applying custom patch${NC}"
-patch -p1 --fuzz=4 < ../nano-colors.patch
+if [ -d ../patches ]; then
+   # Check if directory is not empty
+   if [ "\$(ls -A ../patches 2>/dev/null)" ]; then
+       echo -e "${NEONPINK}= Applying custom patch(es)${NC}"
+       for p in ../patches/*; do
+           if [ -f "\$p" ]; then
+               echo -e "${NEONBLUE}Applying \$(basename "\$p")...${NC}"
+               patch -p1 --fuzz=4 < "\$p"
+           fi
+       done
+   fi
+fi
 echo -e "${PEACH}= Configure source${NC}"
 ./configure CC="${CC}" \
   --sysconfdir=/etc --disable-nls --disable-utf8 --disable-tiny --enable-nanorc --enable-color \

@@ -10,10 +10,11 @@ HTOP_TARBALL="htop-${HTOP_VERSION}.tar.xz"
 HTOP_MIRRORS=(
   "https://github.com/htop-dev/htop/releases/download/${HTOP_VERSION}/htop-${HTOP_VERSION}.tar.xz"
   "https://fossies.org/linux/misc/htop-${HTOP_VERSION}.tar.xz"
+  "https://gentoo.osuosl.org/distfiles/a5/htop-${HTOP_VERSION}.tar.xz"
+  "https://sources.voidlinux.org/htop-${HTOP_VERSION}/htop-${HTOP_VERSION}.tar.xz"
 )
 
 run_build_setup "htop" "${HTOP_VERSION}" "${HTOP_TARBALL}" \
-  "htop.patch" \
   -- "${HTOP_MIRRORS[@]}"
 
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
@@ -26,8 +27,18 @@ mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${HTOP_TARBALL}
 cd htop-${HTOP_VERSION}/
-echo -e "${LAGOON}= Applying custom patch${NC}"
-patch -p1 --fuzz=4 < ../htop.patch
+if [ -d ../patches ]; then
+   # Check if directory is not empty
+   if [ "\$(ls -A ../patches 2>/dev/null)" ]; then
+       echo -e "${NEONPINK}= Applying custom patch(es)${NC}"
+       for p in ../patches/*; do
+           if [ -f "\$p" ]; then
+               echo -e "${NEONBLUE}Applying \$(basename "\$p")...${NC}"
+               patch -p1 --fuzz=4 < "\$p"
+           fi
+       done
+   fi
+fi
 echo -e "${PEACH}= Configure source${NC}"
 ./configure CC="${CC}" \
   --enable-unicode --enable-static --enable-affinity --enable-delayacct \

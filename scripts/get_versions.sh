@@ -50,7 +50,8 @@ FPING_VER=${GREEN}$(get_version release "schweikert/fping" '.tag_name | ltrimstr
 echo -e "${BWHITE}fping: ${FPING_VER}${NC}"
 
 #GAWK_VER=${GREEN}$(get_git_version "https://cgit.git.savannah.gnu.org/cgit/gawk.git/refs/tags" "[0-9]+\.[0-9]+(\.[0-9]+)*" "gawk-" "${RED}FALLBACK${NC}")
-GAWK_VER=${YELLOW}$("${CURL}" -s https://ftp.gnu.org/gnu/gawk/ | grep -oP 'gawk-\K[0-9]+\.[0-9]+(\.[0-9]+)?' | sort -V | tail -n 1)
+GAWK_VER=${YELLOW}$(get_web_version "https://ftp.gnu.org/gnu/gawk/" "gawk-\K[0-9]+\.[0-9]+(\.[0-9]+)?")
+[[ -z "${GAWK_VER}" ]] && GAWK_VER="${RED}FALLBACK${NC}"
 echo -e "${BWHITE}gawk: ${GAWK_VER}${NC}"
 
 HEXCURSE_VER=${GREEN}$(get_version release "prso/hexcurse-ng" '.tag_name | ltrimstr("v")' "${RED}FALLBACK${NC}")
@@ -65,18 +66,22 @@ echo -e "${BWHITE}less: ${LESS_VER}${NC}"
 LFTP_VER=${GREEN}$(get_version release "lavv17/lftp" '.tag_name | ltrimstr("v")' "${RED}FALLBACK${NC}")
 echo -e "${BWHITE}lftp: ${LFTP_VER}${NC}"
 
-MC_VER=${YELLOW}$("${CURL}" -s https://ftp.osuosl.org/pub/midnightcommander/ | grep -oP 'mc-\K[0-9]+\.[0-9]+(\.[0-9]+)?' | sort -V | tail -n 1)
+MC_VER=${YELLOW}$(get_web_version "https://ftp.osuosl.org/pub/midnightcommander/" "mc-\K[0-9]+\.[0-9]+(\.[0-9]+)?")
+[[ -z "${MC_VER}" ]] && MC_VER="${RED}FALLBACK${NC}"
 echo -e "${BWHITE}mc: ${MC_VER}${NC}"
 
 #NANO_VER=${GREEN}$(get_git_version "https://cgit.git.savannah.gnu.org/cgit/nano.git/refs/tags" "v[0-9]+\.[0-9]+(\.[0-9]+)*" "v" "${RED}FALLBACK${NC}")
-NANO_VER=${YELLOW}$("${CURL}" -s https://ftp.gnu.org/gnu/nano/ | grep -oP 'nano-\K[0-9]+\.[0-9]+(\.[0-9]+)?' | sort -V | tail -n 1)
+NANO_VER=${YELLOW}$(get_web_version "https://ftp.gnu.org/gnu/nano/" "nano-\K[0-9]+\.[0-9]+(\.[0-9]+)?")
+[[ -z "${NANO_VER}" ]] && NANO_VER="${RED}FALLBACK${NC}"
 echo -e "${BWHITE}nano: ${NANO_VER}${NC}"
 
 NETCAT_VER=${YELLOW}$("${CURL}" -s "https://salsa.debian.org/api/v4/projects/debian%2Fnetcat-openbsd/repository/tags?per_page=20" | \
   "${JQ}" -r '[.[] | select(.name | test("^debian/"))] | .[0].name | ltrimstr("debian/")' 2>/dev/null)
+[[ -z "${NETCAT_VER}" ]] && NETCAT_VER="${RED}FALLBACK${NC}"
 echo -e "${BWHITE}netcat: ${NETCAT_VER}${NC}"
 
-NMAP_VER=${YELLOW}$("${CURL}" -s https://nmap.org/dist/ | grep -o 'href="[^"]*.tar.bz2"' | cut -d'"' -f2 | sort | tail -1 | sed 's/\.tar.*//' | sed 's/nmap-//g')
+NMAP_VER=${YELLOW}$(get_web_version "https://nmap.org/dist/" 'href="[^"]*.tar.bz2"' | cut -d'"' -f2 | sort | tail -1 | sed 's/\.tar.*//' | sed 's/nmap-//g' | cut -d'/' -f3)
+[[ -z "${NMAP_VER}" ]] && NMAP_VER="${RED}FALLBACK${NC}"
 echo -e "${BWHITE}nmap: ${NMAP_VER}${NC}"
 
 OKSH_VER=${GREEN}$(get_version release "ibara/oksh" '.tag_name | ltrimstr("oksh-")' "${RED}FALLBACK${NC}")
@@ -94,29 +99,35 @@ echo -e "${BWHITE}ripgrep: ${RG_VER}${NC}"
 RSYNC_VER=${GREEN}$(get_version release "RsyncProject/rsync" '.tag_name | ltrimstr("v")' "${RED}FALLBACK${NC}")
 echo -e "${BWHITE}rsync: ${RSYNC_VER}${NC}"
 
-SCREEN_VER=${GREEN}$(get_git_version "https://cgit.git.savannah.gnu.org/cgit/screen.git/refs/tags" "[0-9]+\.[0-9]+(\.[0-9]+)*" "v" "${RED}FALLBACK${NC}")
-#SCREEN_VER=${YELLOW}$("${CURL}" -s https://ftp.gnu.org/gnu/screen/ | grep -oP 'screen-\K[0-9]+\.[0-9]+\.[0-9]+' | sort -V | tail -n 1)
+#SCREEN_VER=${GREEN}$(get_git_version "https://cgit.git.savannah.gnu.org/cgit/screen.git/refs/tags" "[0-9]+\.[0-9]+(\.[0-9]+)*" "v" "${RED}FALLBACK${NC}")
+SCREEN_VER=${YELLOW}$(get_web_version "https://ftp.gnu.org/gnu/screen/" "screen-\K[0-9]+\.[0-9]+(\.[0-9]+)?")
+[[ -z "${SCREEN_VER}" ]] && SCREEN_VER="${RED}FALLBACK${NC}"
 echo -e "${BWHITE}screen: ${SCREEN_VER}${NC}"
 
 #SED_VER=${GREEN}$(get_git_version "https://cgit.git.savannah.gnu.org/cgit/sed.git/refs/tags" "[0-9]+\.[0-9]+(\.[0-9]+)*" "v" "${RED}FALLBACK${NC}")
-SED_VER=${YELLOW}$("${CURL}" -s https://ftp.gnu.org/gnu/sed/ | grep -oP 'sed-\K[0-9]+\.[0-9]+\.[0-9]+' | sort -V | tail -n 1)
+SED_VER=${YELLOW}$(get_web_version "https://ftp.gnu.org/gnu/sed/" "sed-\K[0-9]+\.[0-9]+(\.[0-9]+)?")
 #SED_VER=${GREEN}$(get_version tag "mirror/sed" '.[0].name | ltrimstr("v")' "${RED}FALLBACK${NC}")
+[[ -z "${SED_VER}" ]] && SED_VER="${RED}FALLBACK${NC}"
 echo -e "${BWHITE}sed: ${SED_VER}${NC}"
 
-SOCAT_VER=${GREEN}$(get_git_version "https://repo.or.cz/socat.git/refs/tags" "tag-1\.[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)*" "tag-" "${RED}FALLBACK${NC}")
+#SOCAT_VER=${GREEN}$(get_git_version "https://repo.or.cz/socat.git/refs/tags" "tag-1\.[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)*" "tag-" "${RED}FALLBACK${NC}")
+SOCAT_VER=${YELLOW}$(get_web_version "http://www.dest-unreach.org/socat/download/" "socat-\K1\.[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)*")
+[[ -z "${SOCAT_VER}" ]] && SOCAT_VER="${RED}FALLBACK${NC}"
 echo -e "${BWHITE}socat: ${SOCAT_VER}${NC}"
 
 SYSTEMCTL_TUI_VER=${GREEN}$(get_version release "rgwood/systemctl-tui" '.tag_name | ltrimstr("v")' "${RED}FALLBACK${NC}")
 echo -e "${BWHITE}systemctl-tui: ${SYSTEMCTL_TUI_VER}${NC}"
 
 #TAR_VER=${GREEN}$(get_git_version "https://cgit.git.savannah.gnu.org/cgit/tar.git/refs/tags" "v[0-9]+\.[0-9]+(\.[0-9]+)*" "v" "${RED}FALLBACK${NC}")
-TAR_VER=${YELLOW}$("${CURL}" -s https://ftp.gnu.org/gnu/tar/ | grep -oP 'tar-\K[0-9]+\.[0-9]+(\.[0-9]+)?' | sort -V | tail -n 1)
+TAR_VER=${YELLOW}$(get_web_version "https://ftp.gnu.org/gnu/tar/" "tar-\K[0-9]+\.[0-9]+(\.[0-9]+)?")
+[[ -z "${TAR_VER}" ]] && TAR_VER="${RED}FALLBACK${NC}"
 echo -e "${BWHITE}tar: ${TAR_VER}${NC}"
 
 TMUX_VER=${GREEN}$(get_version release "tmux/tmux" ".tag_name" "${RED}FALLBACK${NC}")
 echo -e "${BWHITE}tmux: ${TMUX_VER}${NC}"
 
-TNFTP_VER=${YELLOW}$("${CURL}" -s https://ftp.netbsd.org/pub/NetBSD/misc/tnftp/ | grep -o 'href="tnftp-[^"]*.gz"' | cut -d'"' -f2 | sort | tail -1 | sed 's/\..*//' | sed 's/tnftp-//')
+TNFTP_VER=${YELLOW}$(get_web_version "https://ftp.netbsd.org/pub/NetBSD/misc/tnftp/" 'href="tnftp-[^"]*.gz"' | cut -d'"' -f2 | sort | tail -1 | sed 's/\..*//' | sed 's/tnftp-//')
+[[ -z "${TNFTP_VER}" ]] && TNFTP_VER="${RED}FALLBACK${NC}"
 echo -e "${BWHITE}tnftp: ${TNFTP_VER}${NC}"
 
 UPX_VER=${GREEN}$(get_version release "upx/upx" '.tag_name | ltrimstr("v")' "${RED}FALLBACK${NC}")
@@ -136,7 +147,8 @@ echo -e "${BWHITE}wget2: ${WGET2_VER}${NC}"
 XZ_VER=${GREEN}$(get_version release "tukaani-project/xz" '.tag_name | ltrimstr("v")' "${RED}FALLBACK${NC}")
 echo -e "${BWHITE}xz: ${XZ_VER}${NC}"
 
-ZSH_VER=${YELLOW}$("${CURL}" -s https://www.zsh.org/pub/ | grep -o 'href="[^"]*.xz"' | grep -e zsh-[0-9] | cut -d'"' -f2 | sort | tail -1 | sed 's/\.tar.*//' | sed 's/zsh-//g')
+ZSH_VER=${YELLOW}$(get_web_version "https://www.zsh.org/pub/" 'href="[^"]*.xz"' | grep -e zsh-[0-9] | cut -d'"' -f2 | sort | tail -1 | sed 's/\.tar.*//' | sed 's/zsh-//g')
+[[ -z "${ZSH_VER}" ]] && ZSH_VER="${RED}FALLBACK${NC}"
 echo -e "${BWHITE}zsh: ${ZSH_VER}${NC}"
 
 ZSTD_VER=${GREEN}$(get_version release "facebook/zstd" '.tag_name | ltrimstr("v")' "${RED}FALLBACK${NC}")

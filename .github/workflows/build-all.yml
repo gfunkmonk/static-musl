@@ -308,3 +308,21 @@ jobs:
           ```
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Write workflow summary
+      if: always()
+      run: |
+        echo "## ${{ matrix.tool }} ${{ steps.release-version.outputs.version }}" >> "$GITHUB_STEP_SUMMARY"
+        echo "" >> "$GITHUB_STEP_SUMMARY"
+        echo "| Arch | Archive |" >> "$GITHUB_STEP_SUMMARY"
+        echo "|------|---------|" >> "$GITHUB_STEP_SUMMARY"
+        for f in dist/${{ matrix.tool }}-*.tar.xz; do
+          arch="${f%.tar.xz}"; arch="${arch##*-}"
+          size=$(du -sh "$f" | cut -f1)
+          echo "| \`${arch}\` | \`$(basename $f)\` (${size}) |" >> "$GITHUB_STEP_SUMMARY"
+        done
+        echo "" >> "$GITHUB_STEP_SUMMARY"
+        echo "**SHA256:**" >> "$GITHUB_STEP_SUMMARY"
+        echo '```' >> "$GITHUB_STEP_SUMMARY"
+        echo "${{ env.SHA_SUMS }}" >> "$GITHUB_STEP_SUMMARY"
+        echo '```' >> "$GITHUB_STEP_SUMMARY"

@@ -14,7 +14,6 @@ UPX_MIRRORS=(
 )
 
 run_build_setup "upx" "${UPX_VERSION}" "${UPX_TARBALL}" \
-  "upx-mod.patch" \
   -- "${UPX_MIRRORS[@]}"
 
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
@@ -26,8 +25,18 @@ mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${UPX_TARBALL}
 cd upx-${UPX_VERSION}-src/
-echo -e "${LAGOON}= Applying custom patch${NC}"
-patch -p1 --fuzz=4 < ../upx-mod.patch
+if [ -d ../patches ]; then
+   # Check if directory is not empty
+   if [ "\$(ls -A ../patches 2>/dev/null)" ]; then
+       echo -e "${NEONPINK}= Applying custom patch(es)${NC}"
+       for p in ../patches/*; do
+           if [ -f "\$p" ]; then
+               echo -e "${NEONBLUE}Applying \$(basename "\$p")...${NC}"
+               patch -p1 --fuzz=4 < "\$p"
+           fi
+       done
+   fi
+fi
 sed -i 's|define UPX_VERSION_HEX      0x050...|define UPX_VERSION_HEX      0x00010${SINGLEVER}|g' src/version.h
 sed -i 's|05.01...|00.01.0${SINGLEVER}|g' src/version.h
 sed -i 's|"5...."|"0.1.${SINGLEVER}"|g' src/version.h

@@ -9,10 +9,10 @@ PACKAGE_VERSION="${HEXCURSE_VERSION}"
 HEXCURSE_TARBALL="hexcurse-ng-${HEXCURSE_VERSION}.tar.gz"
 HEXCURSE_MIRRORS=(
   "https://github.com/prso/hexcurse-ng/archive/refs/tags/v${HEXCURSE_VERSION}.tar.gz"
+  "https://slackware.uk/sbosrcarch/by-name/development/hexcurse/hexcurse-ng-${HEXCURSE_VERSION}.tar.gz"
 )
 
 run_build_setup "hexcurse" "${HEXCURSE_VERSION}" "${HEXCURSE_TARBALL}" \
-  "gcc-15.patch" \
   -- "${HEXCURSE_MIRRORS[@]}"
 
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
@@ -24,8 +24,18 @@ mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${HEXCURSE_TARBALL}
 cd hexcurse-ng-${HEXCURSE_VERSION}/
-echo -e "${LAGOON}= Applying patches${NC}"
-patch -p1 --fuzz=1 < ../gcc-15.patch
+if [ -d ../patches ]; then
+   # Check if directory is not empty
+   if [ "\$(ls -A ../patches 2>/dev/null)" ]; then
+       echo -e "${NEONPINK}= Applying custom patch(es)${NC}"
+       for p in ../patches/*; do
+           if [ -f "\$p" ]; then
+               echo -e "${NEONBLUE}Applying \$(basename "\$p")...${NC}"
+               patch -p1 --fuzz=4 < "\$p"
+           fi
+       done
+   fi
+fi
 echo -e "${PEACH}= Applying Makefile fix${NC}"
 sed -i 's/-Werror//g' src/Makefile.am
 autoreconf -i -f

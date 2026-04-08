@@ -1,10 +1,24 @@
 #!/usr/bin/env bash
 
+############################################################################################################################
+#    ___      _ _   __  __        ___      _ _    _   _      _____ _         _   _                                         #
+#   / __|__ _| | | |  \/  |_ _   | _ )_  _(_| |__| | (_)    |_   _| |_  __ _| |_( )___  _ __ _  _   _ _  __ _ _ __  ___    #
+#  | (__/ _` | | | | |\/| | '__  | _ | || | | / _` |_ _       | | | ' \/ _` |  _|/(_-< | '  | || | | ' \/ _` | '  \/ -_)_  #
+#   \___\__,_|_|_| |_|  |_|_|(_) |___/\_,_|_|_\__,_( (_)      |_| |_||_\__,_|\__| /__/ |_|_|_\_, | |_||_\__,_|_|_|_\___(_) #
+#   _____ _         _                              |/          _        _      __  __        |__/     _ _    _             #
+#  |_   _| |_  __ _| |_   _ _  __ _ _ __  ___   __ _ __ _ __ _(_)_ _   (_)___ |  \/  |_ _   | _ )_  _(_| |__| |            #
+#    | | | ' \/ _` |  _| | ' \/ _` | '  \/ -_) / _` / _` / _` | | ' \  | (_-< | |\/| | '__  | _ | || | | / _` |_           #
+#    |_| |_||_\__,_|\__| |_||_\__,_|_|_|_\___| \__,_\__, \__,_|_|_||_| |_/__/ |_|  |_|_|(_) |___/\_,_|_|_\__,_(_)          #
+############################################################################################################################
+
 # Default flags
 RESUME=false
 DRY_RUN=false
 SELECTED_TOOLS=""
 PARALLEL_JOBS=1
+CHECKSUM=false
+CLEAN_DIST=false
+USE_CROSS=false  # New Flag
 
 JUNEBUD="\033[38;2;189;218;87m"
 SKY="\033[38;2;135;206;250m"
@@ -28,6 +42,8 @@ usage() {
   echo -e "${BWHITE}Usage: ${NC}./$(basename "$0") [OPTIONS]"
   echo -e ""
   echo -e "${BWHITE}Options:${NC}"
+  echo -e "  ${SKY}--tui${NC}              Launch interactive TUI for selection."
+  echo -e ""
   echo -e "  ${SKY}--parallel <n>${NC}     Number of concurrent build jobs."
   echo -e "  ${SKY}--resume${NC}           Skip tools that already have a binary in ${NC}dist/."
   echo -e "  ${SKY}--list-tools${NC}       Show all available build scripts and their last version."
@@ -36,11 +52,98 @@ usage() {
   echo -e "  ${SKY}--dry-run${NC}          Show which scripts would be executed without running them."
   echo -e "  ${SKY}--arch <arch>${NC}      Target architecture (x86_64, aarch64, armv7, armhf, x86)."
   echo -e "                       Overrides ARCH environment variable."
+  echo -e "  ${SKY}--cross${NC}            Download and use prebuilt musl-cross toolchains for non-native builds."
+  echo -e ""
   echo -e "  ${SKY}--checksum${NC}         Generate SHA256 checksums for all files in dist/ after building."
   echo -e "  ${SKY}--clean${NC}            Remove dist/*.tar.xz before building."
   echo -e "  ${SKY}--help${NC}             Display this help message and exit."
   echo -e ""
   exit 0
+}
+
+setup_cross_toolchain() {
+    local arch="${ARCH:-x86_64}"
+    [ "$arch" == "x86_64" ] && return 0
+
+    local tc_name=""
+    case "$arch" in
+        aarch64) tc_name="aarch64-unknown-linux-musl" ;;
+        armv7)   tc_name="armv7-unknown-linux-musleabihf" ;;
+        armhf)   tc_name="arm-unknown-linux-musleabihf" ;;
+        x86|i686) tc_name="i686-unknown-linux-musl" ;;
+        *) return 0 ;;
+    esac
+
+    local toolchain_dir="$(pwd)/toolchains"
+    local tc_path="${toolchain_dir}/${tc_name}"
+
+    if [ ! -d "$tc_path" ]; then
+        echo -e "${NEONBLUE}= Downloading $tc_name toolchain...${NC}"
+        mkdir -p "$toolchain_dir"
+        if [ "$CLANG_CROSS" = true ]; then
+          curl -L "https://github.com/gfunkmonk/clang-cross/releases/download/magazine/${tc_name}.tar.xz" | tar -xJ -C "$toolchain_dir"
+        else
+          curl -L "https://github.com/gfunkmonk/musl-cross/releases/download/prevalence/${tc_name}.tar.xz" | tar -xJ -C "$toolchain_dir"
+        fi
+    fi
+
+    # Export variables for sub-scripts to inherit
+    export CROSS_BIN_PATH="$tc_path"
+    local prefix=$(ls "${tc_path}/bin"/*-gcc | head -n1 | xargs basename | sed 's/gcc//')
+    export CROSS_PREFIX="$prefix"
+}
+
+run_tui() {
+  if ! command -v dialog >/dev/null 2>&1; then
+    echo -e "${NEONRED}Error: 'dialog' is not installed.${NC}"
+    echo -e "Install it with: ${SKY}sudo apt install dialog${NC} or ${SKY}apk add dialog${NC}"
+    exit 1
+  fi
+
+  # Select Architecture
+  ARCH_CHOICE=$(dialog --clear --title "Architecture Selection" \
+    --radiolist "Select target architecture:" 15 50 5 \
+    "x86_64"  "AMD64 / Standard PC" ON \
+    "aarch64" "ARM64 / v8" OFF \
+    "armv7"   "ARMv7 / Raspberry Pi" OFF \
+    "armhf"   "ARM Hard Float" OFF \
+    "x86"     "i386 / 32-bit" OFF \
+    2>&1 >/dev/tty)
+
+  [ -z "$ARCH_CHOICE" ] && exit 0
+  export ARCH="$ARCH_CHOICE"
+
+  # Select Tools
+  TOOL_LIST=()
+  for script in *-static-musl.sh; do
+    [ -f "$script" ] || continue
+    name=$(echo "$script" | sed 's/-static-musl//; s/\.sh//')
+    TOOL_LIST+=("$name" "" OFF)
+  done
+
+  SELECTED_TOOLS=$(dialog --clear --title "Tool Selection" \
+    --checklist "Space to select tools to build:" 20 60 12 \
+    "${TOOL_LIST[@]}" 2>&1 >/dev/tty | tr ' ' ',')
+
+  JOBS=$(dialog --title "Parallel Jobs" --inputbox \
+  "Number of concurrent build jobs:" 15 50 1 \
+  2>&1 >/dev/tty)
+  PARALLEL_JOBS=$JOBS
+
+  # Select Build Options
+  OPTIONS=$(dialog --separate-output --title "Options" \
+    --checklist "Build Flags:" 12 50 4 \
+    "resume"   "Skip existing" OFF \
+    "checksum" "Generate SHA256" OFF \
+    "clean"    "Clean dist/" OFF \
+    "cross"    "Cross-compile" OFF \
+    2>&1 >/dev/tty)
+
+  [[ $OPTIONS == *"resume"* ]] && RESUME=true
+  [[ $OPTIONS == *"checksum"* ]] && CHECKSUM=true
+  [[ $OPTIONS == *"clean"* ]] && CLEAN_DIST=true
+  [[ $OPTIONS == *"cross"* ]] && USE_CROSS=true
+
 }
 
 # Change to the repository root
@@ -51,6 +154,9 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --help|-h)
       usage
+      ;;
+    --tui)
+      run_tui
       ;;
     --resume)
       RESUME=true
@@ -71,6 +177,9 @@ while [[ $# -gt 0 ]]; do
       ;;
     --clean)
       CLEAN_DIST=true
+      ;;
+    --cross)
+      USE_CROSS=true
       ;;
     --tool)
       SELECTED_TOOLS="$2"
@@ -93,6 +202,11 @@ while [[ $# -gt 0 ]]; do
   esac
   shift
 done
+
+# Initialize Cross-Toolchain if requested
+if [ "$USE_CROSS" = true ]; then
+    setup_cross_toolchain
+fi
 
 LOG_DIR="${PWD}/logs"
 LOG_FILE="${LOG_DIR}/build_log.txt"
@@ -120,7 +234,7 @@ fi
 success_count=0
 failure_count=0
 current_jobs=0
-echo -e "--- Starting file execution loop (${NEONBLUE}$PARALLEL_JOBS${NC} jobs) ---" | tee -a "$LOG_FILE"
+echo -e "--- Starting file execution loop (${NEONGREEN}$PARALLEL_JOBS${NC} jobs) ---" | tee -a "$LOG_FILE"
 if [ "$RESUME" = true ]; then
     echo -e "\n--- RESUMING BUILD AT $(date) ---" >> "$LOG_FILE"
 fi
@@ -153,6 +267,13 @@ for file in *-static-musl.sh; do
     (
         # Prevent chroot collision by giving each job a unique directory name
         export CHROOTDIR="chroot-${ARCH:-native}-${bin_name}"
+
+        # --- THE FIX: Bridge the Toolchain into the Chroot ---
+        if [ "$USE_CROSS" = true ] && [ -n "${CROSS_BIN_PATH:-}" ]; then
+            # We wait until the sub-script creates the directory, or we pre-create it
+            # Since common.sh handles mounting, we just pass the info
+            export CROSS_COMPILE_HOST_PATH="$CROSS_BIN_PATH"
+        fi
 
         echo -e "${LAGOON}Started: ${LEMON}$file${BWHITE} (Log: ${bin_name}.txt)${NC}" | tee -a "$LOG_FILE"
         chmod +x "$file"
@@ -194,6 +315,17 @@ echo -e "${SKY}Successful executions: $success_count${NC}" | tee -a "$LOG_FILE"
 echo -e "${NEONRED}Failed executions: $failure_count${NC}" | tee -a "$LOG_FILE"
 
 echo -e "${VIOLET}Results logged to $LOG_FILE${NC}"
+
+# Print the names of failed tools
+if [ "$failure_count" -gt 0 ]; then
+  echo -e "\n${NEONRED}=== Failed tools: ===${NC}" | tee -a "$LOG_FILE"
+  for f in "$STATUS_DIR"/*; do
+    base=$(basename "$f")
+    [[ "$base" == *.0 ]] && continue
+    tool="${base%.*}"
+    echo -e "  ${HIGHLIGHTER}✗ ${tool}${NC}  (log: logs/builds/${tool}.txt)" | tee -a "$LOG_FILE"
+  done
+fi
 
 if [ "$CHECKSUM" = true ]; then
     CHECKSUM_FILE="dist/SHA256SUMS"

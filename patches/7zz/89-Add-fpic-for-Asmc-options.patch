@@ -1,0 +1,26 @@
+From: YOKOTA Hiroshi <yokota.hgml@gmail.com>
+Date: Fri, 27 Dec 2024 12:15:55 +0900
+Subject: Add "-fpic" for Asmc options
+
+Bug: https://github.com/nidud/asmc/issues/15#issuecomment-2554348661
+Bug: https://github.com/nidud/asmc/issues/15#issuecomment-2554659070
+
+Asmc author suggests this option:
+* https://github.com/nidud/asmc/issues/15#issuecomment-2554348661
+* https://github.com/nidud/asmc/issues/15#issuecomment-2554659070
+---
+ CPP/7zip/7zip_gcc.mak | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/CPP/7zip/7zip_gcc.mak b/CPP/7zip/7zip_gcc.mak
+index c5d2d50..b317701 100644
+--- a/CPP/7zip/7zip_gcc.mak
++++ b/CPP/7zip/7zip_gcc.mak
+@@ -194,7 +194,7 @@ AFLAGS_ABI = -elf -DABI_LINUX -DABI_CDECL
+ # -DABI_LINUX
+ # -DABI_CDECL
+ endif
+-AFLAGS = -nologo $(AFLAGS_ABI) -Fo$(O)/ -c
++AFLAGS = -nologo $(AFLAGS_ABI) -Fo$(O)/ -c -fpic
+ 
+ endif  # IS_MINGW

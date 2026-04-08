@@ -82,6 +82,12 @@ USE_STRIP="${USE_STRIP:-true}"
 USE_UPX="${USE_UPX:-true}"
 UPX_FLAGS="--lzma"
 
+# Fail if binary is dynamically linked
+REQUIRE_STATIC="${REQUIRE_STATIC:-true}"
+
+# Cross-compiler download is 'clang' if set to true, otherwise it's gcc
+CLANG_CROSS="${CLANG_CROSS:-false}"
+
 ##############################################################################
 # Cache results from 'get_version' 'get_git_version' & 'get_gitlab_version'  #
 # to save time and to keep from getting rate limited or temp blocked         #
@@ -113,7 +119,7 @@ FALLBACK_LESS="696"
 FALLBACK_LFTP="4.9.3"
 FALLBACK_MC="4.8.33"
 FALLBACK_NANO="8.7.1"
-FALLBACK_NETCAT="1.234-1"
+FALLBACK_NETCAT="1.234-2"
 FALLBACK_NMAP="7.99"
 FALLBACK_OKSH="7.8"
 FALLBACK_OPENSSH="10.3p1"
@@ -121,14 +127,14 @@ FALLBACK_PIGZ="2.8"
 FALLBACK_RIPGREP="15.1.0"
 FALLBACK_RSYNC="3.4.1"
 FALLBACK_SCREEN="5.0.1"
-FALLBACK_SED="4.9"
+FALLBACK_SED="4.2.2"
 FALLBACK_SOCAT="1.8.1.1"
 FALLBACK_SYSTEMCTL_TUI="0.5.2"
 FALLBACK_TAR="1.35"
 FALLBACK_TMUX="3.6a"
 FALLBACK_TNFTP="20260211"
 FALLBACK_UPX="5.1.1"
-FALLBACK_VIM="9.2.0298"
+FALLBACK_VIM="9.2.0321"
 FALLBACK_WGET="1.25.0"
 FALLBACK_WGET2="2.2.1"
 FALLBACK_XZ="5.8.3"

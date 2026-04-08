@@ -10,13 +10,10 @@ RSYNC_TARBALL="rsync-${RSYNC_VERSION}.tar.gz"
 RSYNC_MIRRORS=(
   "https://github.com/RsyncProject/rsync/releases/download/v${RSYNC_VERSION}/rsync-${RSYNC_VERSION}.tar.gz"
   "https://rsync.samba.org/ftp/rsync/rsync-${RSYNC_VERSION}.tar.gz"
+  "https://ftp2.osuosl.org/pub/blfs/conglomeration/rsync/rsync-${RSYNC_VERSION}.tar.gz"
 )
 
 run_build_setup "rsync" "${RSYNC_VERSION}" "${RSYNC_TARBALL}" \
-  "CVE-2025-10158.patch" \
-  "disable_reconfigure_req.diff" \
-  "gcc_15.patch" \
-  "reproducible-build.patch" \
   -- "${RSYNC_MIRRORS[@]}"
 
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
@@ -40,11 +37,18 @@ cd ..
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${RSYNC_TARBALL}
 cd rsync-${RSYNC_VERSION}/
-echo -e "${LAGOON}= Applying custom patch${NC}"
-patch -p1 --fuzz=4 < ../CVE-2025-10158.patch
-patch -p1 --fuzz=4 < ../disable_reconfigure_req.diff
-patch -p1 --fuzz=4 < ../gcc_15.patch
-patch -p1 --fuzz=4 < ../reproducible-build.patch
+if [ -d ../patches ]; then
+   # Check if directory is not empty
+   if [ "\$(ls -A ../patches 2>/dev/null)" ]; then
+       echo -e "${NEONPINK}= Applying custom patch(es)${NC}"
+       for p in ../patches/*; do
+           if [ -f "\$p" ]; then
+               echo -e "${NEONBLUE}Applying \$(basename "\$p")...${NC}"
+               patch -p1 --fuzz=4 < "\$p"
+           fi
+       done
+   fi
+fi
 echo -e "${PEACH}= Configure source${NC}"
 ./configure CC="${CC}" --disable-ipv6 --disable-roll-simd --with-included-zlib=no --disable-md5-asm \
   LDFLAGS='${BLDFLAGS} ${MOLD} ${LPIE}' PKG_CONFIG='${PKGCFG}' EXEEXT='-static' \

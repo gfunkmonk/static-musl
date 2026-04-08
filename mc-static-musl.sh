@@ -3,8 +3,8 @@ set -euo pipefail
 . "$(dirname "${BASH_SOURCE[0]}")/common.sh"
 
 echo -e "${MINT}= fetching latest mc version${NC}"
-MC_VERSION=$("${CURL}" -s https://ftp.osuosl.org/pub/midnightcommander/ | grep -oP 'mc-\K[0-9]+\.[0-9]+(\.[0-9]+)?' | sort -V | tail -n 1)
-[[ -z "${MC_VERSION}" ]] && { echo -e "${TAWNY}= mc source fetch failed, using fallback ${FALLBACK_MC}${NC}" >&2; MC_VERSION="${FALLBACK_MC}"; }
+MC_VERSION=$(get_web_version "https://ftp.osuosl.org/pub/midnightcommander/" "mc-\K[0-9]+\.[0-9]+(\.[0-9]+)?")
+[[ -z "${MC_VERSION}" || "${MC_VERSION}" == "FAILED" ]] && { echo -e "${TAWNY}= mc source fetch failed, using fallback ${FALLBACK_MC}${NC}" >&2; MC_VERSION="${FALLBACK_MC}"; }
 echo -e "${JUNEBUD}= building mc version: ${MC_VERSION}${NC}"
 PACKAGE_VERSION="${MC_VERSION}"
 MC_TARBALL="mc-${MC_VERSION}.tar.xz"
@@ -14,8 +14,6 @@ MC_MIRRORS=(
   "https://mirrors.mit.edu/macports/distfiles/mc/mc-${MC_VERSION}.tar.xz"
 )
 run_build_setup "mc" "${MC_VERSION}" "${MC_TARBALL}" \
-  "2987.patch" \
-  "disable_internal_editor.patch" \
   -- "${MC_MIRRORS[@]}"
 
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
@@ -28,9 +26,18 @@ mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${MC_TARBALL}
 cd mc-${MC_VERSION}/
-echo -e "${LAGOON}= Applying custom patch${NC}"
-patch -p1 --fuzz=4 < ../2987.patch
-patch -p1 --fuzz=4 < ../disable_internal_editor.patch
+if [ -d ../patches ]; then
+   # Check if directory is not empty
+   if [ "\$(ls -A ../patches 2>/dev/null)" ]; then
+       echo -e "${NEONPINK}= Applying custom patch(es)${NC}"
+       for p in ../patches/*; do
+           if [ -f "\$p" ]; then
+               echo -e "${NEONBLUE}Applying \$(basename "\$p")...${NC}"
+               patch -p1 --fuzz=4 < "\$p"
+           fi
+       done
+   fi
+fi
 echo -e "${PEACH}= Configure source${NC}"
 ./configure CC="${CC}" \
   --disable-nls --disable-tests --disable-doxygen-doc --without-gnutls --without-mclib \

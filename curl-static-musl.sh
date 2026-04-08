@@ -18,7 +18,6 @@ CURL_MIRRORS=(
 )
 
 run_build_setup "curl" "${CURL_VERSION}" "${CURL_TARBALL}" \
-  "curl.patch" \
   -- "${CURL_MIRRORS[@]}"
 
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
@@ -30,8 +29,18 @@ mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${CURL_TARBALL}
 cd curl-${CURL_VERSION}/
-echo -e "${LAGOON}= Applying custom patch${NC}"
-patch -p1 --fuzz=4 < ../curl.patch
+if [ -d ../patches ]; then
+   # Check if directory is not empty
+   if [ "\$(ls -A ../patches 2>/dev/null)" ]; then
+       echo -e "${NEONPINK}= Applying custom patch(es)${NC}"
+       for p in ../patches/*; do
+           if [ -f "\$p" ]; then
+               echo -e "${NEONBLUE}Applying \$(basename "\$p")...${NC}"
+               patch -p1 --fuzz=4 < "\$p"
+           fi
+       done
+   fi
+fi
 echo -e "${PEACH}= Configure source${NC}"
 ./configure CC='clang' --disable-shared --enable-static --disable-ldap --disable-ipv6 --enable-unix-sockets \
   --with-ssl --with-libssh2 --disable-docs --disable-manual --without-libpsl \

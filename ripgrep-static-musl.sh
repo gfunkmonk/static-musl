@@ -16,6 +16,8 @@ RIPGREP_MIRRORS=(
 run_build_setup "ripgrep" "${RIPGREP_VERSION}" "${RIPGREP_TARBALL}" \
   -- "${RIPGREP_MIRRORS[@]}"
 
+NATIVE_RUST_TARGET="${RUST_TARGET}"
+
 rust_set_cross_target
 
 if [ -n "${RUST_TARGET}" ]; then
@@ -36,10 +38,10 @@ export CARGO_PROFILE_RELEASE_LTO="true"
 export CARGO_PROFILE_RELEASE_STRIP="symbols"
 export CARGO_PROFILE_RELEASE_CODEGEN_UNITS="1"
 export RUSTFLAGS="-C target-feature=+crt-static -C link-arg=-fuse-ld=mold"
-cargo build --release
+cargo build --target ${NATIVE_RUST_TARGET} --release
 echo -e "\n${CARIBBEAN}= ccache statistics:${NC}"
 ccache -s | tail -n 10
 EOF
 
-  package_output "ripgrep" "./${CHROOTDIR}/ripgrep-${RIPGREP_VERSION}/target/release/rg"
+  package_output "ripgrep" "./${CHROOTDIR}/ripgrep-${RIPGREP_VERSION}/target/${NATIVE_RUST_TARGET}/release/rg"
 fi

@@ -11,6 +11,7 @@ WGET2_MIRRORS=(
   "https://ftp.gnu.org/gnu/wget/wget2-${WGET2_VERSION}.tar.lz"
   "https://fossies.org/linux/www/wget2-${WGET2_VERSION}.tar.lz"
   "https://mirrors.kernel.org/slackware/slackware-current/source/n/wget2/wget2-${WGET2_VERSION}.tar.lz"
+  "https://mirror.retropc.se/slackware/slackware/patches/source/wget2/wget2-${WGET2_VERSION}.tar.lz"
 )
 
 run_build_setup "wget2" "${WGET2_VERSION}" "${WGET2_TARBALL}" \
@@ -27,6 +28,18 @@ mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH
 echo -e "${MAUVE}= Extracting source${NC}"
 7zz x -so ${WGET2_TARBALL} | tar xf -
 cd wget2-${WGET2_VERSION}/
+if [ -d ../patches ]; then
+   # Check if directory is not empty
+   if [ "\$(ls -A ../patches 2>/dev/null)" ]; then
+       echo -e "${NEONPINK}= Applying custom patch(es)${NC}"
+       for p in ../patches/*; do
+           if [ -f "\$p" ]; then
+               echo -e "${NEONBLUE}Applying \$(basename "\$p")...${NC}"
+               patch -p1 --fuzz=4 < "\$p"
+           fi
+       done
+   fi
+fi
 echo -e "${PEACH}= Configure source${NC}"
 # NO MOLD -- DOESN'T BUILD WITH MOLD #
 ./configure  CC="${CC}" --with-ssl=openssl \

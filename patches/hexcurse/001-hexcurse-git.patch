@@ -1,0 +1,550 @@
+diff -ruN hexcurse-ng-1.70.0/README.md hexcurse-ng-master/README.md
+--- hexcurse-ng-1.70.0/README.md	2024-08-26 14:06:48.000000000 -0400
++++ hexcurse-ng-master/README.md	2025-04-27 20:18:03.000000000 -0400
+@@ -1,6 +1,8 @@
+ hexcurse-ng
+ =====================================
+ 
++**New release [v1.70.0](https://github.com/prso/hexcurse-ng/releases/tag/v1.70.0)**
++
+ Project: https://github.com/prso/hexcurse-ng
+ 
+ ![hexcurse screenshot](screenshots/hexcurse-screenshot.png)
+@@ -17,7 +19,7 @@
+ 
+ It currently supports fast searching, hex and decimal address output,
+ jumping to specified locations in the file, "undo" capabilities, "bolded"
+-modifications, colors, EBCDIC mode, and quick keyboard shortcuts to
++modifications, colors, EBCDIC mode, and quick keyboard and mouse shortcuts to
+ commands.
+ 
+ 
+diff -ruN hexcurse-ng-1.70.0/configure.ac hexcurse-ng-master/configure.ac
+--- hexcurse-ng-1.70.0/configure.ac	2024-08-26 14:06:48.000000000 -0400
++++ hexcurse-ng-master/configure.ac	2025-04-27 20:18:03.000000000 -0400
+@@ -1,5 +1,5 @@
+ dnl Process this file with autoconf to produce a configure script.
+-AC_INIT([hexcurse], [1.70.0])
++AC_INIT([hexcurse],[1.70.0])
+ AC_CONFIG_SRCDIR(src/file.c)
+ AM_INIT_AUTOMAKE([-Wall])
+ 
+@@ -32,9 +32,21 @@
+ AC_FUNC_FSEEKO
+ 
+ dnl Checks for library functions.
+-AC_TYPE_SIGNAL
++AC_DIAGNOSE([obsolete],[your code may safely assume C89 semantics that RETSIGTYPE is void.
++Remove this warning and the `AC_CACHE_CHECK' when you adjust the code.])dnl
++AC_CACHE_CHECK([return type of signal handlers],[ac_cv_type_signal],[AC_COMPILE_IFELSE(
++[AC_LANG_PROGRAM([#include <sys/types.h>
++#include <signal.h>
++],
++		 [return *(signal (0, 0)) (0) == 1;])],
++		   [ac_cv_type_signal=int],
++		   [ac_cv_type_signal=void])])
++AC_DEFINE_UNQUOTED([RETSIGTYPE],[$ac_cv_type_signal],[Define as the return type of signal handlers
++		    (`int' or `void').])
++
+ 
+ dnl Checks for BIG ENDIAN
+ dnl AC_C_BIGENDIAN 
+ 
+-AC_OUTPUT(Makefile src/Makefile man/Makefile)
++AC_CONFIG_FILES([Makefile src/Makefile man/Makefile])
++AC_OUTPUT
+diff -ruN hexcurse-ng-1.70.0/include/hex.h hexcurse-ng-master/include/hex.h
+--- hexcurse-ng-1.70.0/include/hex.h	2024-08-26 14:06:48.000000000 -0400
++++ hexcurse-ng-master/include/hex.h	2025-04-27 20:18:03.000000000 -0400
+@@ -148,7 +148,7 @@
+ void outline(FILE *fp, off_t linenum);
+ off_t maxLoc(FILE *fp);
+ void set_saved(bool sav, WINDOW *win);
+-void print_usage();
++void print_usage(void);
+ off_t maxLines(off_t len);
+ int openfile(WINS *win);
+ int savefile(WINS *win);
+@@ -171,7 +171,7 @@
+ int searchList(hexList *head, off_t loc);
+ off_t countList(hexList *head, off_t loc);
+ void updateBuf(hexList *head, char *buf, off_t pos1, off_t pos2);
+-int writeChanges();
++int writeChanges(void);
+ hexList *freeList(hexList *head);
+ 
+ /* screen.c */
+@@ -180,7 +180,7 @@
+ void exit_err(char *err_str);
+ void init_screen(void);
+ void screen_exit(int exit_val);
+-void init_fkeys();
++void init_fkeys(void);
+ RETSIGTYPE checkScreenSize(int sig);
+ void refreshall(WINS *win);
+ WINDOW *drawbox(int y, int x, int height, int width);
+diff -ruN hexcurse-ng-1.70.0/man/hexcurse.1 hexcurse-ng-master/man/hexcurse.1
+--- hexcurse-ng-1.70.0/man/hexcurse.1	2024-08-26 14:06:48.000000000 -0400
++++ hexcurse-ng-master/man/hexcurse.1	2025-04-27 20:18:03.000000000 -0400
+@@ -107,6 +107,8 @@
+ .TP 15
+ .B F8 | ctrl+q | ctrl+x
+ Exit out of the program.
++.LP
++Note: The labels of these F-commands are clickable on terminals that support mouse operation.  To copy and paste text using mouse buttons, the Shift key must be pressed during the clicks.
+ .TP 15
+ .B Page Up | ctrl+u
+ Scroll one 'page' up.
+diff -ruN hexcurse-ng-1.70.0/src/acceptch.c hexcurse-ng-master/src/acceptch.c
+--- hexcurse-ng-1.70.0/src/acceptch.c	2024-08-26 14:06:48.000000000 -0400
++++ hexcurse-ng-master/src/acceptch.c	2025-04-27 20:18:03.000000000 -0400
+@@ -33,7 +33,8 @@
+ int wacceptch(WINS *win, off_t len)
+ {
+     intmax_t tmp_max;
+-    
++    MEVENT event;
++
+     off_t count;
+     int  col = 0, val, tmpval, 	    			/* counters, etc.     */   
+          ch[81],					/* holds search string*/
+@@ -90,6 +91,45 @@
+     while(!shouldExit)
+     {
+         key = wgetch(Winds);
++        if (key == KEY_MOUSE)
++        {
++            if (getmouse(&event) == OK)
++            {
++                int x = event.x;
++                if (event.bstate & BUTTON1_CLICKED)
++                {
++                    if (event.y == LINES){
++						int odd_add1 = COLS % 2;
++
++						if (x >= 0 && x <= 7)	/* Help label */
++						{
++							key = KEY_F(1);
++						} else if ( x <= 16 && x >= 9)	/* Save label */
++						{
++							key = KEY_F(2);
++						} else if ( x <= 25 && x >= 18)	/* Open label */
++						{
++							key = KEY_F(3);
++						} else if ( x <= (COLS/2) - 2 + odd_add1 && x >= (COLS/2) - 9 + odd_add1) /* Goto label */
++						{
++							key = KEY_F(4);
++						} else if ( x <= (COLS/2) + 7 + odd_add1 && x >= (COLS/2) + odd_add1) /* Find label */
++						{
++							key = KEY_F(5);
++						} else if ( x <= COLS - 19 && x >= COLS-26 ) /* Hex Addr label */
++						{
++							key =  KEY_F(6);
++						} else if ( x <= COLS-10 && x >= COLS-17 ) /* Hex Edit label */
++						{
++							key = KEY_F(7);
++						} else if ( x <= COLS-1 && x >= COLS-8 ) /* Quit label */
++						{
++							key = KEY_F(8);
++						}
++                    }
++                }
++            }
++        }
+ 	lastRow = row;
+ 	lastCol = col;
+ 	getyx(Winds, row, col);				/* curent cursor loc  */
+@@ -493,7 +533,7 @@
+ 	case KEY_F(5):
+  		/* SeachStr stores the last searched string into the format *\
+ 	 	\* "(XXXXXXX...)" with 10 being the max chars shown         */
+-                if (!fpINfilename || !strcmp(fpINfilename, "")) 
++        if (!fpINfilename || !strcmp(fpINfilename, "")) 
+ 		{	 				/* output prompt      */
+ 		    wmove(win->hex_outline, LINES-1, 1);
+                     wclrtoeol(win->hex_outline);
+@@ -952,6 +992,8 @@
+ 
+     wmove(win, line, col);
+ 
++    mousemask(0, NULL);                          /* disable mouse temporarily */
++
+     for (x = 0; (c = wgetch(win)) != 10; x++) 
+     {
+         wclrtoeol(win);					/* clear line         */
+@@ -965,6 +1007,7 @@
+ 	else if (c == 27)				/* if the escape key  */
+ 	{   						/* is pressed, return */
+ 	    ch[0] = 27;					/* setting ch to 0xff */
++	    mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, NULL);  /* reenable mouse */
+ 	    return ch;					
+ 	}
+ 	else if (x == allocated)
+@@ -992,5 +1035,6 @@
+ 
+     ch[x] = '\0';					/* terminate          */
+ 
++    mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, NULL);   /* reenable mouse */
+     return ch;
+ }
+diff -ruN hexcurse-ng-1.70.0/src/file.c hexcurse-ng-master/src/file.c
+--- hexcurse-ng-1.70.0/src/file.c	2024-08-26 14:06:48.000000000 -0400
++++ hexcurse-ng-master/src/file.c	2025-04-27 20:18:03.000000000 -0400
+@@ -78,13 +78,13 @@
+ 			wattron(windows->ascii, A_BOLD);
+ 			wattron(windows->hex, A_BOLD);
+ 		}
+-		byte_color_on(locbasei, c);
++		byte_color_on(locbasei, (char) c);
+ 		wprintw(windows->hex, "%02X ", c);		/* print out hex char */
+ 		if (USE_EBCDIC)
+ 			wprintw(windows->ascii, "%c", EBCDIC[c]);/* print EBCDIC char */
+ 		else						/* print ASCII  char */
+ 			wprintw(windows->ascii, (isprint(c)) ? "%c":".", c);
+-		byte_color_off(locbasei, c);
++		byte_color_off(locbasei, (char) c);
+ 		if (bold[i])
+ 		{
+ 			wattroff(windows->ascii, A_BOLD);
+@@ -141,7 +141,7 @@
+  * Description: prints out the command line help info *
+  *		this function does not return anything*
+ \******************************************************/
+-void print_usage()
++void print_usage(void)
+ {
+     char *ver = HVERSION; 
+ 
+@@ -296,13 +296,23 @@
+     return exitCode;
+ }
+ 
+-void make_delta1(int *delta1, int *pat, size_t patlen) {
++void make_delta1(int *delta1, const int *pat, size_t patlen) {
++    if (!delta1 || !pat || patlen == 0) {
++        return; 
++    }
++
+     size_t i;
+-    for (i=0; i < ALPHABET_LEN; i++) {
+-        delta1[i] = patlen;
++    
++    /* Initialize delta1 safely */
++    for (i = 0; i < ALPHABET_LEN; i++) {
++        delta1[i] = (int)patlen;
+     }
+-    for (i=0; i < patlen-1; i++) {
+-        delta1[pat[i]] = patlen-1 - i;
++
++    /* Fill delta1 and ensuring pat[i]  */
++    for (i = 0; i < patlen - 1; i++) {
++        if (pat[i] >= 0 && pat[i] < ALPHABET_LEN) { 
++            delta1[pat[i]] = (int)(patlen - 1 - i);
++        }
+     }
+ }
+ 
+@@ -331,23 +341,40 @@
+ }
+ 
+ void make_delta2(int *delta2, int *pat, size_t patlen) {
+-    size_t  p;
+-    size_t  last_prefix_index = patlen-1;
++    if (!delta2 || !pat || patlen == 0) {
++        return;
++    }
++
++    size_t p;
++    size_t last_prefix_index = patlen - 1;
+ 
+-    // first loop
+-    for (p=patlen-1; ;p--) {
+-        if (is_prefix(pat, patlen, p+1)) {
+-            last_prefix_index = p+1;
++    // First loop 
++    for (p = patlen - 1; ; p--) {
++        if (is_prefix(pat, patlen, p + 1)) {
++            last_prefix_index = p + 1;
+         }
+-        delta2[p] = (int) (last_prefix_index + (patlen-1 - p));
++
++        if (p < patlen) {
++            delta2[p] = (int)(last_prefix_index + (patlen - 1 - p));
++        } else {
++            continue;
++        }
++
+         if (p == 0) break;
+     }
+ 
+-    // second loop
+-    for (p=0; p < patlen-1; p++) {
+-        int slen = suffix_length(pat, patlen, p);
+-        if (pat[p - slen] != pat[patlen-1 - slen]) {
+-            delta2[patlen-1 - slen] = (int) (patlen-1 - p + slen);
++    // Second loop 
++    for (p = 0; p < patlen - 1; p++) {
++        size_t slen = suffix_length(pat, patlen, p);
++        if (slen <= p) {
++            if (pat[p - slen] != pat[patlen - 1 - slen]) {
++                size_t delta_index = patlen - 1 - slen;
++                if (delta_index < patlen) {
++                    delta2[delta_index] = (int)(patlen - 1 - p + slen);
++                } else {
++                    continue;
++                }
++            }
+         }
+     }
+ }
+@@ -367,10 +394,11 @@
+     int         i, m = 1;
+     int         j = patlen - 1;
+     int         delta1 [ ALPHABET_LEN ];
+-    int         *delta2 = (int *)malloc(patlen * sizeof(int));
++    int         *delta2 = (int *)malloc((size_t)patlen * sizeof(int));
++
+ 
+     char        *buf;           // circular buffer
+-    char        *patt = (char *) malloc(patlen);
++    unsigned char        *patt = (unsigned char *) malloc((size_t)patlen);
+ 
+     int         n;              // number of bytes read by fread()
+     int         rem_bytes = 0;  // remaining bytes in the buffer
+@@ -382,13 +410,13 @@
+     off_t       pos_max = -1;   // EOF position
+     off_t       rv = -1;        // return value: default = -1
+ 
+-    if (posix_memalign((void **)&buf, getpagesize(), BUF_L) != 0)
++    if (posix_memalign((void **)&buf, (size_t)getpagesize(), BUF_L) != 0)
+         return -1;
+ 
+     if (! (delta2 && patt)) return -1;
+ 
+-    make_delta1(delta1, pat, patlen);
+-    make_delta2(delta2, pat, patlen);
++    make_delta1(delta1, pat, (size_t) patlen);
++    make_delta2(delta2, pat, (size_t) patlen);
+     // converting int to (unsigned char) -> (unsigned char) is faster
+     for (i = 0; i < patlen; i++) patt[i] = (unsigned char) pat[i];
+ 
+@@ -406,7 +434,7 @@
+     pos1 = pos2 = startfp;
+ 
+     while (1) {
+-        n = (int) fread(&buf[rem_bytes], 1, bytes_to_read, fp);
++        n = (int) fread(&buf[rem_bytes], 1, (size_t) bytes_to_read, fp);
+         full_length = n + rem_bytes;
+         if (n == 0 || full_length < patlen) break;
+         pos2 = pos1 + (off_t) full_length;
+@@ -435,7 +463,7 @@
+         if (rem_bytes > full_length) rem_bytes = full_length;
+ 
+         bytes_to_read = BUF_L - rem_bytes;
+-        memmove(buf, &buf[full_length - rem_bytes], rem_bytes);
++        memmove(buf, &buf[full_length - rem_bytes], (size_t) rem_bytes);
+         pos1 = pos2 - rem_bytes;
+ 
+         if (wgetch(w) == 27) { // escape
+@@ -467,9 +495,9 @@
+  * Description: goes to a certain location in the file  *
+  * Returns:     currentLine (in file)                   *
+ \********************************************************/
+-off_t gotoLine(FILE *fp, off_t currLoc, off_t gotoLoc, off_t maxlines, WINDOW *win)
++off_t gotoLine(FILE *fp, off_t currLoc, off_t gotoLoc, off_t maxDisplaylines, WINDOW *win)
+ {
+-    off_t count, currentLine, tmp, linediff;
++    off_t count, currentFileLine, tmp, linediff;
+     int row, col;
+ 
+     /* col is not used, but needed for the getyx macro, this line is to avoid compiler warnings */
+@@ -479,10 +507,10 @@
+     restoreBorder(windows);				/* restore border     */
+ 
+     wrefresh(windows->hex_outline);
+-    currentLine = maxLines(gotoLoc);
++    currentFileLine = maxLines(gotoLoc);
+ 
+     if ((gotoLoc % BASE) == 0)
+-        currentLine++;
++        currentFileLine++;
+ 
+     /* we must calculate the lines between the currloc and gotoLoc.       *\
+      * we do this by calculating the line number for the value of currloc *
+@@ -494,12 +522,12 @@
+     if (gotoLoc >= currLoc) /* the destination is below the current loc   */
+     {
+         tmp = currLoc - (row * BASE);
+-        linediff=currentLine-((tmp%BASE) ? maxLines(tmp) : maxLines(++tmp));
++        linediff=currentFileLine-((tmp%BASE) ? maxLines(tmp) : maxLines(++tmp));
+     }
+     else /*the dest is above the current location, must handle differently*/
+     {
+         tmp = currLoc + ((MAXY - row) * BASE);
+-        linediff = currentLine
++        linediff = currentFileLine
+                  - ((tmp%BASE) ? maxLines(tmp) : maxLines(++tmp));
+         if (linediff >= (MAXY*-1) && linediff < 1) linediff += MAXY;
+     }
+@@ -509,7 +537,7 @@
+     if (linediff <= MAXY) /* if the dest on the same screen as currloc   */
+     {
+         /* now move position w/o scrolling dest line to the top of screen */
+-        wmove((editHex) ? windows->hex : windows->ascii, linediff , (editHex) ?
++        wmove((editHex) ? windows->hex : windows->ascii, (int) linediff , (editHex) ?
+              ((gotoLoc % BASE) * 3) : (gotoLoc % BASE));
+     }
+     else
+@@ -523,9 +551,9 @@
+         wmove(windows->ascii, 0, 0);
+         wmove(windows->address, 0, 0);
+                                                         /* output lines       */
+-        for (count = 0; count <= MAXY && (count + currentLine)<=maxlines;
++        for (count = 0; count <= MAXY && (count + currentFileLine)<=maxDisplaylines;
+             count++)
+-            outline(fp, count+currentLine);
++            outline(fp, count+currentFileLine);
+ 
+         wmove((editHex) ? windows->hex : windows->ascii, 0, (editHex) ?
+              ((gotoLoc % BASE) * 3) : (gotoLoc % BASE));
+@@ -543,7 +571,7 @@
+     wnoutrefresh(windows->hex);
+     doupdate();                                         /* update screen      */
+ 
+-    return currentLine;
++    return currentFileLine;
+ }
+ 
+ /********************************************************\
+diff -ruN hexcurse-ng-1.70.0/src/getopt.c hexcurse-ng-master/src/getopt.c
+--- hexcurse-ng-1.70.0/src/getopt.c	2024-08-26 14:06:48.000000000 -0400
++++ hexcurse-ng-master/src/getopt.c	2025-04-27 20:18:03.000000000 -0400
+@@ -70,8 +70,7 @@
+ static int last_nonopt;
+ 
+ static void
+-exchange (argv)
+-     char **argv;
++exchange (char **argv)
+ {
+   int nonopts_size = (last_nonopt - first_nonopt) * sizeof (char *);
+   char **temp = (char **) malloc(nonopts_size);
+@@ -95,8 +94,7 @@
+ /* Call this function with an argument of 1 to set the default option
+    ordering to that required by Posix.  The normal default is PERMUTE. */
+ void
+-getopt_set_posix_option_order (on_or_off)
+-     int on_or_off;
++getopt_set_posix_option_order (int on_or_off)
+ {
+   if (on_or_off == 1)
+     default_ordering = REQUIRE_ORDER;
+@@ -105,13 +103,7 @@
+ }
+ 	
+ int
+-_getopt_internal (argc, argv, optstring, longopts, longind, long_only)
+-     int argc;
+-     char *const *argv;
+-     const char *optstring;
+-     const struct option *longopts;
+-     int *longind;
+-     int long_only;
++_getopt_internal (int argc,char *const *argv,const char *optstring,const struct option *longopts,int *longind,int long_only)
+ {
+   int option_index;
+ 
+@@ -447,10 +439,7 @@
+ }
+ 
+ int
+-hgetopt (argc, argv, optstring)
+-     int argc;
+-     char *const *argv;
+-     const char *optstring;
++hgetopt (int argc,char *const *argv,const char *optstring)
+ {
+   return _getopt_internal (argc, argv, optstring,
+ 			   (const struct option *) 0,
+diff -ruN hexcurse-ng-1.70.0/src/llist.c hexcurse-ng-master/src/llist.c
+--- hexcurse-ng-1.70.0/src/llist.c	2024-08-26 14:06:48.000000000 -0400
++++ hexcurse-ng-master/src/llist.c	2025-04-27 20:18:03.000000000 -0400
+@@ -133,7 +133,7 @@
+  * Description: write the changes to either the current *
+  *		file or to a specified output file	*
+ \*******************************************************/
+-int writeChanges()
++int writeChanges(void)
+ {   
+     FILE *fpOUT = NULL;
+     FILE *fptmp = NULL;
+diff -ruN hexcurse-ng-1.70.0/src/screen.c hexcurse-ng-master/src/screen.c
+--- hexcurse-ng-1.70.0/src/screen.c	2024-08-26 14:06:48.000000000 -0400
++++ hexcurse-ng-master/src/screen.c	2025-04-27 20:18:03.000000000 -0400
+@@ -122,9 +122,12 @@
+     {
+         perror("initscr");				/* print out error    */
+         printf("exiting\n");
+-	exit(EXIT_FAILURE);
++	    exit(EXIT_FAILURE);
+     }
+ 
++    /* Enable mouse & keypad events */
++    mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, NULL); 
++    keypad(stdscr, TRUE); 
+ }
+ 
+ /******************************************************\
+@@ -141,7 +144,7 @@
+ /******************************************************\
+  * Description: Initialize function key menu interface*
+ \******************************************************/ 
+-void init_fkeys()
++void init_fkeys(void)
+ {
+     if (FNUMBERS)
+     {
+@@ -314,9 +317,10 @@
+     help = newwin(LINES - 2, hex_win_width, 1, 10),
+     small = newwin(LINES - 2, ascii_win_width, 1, hex_outline_width + 2);
+     
+-    if ((LINES < 18) || (COLS < 78))			/* min size to display*/
++    if ((LINES < 20) || (COLS < 90))			/* min size to display*/
+     {
+ 	mvwprintw(help, 0, 0, "Screen too small to display help");
++	mvwprintw(help, 1, 0, "you can read the manual page");
+ 	wmove(help,0,0);
+     }
+     else
+@@ -346,8 +350,12 @@
+ 	mvwprintw(small, 7, 1, "HexAdres = F6");
+ 	mvwprintw(small, 8, 1, "Hex Edit = F7");
+ 	mvwprintw(small, 9, 1, "Quit     = F8");
+-	mvwprintw(small, 11, 1, "Page up  = PGUP");
+-	mvwprintw(small, 12, 1, "Page down= PGDN");
++	mvwprintw(small, 11, 1, "F-labels clickable");
++	mvwprintw(small, 12, 1, "if mouse supported");
++	mvwprintw(small, 13, 1, "Shift+mouse button");
++	mvwprintw(small, 14, 1, "to copy/paste");
++	mvwprintw(small, 16, 1, "Page up   = PGUP");
++	mvwprintw(small, 17, 1, "Page down = PGDN");
+ 
+ 	mvwprintw(help, 0, 10, "HexCurse Keyboard Commands");
+ 	mvwprintw(help, 2, 2, "Help     - you are reading it now");
+@@ -363,7 +371,7 @@
+ 	mvwprintw(help, 13, 2, "Undo     - reverts last modification");
+ 	mvwprintw(help, 14, 2, "Home     - returns to the top of the file");
+ 	mvwprintw(help, 15, 2, "End      - jumps to the bottom of the file");
+-	mvwprintw(help, 17, 12, "Press enter to continue");
++	mvwprintw(help, 17, 12, "Press any key to continue");
+     }
+ 
+     wnoutrefresh(ctrl);					/* refresh new wins   */
+@@ -371,6 +379,7 @@
+     wnoutrefresh(small);
+     doupdate();						/* update screen      */
+ 
++    keypad(ctrl, TRUE);
+     wgetch(ctrl);					/* wait for a char    */
+ 
+     delwin(ctrl);					/* delete help wins   */

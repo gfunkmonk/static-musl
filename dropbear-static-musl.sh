@@ -10,13 +10,11 @@ DROPBEAR_TARBALL="dropbear-${DROPBEAR_VERSION}.tar.bz2"
 DROPBEAR_MIRRORS=(
   "https://matt.ucc.asn.au/dropbear/releases/dropbear-${DROPBEAR_VERSION}.tar.bz2"
   "https://dropbear.nl/mirror/releases/dropbear-${DROPBEAR_VERSION}.tar.bz2"
+  "https://ftp-nyc.osuosl.org/pub/gentoo/distfiles/03/dropbear-${DROPBEAR_VERSION}.tar.bz2"
+  "https://distro.ibiblio.org/slitaz/sources/packages/d/dropbear-${DROPBEAR_VERSION}.tar.bz2"
 )
 
 run_build_setup "dropbear" "${DROPBEAR_VERSION}" "${DROPBEAR_TARBALL}" \
-  "dropbear-options_keepalive.patch" \
-  "dropbear-options_sftp-server_path.patch" \
-  "dropbear-options_ssh_config.patch" \
-  "dropbear-scp.patch" \
   -- "${DROPBEAR_MIRRORS[@]}"
 
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
@@ -28,11 +26,18 @@ mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH
 echo -e "${LEMON}= Extracting source${NC}"
 tar xf ${DROPBEAR_TARBALL}
 cd dropbear-${DROPBEAR_VERSION}/
-echo -e "${LAGOON}= Applying custom patch(es)${NC}"
-patch -p1 --fuzz=4 < ../dropbear-options_ssh_config.patch
-patch -p1 --fuzz=4 < ../dropbear-options_sftp-server_path.patch
-patch -p1 --fuzz=4 < ../dropbear-options_keepalive.patch
-patch -p1 --fuzz=4 < ../dropbear-scp.patch
+if [ -d ../patches ]; then
+   # Check if directory is not empty
+   if [ "\$(ls -A ../patches 2>/dev/null)" ]; then
+       echo -e "${NEONPINK}= Applying custom patch(es)${NC}"
+       for p in ../patches/*; do
+           if [ -f "\$p" ]; then
+               echo -e "${NEONBLUE}Applying \$(basename "\$p")...${NC}"
+               patch -p1 --fuzz=4 < "\$p"
+           fi
+       done
+   fi
+fi
 echo -e "${CHARTREUSE}= Configure source${NC}"
 ./configure CC="${CC}" \
   --disable-lastlog --disable-utmp --disable-utmpx --disable-wtmp --disable-wtmpx \
