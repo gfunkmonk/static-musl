@@ -7,9 +7,13 @@ cd "$(dirname "$0")/.."
 source "$(dirname "$0")/../common.sh"
 
 setup_arch
+setup_cleanup
+install_host_deps
 [ -f minirootfs/"alpine-base-${ARCH}.tar.zst" ] && rm minirootfs/"alpine-base-${ARCH}.tar.zst"
 echo -e "${LAGOON}== Building Master Base Rootfs ==${NC}"
 setup_alpine_chroot base-setup
+setup_qemu
+mount_chroot
 
 echo -e "${ORANGE}= Installing base toolchain...${NC}"
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF

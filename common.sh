@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
 CONF_FILE="${SCRIPT_DIR}"/config.sh
 [[ -f "${CONF_FILE}" ]] && source "${CONF_FILE}"
@@ -285,10 +287,12 @@ get_web_version() {
   local url="$1"
   local regex="$2"
   local version
-  version=$("${CURL}" -s "$url" | grep -oP "$regex" | sort -V | tail -n 1)
+  #version=$("${CURL}" -s "$url" | grep -oP "$regex" | sort -V | tail -n 1)
+  version=$("${CURL}" -s "$url" | grep -oP "$regex" | sort -V | tail -n 1) || true
   if [[ -z "$version" ]]; then
     echo "FAILED"
-    return 1
+    #return 1
+    return 0
   fi
   echo "$version"
 }
@@ -338,8 +342,7 @@ unmount_chroot() {
 # setup_cleanup: register unmount trap for chroot bind mounts #
 ###############################################################
 setup_cleanup() {
-  #trap unmount_chroot EXIT INT TERM
-  trap unmount_chroot EXIT
+  trap unmount_chroot EXIT INT TERM
 }
 
 #####################################################################

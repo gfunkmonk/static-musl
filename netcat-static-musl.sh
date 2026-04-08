@@ -31,7 +31,7 @@ if [ -f ../patches/base64.c ]; then
     echo -e "${MAUVE}= Moving base64.c to source dir${NC}"
     mv ../patches/base64.c .
 else
-    echo -e "${TOMATO}= Error: file 'base64.c' does not exist!!."
+    echo -e "${TOMATO}= Error: file 'base64.c' does not exist!!.${NC}"
 fi
 if [ -d ../patches ]; then
    # Check if directory is not empty

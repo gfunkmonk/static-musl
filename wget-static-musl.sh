@@ -43,7 +43,7 @@ if [ -d ../patches ]; then
 fi
 echo -e "${PEACH}= Configure source${NC}"
 ./configure CC="${CC}" --with-ssl=openssl --disable-nls --disable-rpath --disable-silent-rules  \
-  --disable-ipv6 --enable-year2038  --with-openssl=yes \
+  --disable-ipv6 --enable-year2038  --with-openssl=yes --sysconfdir=/etc \
   LDFLAGS='${BLDFLAGS} ${LNOPIE} -lidn2 -lunistring' PKG_CONFIG='${PKGCFG}' \
   CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${CNOPIE} -Wno-unterminated-string-initialization -Wno-deprecated-declarations -Wno-return-local-addr' \
   PERL=/usr/bin/perl

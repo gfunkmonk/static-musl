@@ -150,7 +150,8 @@ while [[ $# -gt 0 ]]; do
       echo "------------------------------------------------"
       for script in *-static-musl.sh; do
         b_name=$(echo "$script" | sed 's/-static-musl//; s/\.sh//')
-        latest=$(ls dist/${b_name}-*-*.tar.xz 2>/dev/null | tail -n 1 | sed "s|dist/||; s|${b_name}-||; s|-${ARCH:-.*}.tar.xz||")
+        #latest=$(ls dist/${b_name}-*-*.tar.xz 2>/dev/null | tail -n 1 | sed "s|dist/||; s|${b_name}-||; s|-${ARCH:-.*}.tar.xz||")
+        latest=$(ls "${PWD}/dist/${b_name}"-*-*.tar.xz 2>/dev/null | tail -n 1 | sed "s|dist/||; s|${b_name}-||; s|-${ARCH:-.*}.tar.xz||")
         printf "${PEACH}%-15s${NC} %s\n" "$b_name" "${latest:-[No build found]}"
       done
       exit 0
@@ -238,11 +239,6 @@ for file in *-static-musl.sh; do
 
         # Write exit status to a file so the parent can count it
         echo "$exit_status" > "$STATUS_DIR/${bin_name}.$exit_status"
-    ) &
-
-    (
-        export CHROOTDIR="chroot-${TARGET_ARCH:-$ARCH}-${bin_name}"
-        ./"$file" > "${LOG_DIR}/builds/${bin_name}.txt" 2>&1
     ) &
 
     current_jobs=$((current_jobs + 1))
