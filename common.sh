@@ -599,10 +599,16 @@ mount_chroot() {
     mkdir -p "${CHROOTDIR}/opt/cross"
     mountpoint -q "${CHROOTDIR}/opt/cross" || mount --bind --make-slave "$CROSS_COMPILE_HOST_PATH" "${CHROOTDIR}/opt/cross"
     # Inject the compiler paths into the chroot's environment
-    export CC="/opt/cross/bin/${CROSS_PREFIX}gcc"
     export AR="/opt/cross/bin/${CROSS_PREFIX}ar"
     export STRIP="/opt/cross/bin/${CROSS_PREFIX}strip"
     export PATH="/opt/cross/bin:${PATH}"
+    if [ -n "${CLANG_CROSS}" == "false" ]; then
+      export CC="/opt/cross/bin/${CROSS_PREFIX}gcc"
+      export CXX="/opt/cross/bin/${CROSS_PREFIX}g++"
+    else
+      export CC="/opt/cross/bin/${CROSS_PREFIX}clang"
+      export CXX="/opt/cross/bin/${CROSS_PREFIX}clang++"
+    fi
   fi
 }
 
