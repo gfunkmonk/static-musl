@@ -12,14 +12,7 @@
 
 # Compiler Flags
 BCFLAGS="-Os -static -ffunction-sections -fdata-sections -fno-stack-protector"
-# -Os: optimize for size
-# -static: force static linking
-# -ffunction-sections -fdata-sections: enable dead code elimination
-# -fno-stack-protector: reduce binary size (acceptable for static builds)
 EXTRA="-fshort-enums -fno-ident -fno-unwind-tables -fno-asynchronous-unwind-tables"
-# -fshort-enums: use smallest possible enum size
-# -fno-ident: omit compiler identification strings
-# -fno-unwind-tables: omit exception unwinding tables (size reduction)
 LTO="-flto=auto -ffat-lto-objects"
 
 # PIE Flags
@@ -60,19 +53,15 @@ ALPINE_MAJOR_MINOR="${ALPINE_VERSION%.*}"
 CHROOTDIR="${CHROOTDIR:-potato}"
 
 # CCACHE_CHROOT_DIR: path inside the chroot where ccache stores its cache. Set this to a host-mounted path
-# (e.g. via CI cache) to persist ccache across builds. Defaults to /ccache (ephemeral, inside the chroot).
 CCACHE_CHROOT_DIR="${CCACHE_CHROOT_DIR:-/ccache}"
 
 # Determine ccache's log_file directory so mount_chroot can pre-create it inside the chroot.
-# We resolve the path carefully: if ccache is not installed or has no log_file configured,
-# xargs dirname would receive empty input and return "." — so we guard against that.
 _ccache_log_file=$(ccache -k log_file 2>/dev/null | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
 [[ -n ${_ccache_log_file} && ${_ccache_log_file} != "null" ]] && CCACHE_LOG_DIR=$(dirname "${_ccache_log_file}")
 unset _ccache_log_file
 CCACHE_LOG_DIR="${CCACHE_LOG_DIR:-/var/log/ccache}"
 
 # Preserve chroot after failed builds
-# (for debugging)
 KEEP_CHROOT="${KEEP_CHROOT:-false}"
 
 # Strip binaries
@@ -85,14 +74,11 @@ UPX_FLAGS="--lzma"
 # Fail if binary is dynamically linked
 REQUIRE_STATIC="${REQUIRE_STATIC:-true}"
 
-# Cross-compiler download is 'clang' if set to true, otherwise it's gcc
-CLANG_CROSS="${CLANG_CROSS:-false}"
-
 ##############################################################################
 # Cache results from 'get_version' 'get_git_version' & 'get_gitlab_version'  #
 # to save time and to keep from getting rate limited or temp blocked         #
 #                                                                            #
-# defaults to 3600 minutes ( 1 hour ).                                       #
+# defaults to 3600 minutes  1 hour.                                       #
 ##############################################################################
 VER_CACHE_TTL="${VER_CACHE_TTL:-3600}"
 VER_CACHE_DIR="/tmp/script_version_cache"

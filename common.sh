@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
 CONF_FILE="${SCRIPT_DIR}"/config.sh
 [[ -f "${CONF_FILE}" ]] && source "${CONF_FILE}"
@@ -525,13 +523,21 @@ setup_alpine_chroot() {
   # bundled tools
   echo -e "${SAND}= install prebuilt tools${NC}"
   local src
-  for prebuilt in 7zz upx uasm curl jq mold; do
-    src="tools/${prebuilt}/${prebuilt}-${ARCH}"
-    if [[ ! -f "$src" ]]; then
-      echo -e "${CRIMSON}= ERROR: ${src} not found${NC}" >&2
+  #for prebuilt in 7zz upx uasm curl jq mold; do
+  #  src="tools/${prebuilt}/${prebuilt}-${ARCH}"
+  #  if [[ ! -f "$src" ]]; then
+  #    echo -e "${CRIMSON}= ERROR: ${src} not found${NC}" >&2
+  #    exit 1
+  #  fi
+  #  cp "$src" "./${CHROOTDIR}/usr/local/bin/${prebuilt}"
+  #done
+  for tool_name in 7zz upx uasm curl jq mold; do
+    local tool_src="tools/${tool_name}/${tool_name}-${ARCH}"
+    if [[ ! -f "$tool_src" ]]; then
+      echo -e "${CRIMSON}= ERROR: ${tool_src} not found${NC}" >&2
       exit 1
     fi
-    cp "$src" "./${CHROOTDIR}/usr/local/bin/${prebuilt}"
+    cp "$tool_src" "./${CHROOTDIR}/usr/local/bin/${tool_name}"
   done
 }
 
@@ -594,21 +600,6 @@ mount_chroot() {
     sudo mount --bind "${CCACHE_DIR}" "./${CHROOTDIR}/${CCACHE_CHROOT_DIR}"
     sudo mount --make-slave "./${CHROOTDIR}/${CCACHE_CHROOT_DIR}"
     sudo mkdir -p "./${CHROOTDIR}/${CCACHE_LOG_DIR}"
-  fi
-  if [ -n "${CROSS_COMPILE_HOST_PATH:-}" ]; then
-    mkdir -p "${CHROOTDIR}/opt/cross"
-    mountpoint -q "${CHROOTDIR}/opt/cross" || mount --bind --make-slave "$CROSS_COMPILE_HOST_PATH" "${CHROOTDIR}/opt/cross"
-    # Inject the compiler paths into the chroot's environment
-    export AR="/opt/cross/bin/${CROSS_PREFIX}ar"
-    export STRIP="/opt/cross/bin/${CROSS_PREFIX}strip"
-    export PATH="/opt/cross/bin:${PATH}"
-    if [ "${CLANG_CROSS:-false}" != "true" ]; then
-      export CC="/opt/cross/bin/${CROSS_PREFIX}gcc"
-      export CXX="/opt/cross/bin/${CROSS_PREFIX}g++"
-    else
-      export CC="/opt/cross/bin/${CROSS_PREFIX}clang"
-      export CXX="/opt/cross/bin/${CROSS_PREFIX}clang++"
-    fi
   fi
 }
 
