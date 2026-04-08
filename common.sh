@@ -92,6 +92,15 @@ case "${ARCH}" in
   armv6|arm)    ARCH="armhf" ;;
   *)    echo -e "${MAUVE}= ARCH '${ARCH}' not in normalization map, using as-is${NC}" ;;
 esac
+# HOST_ARCH: the normalized native machine arch (used to decide when QEMU is needed)
+HOST_ARCH=$(uname -m)
+case "${HOST_ARCH}" in
+  x86_64|x86-64|amd64) HOST_ARCH="x86_64" ;;
+  i*86)                 HOST_ARCH="x86" ;;
+  aarch64|arm64|armv8)  HOST_ARCH="aarch64" ;;
+  armv7*)               HOST_ARCH="armv7" ;;
+  armv6|arm)            HOST_ARCH="armhf" ;;
+esac
 
 ####################
 #   Setup tools    #
@@ -113,18 +122,6 @@ done
 # setup_arch: resolve QEMU_ARCH & ARCH_FLAGS from ARCH #
 ########################################################
 setup_arch() {
-  # Determine the host's canonical architecture so we can skip QEMU when the
-  # target matches the host (no emulation needed for native builds).
-  local _host_arch
-  _host_arch=$(uname -m)
-  case "${_host_arch}" in
-    x86_64|amd64)  _host_arch="x86_64"  ;;
-    i*86)          _host_arch="x86"      ;;
-    arm64|aarch64) _host_arch="aarch64"  ;;
-    armv7*)        _host_arch="armv7"    ;;
-    armv6|arm)     _host_arch="armhf"    ;;
-  esac
-
   case "${ARCH}" in
     x86_64)
       QEMU_ARCH=""
@@ -132,15 +129,13 @@ setup_arch() {
       RUST_TARGET="x86_64-alpine-linux-musl"
       ;;
     x86)
-      # x86_64 (and x86) hosts execute i386 code natively via kernel compat32;
-      # QEMU is only required when the host itself is a different ISA.
-      [[ "${_host_arch}" == "x86_64" || "${_host_arch}" == "x86" ]] && QEMU_ARCH="" || QEMU_ARCH="i386"
+      # x86_64/x86 hosts run i386 natively via kernel compat32; only need QEMU on other ISAs
+      [[ "${HOST_ARCH}" == "x86_64" || "${HOST_ARCH}" == "x86" ]] && QEMU_ARCH="" || QEMU_ARCH="i386"
       ARCH_FLAGS="${X86_FLAGS}"
       RUST_TARGET="i586-alpine-linux-musl"
       ;;
     aarch64)
-      # Native aarch64 hosts can run Alpine aarch64 chroots without QEMU.
-      [[ "${_host_arch}" == "aarch64" ]] && QEMU_ARCH="" || QEMU_ARCH="aarch64"
+      [[ "${HOST_ARCH}" == "aarch64" ]] && QEMU_ARCH="" || QEMU_ARCH="aarch64"
       ARCH_FLAGS="${AARCH64_FLAGS}"
       RUST_TARGET="aarch64-alpine-linux-musl"
       ;;
