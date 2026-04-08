@@ -19,6 +19,7 @@ PARALLEL_JOBS=1
 CHECKSUM=false
 CLEAN_DIST=false
 USE_CROSS=false  # New Flag
+CLANG_CROSS=false
 
 JUNEBUD="\033[38;2;189;218;87m"
 SKY="\033[38;2;135;206;250m"
@@ -53,6 +54,7 @@ usage() {
   echo -e "  ${SKY}--arch <arch>${NC}      Target architecture (x86_64, aarch64, armv7, armhf, x86)."
   echo -e "                       Overrides ARCH environment variable."
   echo -e "  ${SKY}--cross${NC}            Download and use prebuilt musl-cross toolchains for non-native builds."
+  echo -e "  ${SKY}--clang-cross${NC}      Same as above but downloads clang toolchain instead of gcc."
   echo -e ""
   echo -e "  ${SKY}--checksum${NC}         Generate SHA256 checksums for all files in dist/ after building."
   echo -e "  ${SKY}--clean${NC}            Remove dist/*.tar.xz before building."
@@ -80,10 +82,10 @@ setup_cross_toolchain() {
     if [ ! -d "$tc_path" ]; then
         echo -e "${NEONBLUE}= Downloading $tc_name toolchain...${NC}"
         mkdir -p "$toolchain_dir"
-        if [ "$CLANG_CROSS" = true ]; then
-          curl -L "https://github.com/gfunkmonk/clang-cross/releases/download/magazine/${tc_name}.tar.xz" | tar -xJ -C "$toolchain_dir"
-        else
+        if [ "$CLANG_CROSS" = false ]; then
           curl -L "https://github.com/gfunkmonk/musl-cross/releases/download/prevalence/${tc_name}.tar.xz" | tar -xJ -C "$toolchain_dir"
+        else
+          curl -L "https://github.com/gfunkmonk/clang-cross/releases/download/magazine/${tc_name}.tar.xz" | tar -xJ -C "$toolchain_dir"
         fi
     fi
 
@@ -180,6 +182,11 @@ while [[ $# -gt 0 ]]; do
       ;;
     --cross)
       USE_CROSS=true
+      ;;
+    --clang-cross)
+      USE_CROSS=true
+      CLANG_CROSS=true
+      export CLANG_CROSS=true
       ;;
     --tool)
       SELECTED_TOOLS="$2"
