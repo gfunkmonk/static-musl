@@ -33,21 +33,21 @@ jobs:
         id: alpine-version
         run: echo "version=$(grep '^ALPINE_VERSION=' config.sh | cut -d= -f2 | tr -d '"')" >> "$GITHUB_OUTPUT"
 
-     - name: Restore Rootfs Cache
-       id: rootfs-cache
-       uses: actions/cache/restore@v5
-       with:
-         path: minirootfs/alpine-base-${{ matrix.arch }}.tar.zst
-         key: alpine-prebaked-${{ steps.alpine-version.outputs.version }}-${{ matrix.arch }}
+      - name: Restore Rootfs Cache
+        id: rootfs-cache
+        uses: actions/cache/restore@v5
+        with:
+          path: minirootfs/alpine-base-${{ matrix.arch }}.tar.zst
+          key: alpine-prebaked-${{ steps.alpine-version.outputs.version }}-${{ matrix.arch }}
 
-     - name: Run Setup Script
+      - name: Run Setup Script
         run: |
           chmod +x scripts/setup-base-rootfs.sh
           sudo env ARCH=${{ matrix.arch }} ./scripts/setup-base-rootfs.sh ${{ inputs.extra_packages }}
 
-     - name: Save Rootfs Cache
-       if: steps.rootfs-cache.outputs.cache-hit != 'true'
-       uses: actions/cache/save@v5
-       with:
-         path: minirootfs/alpine-base-${{ matrix.arch }}.tar.zst
-         key: alpine-prebaked-${{ steps.alpine-version.outputs.version }}-${{ matrix.arch }}
+      - name: Save Rootfs Cache
+        if: steps.rootfs-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: minirootfs/alpine-base-${{ matrix.arch }}.tar.zst
+          key: alpine-prebaked-${{ steps.alpine-version.outputs.version }}-${{ matrix.arch }}

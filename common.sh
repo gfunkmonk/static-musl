@@ -168,7 +168,7 @@ check_cache() {
             fi
         fi
         return 1
-    ) 200>>"$lockfile"
+    ) 200>"$lockfile"
 }
 
 ###########################################
@@ -184,7 +184,7 @@ write_cache() {
         flock -x 200 || return 1
         echo "$2" > "$temp_file"
         mv "$temp_file" "$cache_file"
-    ) 200>>"$lockfile"
+    ) 200>"$lockfile"
 }
 
 #########################################
@@ -318,7 +318,11 @@ unmount_chroot() {
       grep -F "$(pwd)/${CHROOTDIR}" /proc/mounts | cut -f2 -d" " | sort -r | xargs -r sudo umount -nfR 2>/dev/null || true
     fi
 
-    sleep 3
+    # Re-check immediately; only sleep if still mounted (exponential backoff)
+    if ! grep -qF "$(pwd)/${CHROOTDIR}" /proc/mounts 2>/dev/null; then
+      return 0
+    fi
+    sleep $(( attempt + 1 ))
     (( ++attempt ))
   done
 
