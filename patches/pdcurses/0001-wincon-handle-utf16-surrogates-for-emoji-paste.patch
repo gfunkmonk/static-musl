@@ -1,0 +1,74 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: static-musl <noreply@example.com>
+Date: Sun, 10 May 2026 02:30:00 +0000
+Subject: [PATCH] wincon: combine UTF-16 surrogate pairs for pasted emoji
+
+Windows console input delivers non-BMP code points (such as emojis) as
+UTF-16 surrogate pairs.  In wide builds, the wincon keyboard path was
+returning the raw high surrogate first, which appears as garbled or
+unknown glyphs when pasting emoji text.
+
+Buffer a high surrogate and combine it with the following low surrogate
+into a single Unicode code point before returning it to callers.
+
+---
+ wincon/pdckbd.c | 31 +++++++++++++++++++++++++++++++
+ 1 file changed, 31 insertions(+)
+
+diff --git a/wincon/pdckbd.c b/wincon/pdckbd.c
+index 7f5f97f..7fe34f0 100644
+--- a/wincon/pdckbd.c
++++ b/wincon/pdckbd.c
+@@ -12,6 +12,10 @@ static DWORD event_count = 0;
+ static SHORT left_key;
+ static int key_count = 0;
+ static int save_press = 0;
++#ifdef PDC_WIDE
++/* Pending UTF-16 high surrogate from console input, if any. */
++static int pending_high_surrogate = 0;
++#endif
+ 
+ #define KEV save_ip.Event.KeyEvent
+ #define MEV save_ip.Event.MouseEvent
+@@ -406,6 +410,30 @@ static int _process_key_event(void)
+     int idx;
+     BOOL enhanced;
+ 
++#ifdef PDC_WIDE
++    if ((unsigned int)key >= 0xD800U && (unsigned int)key <= 0xDBFFU)
++    {
++        /* Save high surrogate; wait for the matching low surrogate. */
++        pending_high_surrogate = key;
++        return -1;
++    }
++
++    if ((unsigned int)key >= 0xDC00U && (unsigned int)key <= 0xDFFFU)
++    {
++        if (pending_high_surrogate)
++        {
++            key = 0x10000 + ((pending_high_surrogate - 0xD800) << 10)
++                + (key - 0xDC00);
++            pending_high_surrogate = 0;
++        }
++        else
++            return -1;     /* orphan low surrogate */
++    }
++    else
++        pending_high_surrogate = 0;
++#endif
++
+     /* Save the key modifiers. Do this first to allow to detect e.g. a
+        pressed CTRL key after a hit of NUMLOCK. */
+ 
+@@ -629,6 +657,9 @@ void PDC_flushinp(void)
+     PDC_LOG(("PDC_flushinp() - called\n"));
+ 
+     FlushConsoleInputBuffer(pdc_con_in);
++#ifdef PDC_WIDE
++    pending_high_surrogate = 0;
++#endif
+ }
+ 
+ bool PDC_has_mouse(void)
+-- 
+2.49.0
