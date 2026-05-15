@@ -3,6 +3,7 @@ set -euo pipefail
 . "$(dirname "${BASH_SOURCE[0]}")/common.sh"
 
 echo -e "${VIOLET}= fetching latest htop version${NC}"
+# Keep htop pinned to the patch base version until patches/htop/htop.patch is updated for newer upstream releases.
 HTOP_VERSION="${FALLBACK_HTOP}"
 echo -e "${CORAL}= building htop version: ${HTOP_VERSION}${NC}"
 PACKAGE_VERSION="${HTOP_VERSION}"
