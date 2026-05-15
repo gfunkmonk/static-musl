@@ -21,7 +21,7 @@ run_build_setup "sed" "${SED_VERSION}" "${SED_TARBALL}" \
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
 set -e
 echo -e "${ORANGE}= Installing dependencies...${NC}"
-apk update && apk add build-base mold ccache pkgconfig perl gettext-dev gettext-static
+apk update && apk add build-base mold ccache pkgconfig perl gettext-dev gettext-static linux-headers
 apk upgrade musl-dev mold --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
 mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
 echo -e "${LIME}= Extracting source${NC}"
