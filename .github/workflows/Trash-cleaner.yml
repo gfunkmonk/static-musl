@@ -45,6 +45,10 @@ on:
           - disabled_inactivity
           - disabled_manually
 
+permissions:
+  contents: read
+  actions: write # Required to delete historical workflow logs
+
 jobs:
   del_runs:
     runs-on: ubuntu-latest
@@ -71,4 +75,4 @@ jobs:
           delete_workflow_pattern: ${{ github.event.inputs.delete_workflow_pattern }}
           delete_workflow_by_state_pattern: ${{ github.event.inputs.delete_workflow_by_state_pattern }}
           delete_run_by_conclusion_pattern: ${{ github.event.inputs.delete_run_by_conclusion_pattern }}
-          dry_run: ${{ github.event.inputs.dry_run }}
+          dry_run: ${{ github.event.inputs.dry_run }} # Hooks up the dry_run checkbox input
