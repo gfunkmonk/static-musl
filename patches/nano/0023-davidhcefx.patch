@@ -1,0 +1,246 @@
+diff -ruN a/doc/nano.1 nano/doc/nano.1
+--- a/doc/nano.1	2026-05-15 05:36:18.685049385 -0400
++++ nano/doc/nano.1	2026-05-15 05:37:41.655048840 -0400
+@@ -372,6 +372,9 @@
+ .BR \-x ", " \-\-nohelp
+ Don't show the two help lines at the bottom of the screen.
+ .TP
++.BR \-\-nosearchwrap
++Don't wrap around to the start or end of the buffer when performing search or replace.
++.TP
+ .BR \-y ", " \-\-afterends
+ Make Ctrl+Right and Ctrl+Delete stop at word ends instead of beginnings.
+ .TP
+diff -ruN a/doc/nanorc.5 nano/doc/nanorc.5
+--- a/doc/nanorc.5	2026-05-15 05:36:18.685049385 -0400
++++ nano/doc/nanorc.5	2026-05-15 05:38:42.335048441 -0400
+@@ -257,6 +257,9 @@
+ Don't automatically add a newline when a text does not end with one.
+ (This can cause you to save non-POSIX text files.)
+ .TP
++.B set nosearchwrap
++Don't wrap around to the start or end of the buffer when performing search or replace.
++.TP
+ .B set nowrap
+ Deprecated option since it has become the default setting.
+ When needed, use \fBunset \%breaklonglines\fR instead.
+@@ -742,6 +745,12 @@
+ Counts and reports on the status bar the number of lines, words,
+ and characters in the current buffer (or in the marked region).
+ .TP
++.B setsyntax
++Prompts for new syntax highlighting to be applied.
++.TP
++.B settabsize
++Prompts for a new tabsize to be set.
++.TP
+ .B execute
+ Prompts for a program to execute.  The program's output is inserted
+ into the current buffer \[em] or into a new buffer when \fBM\-F\fR is toggled.
+diff -ruN a/src/definitions.h b/src/definitions.h
+--- a/src/definitions.h	2026-05-15 05:36:18.685049385 -0400
++++ b/src/definitions.h	2026-05-15 05:39:44.455048033 -0400
+@@ -316,6 +316,7 @@
+ 	PROMPT_BAR,
+ 	STATUS_BAR,
+ 	ERROR_MESSAGE,
++	NO_SEARCH_WRAP,
+ 	KEY_COMBO,
+ 	FUNCTION_TAG,
+ 	NUMBER_OF_ELEMENTS
+diff -ruN a/src/global.c b/src/global.c
+--- a/src/global.c	2026-05-15 05:36:18.685049385 -0400
++++ b/src/global.c	2026-05-15 05:43:11.965046671 -0400
+@@ -691,6 +691,8 @@
+ 	const char *wordcount_gist =
+ 		N_("Count the number of lines, words, and characters");
+ 	const char *suspend_gist = N_("Suspend the editor (return to the shell)");
++	const char *settabsize_gist = N_("Set new tabsize");
++	const char *setsyntax_gist = N_("Set new syntax highlighting");
+ #endif
+ 	const char *refresh_gist = N_("Refresh (redraw) the current screen");
+ #ifdef ENABLE_WORDCOMPLETION
+@@ -1047,6 +1049,10 @@
+ 			N_("Delete"), WHENHELP(delete_gist), BLANKAFTER);
+ 
+ #ifndef NANO_TINY
++	add_to_funcs(do_set_tabsize, MMAIN,
++			N_("Set Tabsize"), WHENHELP(settabsize_gist), TOGETHER);
++	add_to_funcs(do_set_syntax, MMAIN,
++			N_("Set Syntax"), WHENHELP(setsyntax_gist), TOGETHER);
+ 	add_to_funcs(chop_previous_word, MMAIN,
+ 			/* TRANSLATORS: The next two strings refer to deleting words. */
+ 			N_("Chop Left"), WHENHELP(chopwordleft_gist), TOGETHER);
+@@ -1466,6 +1472,8 @@
+ 	add_to_sclist(MEXECUTE, "^Z", 0, do_suspend, 0);
+ 	add_to_sclist(MMAIN, "^Z", 0, suggest_ctrlT_ctrlZ, 0);
+ 	add_to_sclist(MMAIN, "M-D", 0, count_lines_words_and_characters, 0);
++	add_to_sclist(MMAIN, "M-4", 0, do_set_tabsize, 0);
++	add_to_sclist(MMAIN, "M-5", 0, do_set_syntax, 0);
+ #else
+ 	add_to_sclist(MMAIN, "M-H", 0, do_help, 0);
+ #endif
+diff -ruN a/src/nano.c b/src/nano.c
+--- a/src/nano.c	2026-05-15 05:36:18.685049385 -0400
++++ b/src/nano.c	2026-05-15 05:45:35.065045731 -0400
+@@ -634,6 +634,7 @@
+ 	print_opt("-w", "--nowrap", N_("Don't hard-wrap long lines [default]"));
+ #endif
+ 	print_opt("-x", "--nohelp", N_("Don't show the two help lines"));
++	print_opt("", "--nosearchwrap", N_("Don't wrap past EOF when search/replace"));
+ #ifndef NANO_TINY
+ 	print_opt("-y", "--afterends", N_("Make Ctrl+Right stop at word ends"));
+ #endif
+@@ -1848,6 +1849,7 @@
+ #ifdef HAVE_LIBMAGIC
+ 		{"magic", 0, NULL, '!'},
+ #endif
++		{"nosearchwrap", 0, NULL, 0xCF},
+ 		{NULL, 0, NULL, 0}
+ 	};
+ 
+@@ -2151,6 +2153,9 @@
+ 			case 0xCC:
+ 				SET(WHITESPACE_DISPLAY);
+ 				break;
++			case 0xCF:
++				SET(NO_SEARCH_WRAP);
++				break;
+ 			case '@':
+ 				SET(COLON_PARSING);
+ 				break;
+diff -ruN a/src/prototypes.h b/src/prototypes.h
+--- a/src/prototypes.h	2026-05-15 05:36:18.685049385 -0400
++++ b/src/prototypes.h	2026-05-15 05:46:09.685045504 -0400
+@@ -549,6 +549,8 @@
+ #endif
+ #ifndef NANO_TINY
+ void count_lines_words_and_characters(void);
++void do_set_tabsize(void);
++void do_set_syntax(void);
+ #endif
+ void do_verbatim_input(void);
+ #ifdef ENABLE_WORDCOMPLETION
+diff -ruN a/src/rcfile.c b/src/rcfile.c
+--- a/src/rcfile.c	2026-05-15 05:36:18.685049385 -0400
++++ b/src/rcfile.c	2026-05-15 05:48:07.105044733 -0400
+@@ -68,6 +68,7 @@
+ #endif
+ 	{"nohelp", NO_HELP},
+ 	{"nonewlines", NO_NEWLINES},
++	{"nosearchwrap", NO_SEARCH_WRAP},
+ #ifdef ENABLE_WRAPPING
+ 	{"nowrap", NO_WRAP},  /* Deprecated; remove in 2027. */
+ #endif
+@@ -310,6 +311,8 @@
+ 		s->func = do_find_bracket;
+ 	else if (!strcmp(input, "wordcount"))
+ 		s->func = count_lines_words_and_characters;
++	else if (!strcmp(input, "setsyntax"))
++		s->func = do_set_syntax;
+ 	else if (!strcmp(input, "recordmacro"))
+ 		s->func = record_macro;
+ 	else if (!strcmp(input, "runmacro"))
+@@ -320,6 +323,8 @@
+ 		s->func = to_prev_anchor;
+ 	else if (!strcmp(input, "nextanchor"))
+ 		s->func = to_next_anchor;
++	else if (!strcmp(input, "settabsize"))
++		s->func = do_set_tabsize;
+ 	else if (!strcmp(input, "undo"))
+ 		s->func = do_undo;
+ 	else if (!strcmp(input, "redo"))
+diff -ruN a/src/search.c b/src/search.c
+--- a/src/search.c	2026-05-15 05:36:18.685049385 -0400
++++ b/src/search.c	2026-05-15 05:49:04.205044358 -0400
+@@ -245,7 +245,7 @@
+ 		/* If we've reached the start or end of the buffer, wrap around;
+ 		 * but stop when spell-checking or replacing in a region. */
+ 		if (line == NULL) {
+-			if (whole_word_only || modus == INREGION) {
++			if (whole_word_only || modus == INREGION || ISSET(NO_SEARCH_WRAP)) {
+ 				nodelay(midwin, FALSE);
+ 				return 0;
+ 			}
+diff -ruN a/src/text.c b/src/text.c
+--- a/src/text.c	2026-05-15 05:36:18.685049385 -0400
++++ b/src/text.c	2026-05-15 05:51:34.575043370 -0400
+@@ -3203,6 +3203,66 @@
+ 						words, P_("word", "words", words),
+ 						chars, P_("character", "characters", chars));
+ }
++
++/* Prompt user for changing to the new syntax highlighting. We use the spell menu because
++ * it has no functions. */
++void do_set_syntax(void)
++{
++         int response;
++         const char *oldname, *newname;
++         linestruct *line;
++
++         if (openfile->syntax) {
++                   response = do_prompt(MSPELL, "", NULL, edit_refresh, "Syntax Name [%s]", openfile->syntax->name);
++         } else {
++                   response = do_prompt(MSPELL, "", NULL, edit_refresh, "Syntax Name");
++         }
++         if (response == -1) {
++                   statusbar(_("Cancelled"));
++                   return;
++         } else if (response == -2) {  // blank input
++                   return;
++         }
++
++         syntaxstr = mallocstrcpy(syntaxstr, answer);
++         oldname = openfile->syntax ? openfile->syntax->name : "";
++         find_and_prime_applicable_syntax();
++         newname = openfile->syntax ? openfile->syntax->name : "";
++
++         /* If the syntax changed, discard and recompute the multidata. */
++         if (strcmp(oldname, newname) != 0) {
++                   for (line = openfile->filetop; line != NULL; line = line->next) {
++                             free(line->multidata);
++                             line->multidata = NULL;
++                   }
++
++                   precalc_multicolorinfo();
++                   have_palette = FALSE;
++                   refresh_needed = TRUE;
++         }
++}
++
++/* Prompt user to set the new tabsize. We use the spell menu because
++ * it has no functions. */
++void do_set_tabsize(void)
++{
++         ssize_t new_tabsize = -1;
++         int response = do_prompt(MSPELL, "", NULL, edit_refresh, "New tabsize");
++
++         /* Cancel if no answer provided. */
++         if (response != 0) {
++                   statusbar(_("Cancelled"));
++                   return;
++         }
++
++         if (!parse_num(answer, &new_tabsize) || new_tabsize <= 0) {
++                   statusline(AHEM, _("Requested tab size \"%s\" is invalid"), answer);
++                   return;
++         }
++
++         tabsize = new_tabsize;
++         statusline(REMARK, _("Tabsize set to %d"), tabsize);
++}
+ #endif /* !NANO_TINY */
+ 
+ /* Get verbatim input. */
+diff -ruN a/syntax/nanorc.nanorc nano/syntax/nanorc.nanorc
+--- a/syntax/nanorc.nanorc	2026-05-15 05:36:18.685049385 -0400
++++ nano/syntax/nanorc.nanorc	2026-05-15 05:53:05.045042776 -0400
+@@ -14,7 +14,7 @@
+ color lime "^[[:blank:]]*extendsyntax[[:blank:]]+[[:alpha:]]+[[:blank:]]+(i?color|header|magic|comment|formatter|linter|tabgives)[[:blank:]]+.*"
+ 
+ # The arguments of commands
+-color brightgreen "^[[:blank:]]*(set|unset)[[:blank:]]+(afterends|allow_insecure_backup|atblanks|autoindent|backup|boldtext|bookstyle|breaklonglines|casesensitive|colonparsing|constantshow|cutfromcursor|emptyline|historylog|indicator|jumpyscrolling|linenumbers|locking|magic|minibar|mouse|multibuffer|noconvert|nohelp|nonewlines|positionlog|preserve|quickblank|rawsequences|rebinddelete|regexp|saveonexit|showcursor|smarthome|softwrap|solosidescroll|stateflags|tabstospaces|trimblanks|unix|whitespacedisplay|wordbounds|zap|zero)\>"
++color brightgreen "^[[:blank:]]*(set|unset)[[:blank:]]+(afterends|allow_insecure_backup|atblanks|autoindent|backup|boldtext|bookstyle|breaklonglines|casesensitive|colonparsing|constantshow|cutfromcursor|emptyline|historylog|indicator|jumpyscrolling|linenumbers|locking|magic|minibar|mouse|multibuffer|noconvert|nohelp|nosearchwrap|nonewlines|positionlog|preserve|quickblank|rawsequences|rebinddelete|regexp|saveonexit|showcursor|smarthome|softwrap|solosidescroll|stateflags|tabstospaces|trimblanks|unix|whitespacedisplay|wordbounds|zap|zero)\>"
+ color brightgreen "^[[:blank:]]*set[[:blank:]]+(backupdir|brackets|errorcolor|functioncolor|keycolor|matchbrackets|minicolor|numbercolor|operatingdir|promptcolor|punct|quotestr|scrollercolor|selectedcolor|speller|spotlightcolor|statuscolor|stripecolor|titlecolor|whitespace|wordchars)[[:blank:]]+"
+ color brightgreen "^[[:blank:]]*set[[:blank:]]+(fill[[:blank:]]+-?[[:digit:]]+|(guidestripe|tabsize)[[:blank:]]+[1-9][0-9]*)\>"
+ color brightgreen "^[[:blank:]]*bind[[:blank:]]+((\^([[:alpha:]]|[]/@\^_`-]|Space)|([Ss][Hh]-)?[Mm]-[[:alpha:]]|[Mm]-([][!"#$%&'()*+,./0-9:;<=>?@\^_`{|}~-]|Space|Left|Right|Up|Down))|F([1-9]|1[0-9]|2[0-4])|Ins|Del)[[:blank:]]+([[:lower:]]+|".*")[[:blank:]]+(main|help|search|replace(with)?|yesno|gotoline|writeout|insert|execute|browser|whereisfile|gotodir|spell|linter|all)\>"
