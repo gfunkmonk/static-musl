@@ -97,7 +97,7 @@ jobs:
 
   build:
     needs: setup
-    runs-on: ${{ matrix.runner }}
+    runs-on: ${{ (matrix.arch == 'aarch64' || matrix.arch == 'armv7' || matrix.arch == 'armhf') && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
     timeout-minutes: 90
     env:
       CCACHE_DIR: ${{ github.workspace }}/.ccache
@@ -107,17 +107,6 @@ jobs:
       matrix:
         tool: ${{ fromJson(needs.setup.outputs.matrix) }}
         arch: ${{ fromJson(needs.setup.outputs.arch_matrix) }}
-        include:
-          - arch: x86_64
-            runner: ubuntu-latest
-          - arch: x86
-            runner: ubuntu-latest
-          - arch: aarch64
-            runner: ubuntu-24.04-arm
-          - arch: armv7
-            runner: ubuntu-24.04-arm
-          - arch: armhf
-            runner: ubuntu-24.04-arm
 
     steps:
     - uses: actions/checkout@v6
