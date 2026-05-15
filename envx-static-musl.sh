@@ -38,7 +38,12 @@ export CARGO_PROFILE_RELEASE_OPT_LEVEL="z"
 export CARGO_PROFILE_RELEASE_LTO="true"
 export CARGO_PROFILE_RELEASE_STRIP="symbols"
 export CARGO_PROFILE_RELEASE_CODEGEN_UNITS="1"
-export RUSTFLAGS="-C target-feature=+crt-static -C link-arg=-fuse-ld=mold"
+#export RUSTFLAGS="-C target-feature=+crt-static -C link-arg=-fuse-ld=mold"
+RUST_LINKER_FLAG="-C link-arg=-fuse-ld=mold"
+if [ "${ARCH}" = "x86" ]; then
+  RUST_LINKER_FLAG="-C link-arg=-fuse-ld=bfd"
+fi
+export RUSTFLAGS="-C target-feature=+crt-static ${RUST_LINKER_FLAG}"
 cargo build --target ${NATIVE_RUST_TARGET} --release
 echo -e "\n${CARIBBEAN}= ccache statistics:${NC}"
 ccache -s | tail -n 10
