@@ -24,10 +24,6 @@ rust_set_cross_target
 if [ -n "${RUST_TARGET}" ]; then
   rust_host_cross_build "envx" "${ENVX_VERSION}" "${ENVX_TARBALL}" "envx-${ENVX_VERSION}" "envx"
 else
-  envx_link_gcc=""
-  if [[ "${ARCH}" == "x86" ]]; then
-    envx_link_gcc=" -C link-arg=-lgcc"
-  fi
   sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
 set -e
 echo -e "${ORANGE}= Installing dependencies...${NC}"
@@ -42,7 +38,7 @@ export CARGO_PROFILE_RELEASE_OPT_LEVEL="z"
 export CARGO_PROFILE_RELEASE_LTO="true"
 export CARGO_PROFILE_RELEASE_STRIP="symbols"
 export CARGO_PROFILE_RELEASE_CODEGEN_UNITS="1"
-export RUSTFLAGS="-C target-feature=+crt-static -C link-arg=-fuse-ld=mold${envx_link_gcc}"
+export RUSTFLAGS="-C target-feature=+crt-static -C link-arg=-fuse-ld=mold"
 cargo build --target ${NATIVE_RUST_TARGET} --release
 echo -e "\n${CARIBBEAN}= ccache statistics:${NC}"
 ccache -s | tail -n 10
