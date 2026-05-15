@@ -3,8 +3,7 @@ set -euo pipefail
 . "$(dirname "${BASH_SOURCE[0]}")/common.sh"
 
 echo -e "${LEMON}= fetching latest rsync version${NC}"
-# Keep rsync pinned to the patch base version until patches/rsync/* are refreshed for newer upstream releases.
-RSYNC_VERSION="${FALLBACK_RSYNC}"
+RSYNC_VERSION=$(get_version release "RsyncProject/rsync" '.tag_name | ltrimstr("v")' "${FALLBACK_RSYNC}")
 echo -e "${LAGOON}= building rsync version: ${RSYNC_VERSION}${NC}"
 PACKAGE_VERSION="${RSYNC_VERSION}"
 RSYNC_TARBALL="rsync-${RSYNC_VERSION}.tar.gz"
