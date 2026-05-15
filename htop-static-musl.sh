@@ -3,7 +3,8 @@ set -euo pipefail
 . "$(dirname "${BASH_SOURCE[0]}")/common.sh"
 
 echo -e "${VIOLET}= fetching latest htop version${NC}"
-HTOP_VERSION=$(get_version release "htop-dev/htop" "" "${FALLBACK_HTOP}")echo -e "${CORAL}= building htop version: ${HTOP_VERSION}${NC}"
+HTOP_VERSION=$(get_version release "htop-dev/htop" "" "${FALLBACK_HTOP}")
+echo -e "${CORAL}= building htop version: ${HTOP_VERSION}${NC}"
 PACKAGE_VERSION="${HTOP_VERSION}"
 HTOP_TARBALL="htop-${HTOP_VERSION}.tar.xz"
 HTOP_MIRRORS=(
