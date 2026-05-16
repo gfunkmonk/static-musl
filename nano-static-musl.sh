@@ -40,6 +40,8 @@ if [ -d ../patches ]; then
        done
    fi
 fi
+echo -e "${CHARTREUSE}[${BWHITE}nano.c${CHARTREUSE}] ${BWHITE}Updating modified buffer prompt text${NC}"
+sed -i "s|Save modified buffer|& (Y/N/^C)|" src/nano.c
 echo -e "${PEACH}= Configure source${NC}"
 ./configure CC="${CC}" \
   --sysconfdir=/etc --disable-nls --disable-utf8 --disable-tiny --enable-nanorc --enable-color \
