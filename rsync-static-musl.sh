@@ -19,9 +19,8 @@ run_build_setup "rsync" "${RSYNC_VERSION}" "${RSYNC_TARBALL}" \
 sudo chroot "./${CHROOTDIR}/" /bin/sh -s <<EOF
 set -e
 echo -e "${ORANGE}= Installing dependencies...${NC}"
-apk update && apk add build-base mold pkgconfig clang acl-dev acl-static attr-dev zstd-dev zstd-static openssl-libs-static openssl-dev git lz4-dev xxhash-dev
+apk update && apk add build-base ccache mold pkgconfig clang acl-dev acl-static attr-dev zstd-dev zstd-static openssl-libs-static openssl-dev git lz4-dev xxhash-dev
 apk upgrade musl-dev mold --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main
-#mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
 echo -e "${CANARY}= Build & install xxHash${NC}"
 git clone https://github.com/Cyan4973/xxHash.git
 cd xxHash
@@ -34,6 +33,7 @@ cd lz4
 PREFIX=/usr CC="${CC}" make LDFLAGS='${BLDFLAGS} ${MOLD} ${LPIE}' PKG_CONFIG='${PKGCFG}' CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${CPIE}'
 PREFIX=/usr CC="${CC}" make install LDFLAGS='${BLDFLAGS} ${MOLD} ${LPIE}' PKG_CONFIG='${PKGCFG}' CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${CPIE}'
 cd ..
+mkdir -p /ccache && export CCACHE_DIR=${CCACHE_CHROOT_DIR} CCACHE_BASEDIR=/ PATH=/usr/lib/ccache/bin:\$PATH
 echo -e "${LIME}= Extracting source${NC}"
 tar xf ${RSYNC_TARBALL}
 cd rsync-${RSYNC_VERSION}/
