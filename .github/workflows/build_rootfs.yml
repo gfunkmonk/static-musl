@@ -27,7 +27,7 @@ jobs:
 
     runs-on: ${{ matrix.runner }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Read Alpine version
         id: alpine-version
@@ -35,7 +35,7 @@ jobs:
 
       - name: Restore Rootfs Cache
         id: rootfs-cache
-        uses: actions/cache/restore@v5
+        uses: actions/cache/restore@v6
         with:
           path: minirootfs/alpine-base-${{ matrix.arch }}.tar.zst
           key: alpine-prebaked-${{ steps.alpine-version.outputs.version }}-${{ matrix.arch }}
@@ -47,7 +47,7 @@ jobs:
 
       - name: Save Rootfs Cache
         if: steps.rootfs-cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v5
+        uses: actions/cache/save@v6
         with:
           path: minirootfs/alpine-base-${{ matrix.arch }}.tar.zst
           key: alpine-prebaked-${{ steps.alpine-version.outputs.version }}-${{ matrix.arch }}
