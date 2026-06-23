@@ -3,14 +3,14 @@ set -euo pipefail
 . "$(dirname "${BASH_SOURCE[0]}")/common.sh"
 
 echo -e "${VIOLET}= fetching latest upx version${NC}"
-UPX_VERSION=$(get_version release "upx/upx" '.tag_name | ltrimstr("v")' "${FALLBACK_UPX}")
+UPX_VERSION=$(get_version release "gfunkmonk/upx" '.tag_name | ltrimstr("v")' "${FALLBACK_UPX}")
 echo -e "${MINT}= building upx version: ${UPX_VERSION}${NC}"
 PACKAGE_VERSION="${UPX_VERSION}"
 SINGLEVER="${UPX_VERSION##*.}"
 UPX_TARBALL="upx-${UPX_VERSION}-src.tar.xz"
 UPX_MIRRORS=(
-  "https://github.com/upx/upx/releases/download/v${UPX_VERSION}/upx-${UPX_VERSION}-src.tar.xz"
-  "https://fossies.org/linux/misc/upx-${UPX_VERSION}-src.tar.xz"
+  "https://github.com/gfunkmonk/upx/releases/download/v${UPX_VERSION}/upx-${UPX_VERSION}-src.tar.xz"
+  #"https://fossies.org/linux/misc/upx-${UPX_VERSION}-src.tar.xz"
 )
 
 run_build_setup "upx" "${UPX_VERSION}" "${UPX_TARBALL}" \
@@ -37,13 +37,13 @@ if [ -d ../patches ]; then
        done
    fi
 fi
-sed -i 's|define UPX_VERSION_HEX      0x050...|define UPX_VERSION_HEX      0x00010${SINGLEVER}|g' src/version.h
-sed -i 's|05.01...|00.01.0${SINGLEVER}|g' src/version.h
-sed -i 's|"5...."|"0.1.${SINGLEVER}"|g' src/version.h
-sed -i 's|"5..."|"0.1${SINGLEVER}"|g' src/version.h
+#sed -i 's|define UPX_VERSION_HEX      0x050...|define UPX_VERSION_HEX      0x00010${SINGLEVER}|g' src/version.h
+#sed -i 's|05.01...|00.01.0${SINGLEVER}|g' src/version.h
+#sed -i 's|"5...."|"0.1.${SINGLEVER}"|g' src/version.h
+#sed -i 's|"5..."|"0.1${SINGLEVER}"|g' src/version.h
 sed -i "s/UPX_VERSION_DATE     \".*\"/UPX_VERSION_DATE     \"$(date +"%b %-d, %Y" | sed 's/\(1[0-9]\),/\1th,/;s/1,/1st,/;s/2,/2nd,/;s/3,/3rd,/;s/\([0-9]\),/\1th,/g' | sed 's/,//g')\"/g" src/version.h
 sed -i "s/UPX_VERSION_DATE_ISO \".*\"/UPX_VERSION_DATE_ISO \"$(date '+%Y-%m-%d')\"/g" src/version.h
-sed -i 's%UPX_VERSION_STRING "5.1.."%UPX_VERSION_STRING "0.1.${SINGLEVER}"%g' CMakeLists.txt
+#sed -i 's%UPX_VERSION_STRING "5.1.."%UPX_VERSION_STRING "0.1.${SINGLEVER}"%g' CMakeLists.txt
 mkdir build && cd build/
 echo -e "${PEACH}= Configure source${NC}"
 cmake -G Ninja \
@@ -51,7 +51,7 @@ cmake -G Ninja \
   -DCMAKE_C_FLAGS_RELEASE='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${CNOPIE}' \
   -DCMAKE_CXX_FLAGS_RELEASE='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${CNOPIE}' \
   -DCMAKE_BUILD_TYPE=Release -DUPX_CONFIG_DISABLE_GITREV=ON -DUPX_CONFIG_DISABLE_WSTRICT=ON \
-  -DUSE_STRICT_DEFAULTS=OFF -DUPX_CONFIG_REQUIRE_THREADS=ON -S ..
+  -DUSE_STRICT_DEFAULTS=OFF -DUPX_CONFIG_REQUIRE_THREADS=ON -DUPX_CONFIG_EXPECT_THREADS=OFF -S ..
 echo -e "${VIOLET}= Building...${NC}"
 ninja -j\$(nproc)
 echo -e "\n${CARIBBEAN}= ccache statistics:${NC}"
