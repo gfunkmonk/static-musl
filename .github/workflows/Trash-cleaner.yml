@@ -1,7 +1,7 @@
 name: Delete old workflow runs
 on:
-  schedule:
-    - cron: '00 2 * * *'
+#  schedule:
+#    - cron: '00 2 * * *'
   # runs at 2 am UTC every day.
   workflow_dispatch:
     inputs:
