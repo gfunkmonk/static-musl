@@ -40,7 +40,7 @@ diff -ruN a/doc/nanorc.5 nano/doc/nanorc.5
 diff -ruN a/src/definitions.h b/src/definitions.h
 --- a/src/definitions.h	2026-05-15 05:36:18.685049385 -0400
 +++ b/src/definitions.h	2026-05-15 05:39:44.455048033 -0400
-@@ -316,6 +316,7 @@
+@@ -321,6 +321,7 @@
  	PROMPT_BAR,
  	STATUS_BAR,
  	ERROR_MESSAGE,
@@ -165,7 +165,7 @@ diff -ruN a/src/search.c b/src/search.c
 diff -ruN a/src/text.c b/src/text.c
 --- a/src/text.c	2026-05-15 05:36:18.685049385 -0400
 +++ b/src/text.c	2026-05-15 05:51:34.575043370 -0400
-@@ -3203,6 +3203,66 @@
+@@ -3217,6 +3217,66 @@
  						words, P_("word", "words", words),
  						chars, P_("character", "characters", chars));
  }
@@ -239,7 +239,7 @@ diff -ruN a/syntax/nanorc.nanorc nano/syntax/nanorc.nanorc
  color lime "^[[:blank:]]*extendsyntax[[:blank:]]+[[:alpha:]]+[[:blank:]]+(i?color|header|magic|comment|formatter|linter|tabgives)[[:blank:]]+.*"
  
  # The arguments of commands
--color brightgreen "^[[:blank:]]*(set|unset)[[:blank:]]+(afterends|allow_insecure_backup|atblanks|autoindent|backup|boldtext|bookstyle|breaklonglines|casesensitive|colonparsing|constantshow|cutfromcursor|emptyline|historylog|indicator|jumpyscrolling|linenumbers|locking|magic|minibar|mouse|multibuffer|noconvert|nohelp|nonewlines|positionlog|preserve|quickblank|rawsequences|rebinddelete|regexp|saveonexit|showcursor|smarthome|softwrap|solosidescroll|stateflags|tabstospaces|trimblanks|unix|whitespacedisplay|wordbounds|zap|zero)\>"
+-color brightgreen "^[[:blank:]]*(set|unset)[[:blank:]]+(afterends|allow_insecure_backup|atblanks|autoindent|backup|boldtext|bookstyle|breaklonglines|casesensitive|colonparsing|constantshow|cutfromcursor|emptyline|historylog|indicator|jumpyscrolling|linenumbers|locking|magic|minibar|mouse|(new|multi)buffer|noconvert|nohelp|nonewlines|positionlog|preserve|quickblank|rawsequences|rebinddelete|regexp|saveonexit|showcursor|smarthome|softwrap|solosidescroll|stateflags|tabstospaces|trimblanks|unix|whitespacedisplay|wordbounds|zap|zero)\>"
 +color brightgreen "^[[:blank:]]*(set|unset)[[:blank:]]+(afterends|allow_insecure_backup|atblanks|autoindent|backup|boldtext|bookstyle|breaklonglines|casesensitive|colonparsing|constantshow|cutfromcursor|emptyline|historylog|indicator|jumpyscrolling|linenumbers|locking|magic|minibar|mouse|multibuffer|noconvert|nohelp|nosearchwrap|nonewlines|positionlog|preserve|quickblank|rawsequences|rebinddelete|regexp|saveonexit|showcursor|smarthome|softwrap|solosidescroll|stateflags|tabstospaces|trimblanks|unix|whitespacedisplay|wordbounds|zap|zero)\>"
  color brightgreen "^[[:blank:]]*set[[:blank:]]+(backupdir|brackets|errorcolor|functioncolor|keycolor|matchbrackets|minicolor|numbercolor|operatingdir|promptcolor|punct|quotestr|scrollercolor|selectedcolor|speller|spotlightcolor|statuscolor|stripecolor|titlecolor|whitespace|wordchars)[[:blank:]]+"
  color brightgreen "^[[:blank:]]*set[[:blank:]]+(fill[[:blank:]]+-?[[:digit:]]+|(guidestripe|tabsize)[[:blank:]]+[1-9][0-9]*)\>"
