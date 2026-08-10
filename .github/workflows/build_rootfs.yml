@@ -6,7 +6,7 @@ on:
       extra_packages:
         description: 'Extra Alpine packages'
         type: string
-        default: ''
+        default: 'cmake ninja ncurses-dev ncurses-static openssl-dev openssl-libs-static gcc g++ make clang automake autoconf linux-headers pkgconfig libtool perl python3 bash nano mc'
 
 jobs:
   prepare-rootfs:
