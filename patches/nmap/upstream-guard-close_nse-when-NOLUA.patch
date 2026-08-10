@@ -1,0 +1,23 @@
+From: Nmap Upstream
+Subject: Guard close_nse() when NOLUA is enabled
+
+When Nmap is configured with --without-liblua, NOLUA is defined and
+nse_main.h is not included. In that configuration, close_nse() is not
+declared, which causes nmap.cc to fail to compile.
+
+Wrap close_nse() with #ifndef NOLUA to match the other NSE callsites.
+
+diff --git a/nmap.cc b/nmap.cc
+index 33f5245..7e8e6f8 100644
+--- a/nmap.cc
++++ b/nmap.cc
+@@ -1858,6 +1858,8 @@ void nmap_free_mem() {
+   AllProbes::service_scan_free();
+   traceroute_hop_cache_clear();
+   nsock_set_default_engine(NULL);
++#ifndef NOLUA
+   close_nse();
++#endif
+ }
+ 
+ int nmap_main(int argc, char *argv[]) {
