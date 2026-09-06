@@ -20,11 +20,6 @@ run_build_setup "envx" "${ENVX_VERSION}" "${ENVX_TARBALL}" \
 NATIVE_RUST_TARGET="${RUST_TARGET}"
 
 rust_set_cross_target
-# envx currently fails when building jemalloc via cargo-zigbuild on ARM targets.
-# Build natively inside the Alpine chroot for armv7/armhf instead.
-if [[ "${ARCH}" == "armv7" || "${ARCH}" == "armhf" ]]; then
-  RUST_TARGET=""
-fi
 
 if [ -n "${RUST_TARGET}" ]; then
   rust_host_cross_build "envx" "${ENVX_VERSION}" "${ENVX_TARBALL}" "envx-${ENVX_VERSION}" "envx"
