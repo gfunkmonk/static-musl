@@ -645,7 +645,9 @@ run_build_setup() {
 rust_set_cross_target() {
   case "${ARCH}" in
     armhf) RUST_TARGET="arm-unknown-linux-musleabihf"   ;;
-    armv7) RUST_TARGET="armv7-unknown-linux-musleabihf" ;;
+    # cargo-zigbuild + zig currently fails on armv7-unknown-linux-musleabihf
+    # with an unsupported -mcpu value; use the compatible ARM hard-float target.
+    armv7) RUST_TARGET="arm-unknown-linux-musleabihf"   ;;
     *)     RUST_TARGET=""                               ;;
   esac
 }
