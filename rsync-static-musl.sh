@@ -50,7 +50,7 @@ if [ -d ../patches ]; then
    fi
 fi
 echo -e "${PEACH}= Configure source${NC}"
-./configure CC="${CC}" --disable-ipv6 --disable-roll-simd --with-included-zlib=no --disable-md5-asm \
+./configure CC="${CC}" --disable-ipv6 --disable-roll-simd --with-included-zlib=no --disable-md5-asm --disable-idn \
   LDFLAGS='${BLDFLAGS} ${MOLD} ${LPIE}' PKG_CONFIG='${PKGCFG}' EXEEXT='-static' \
   CFLAGS='${BCFLAGS} ${ARCH_FLAGS} ${EXTRA} ${LTO} ${CPIE} -Wno-maybe-uninitialized -Wno-unused-variable -Wno-unused-parameter \
   -Wno-calloc-transposed-args -Wno-unused-but-set-variable -Wno-old-style-definition'
