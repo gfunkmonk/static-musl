@@ -90,14 +90,14 @@ jobs:
           fi
 
           if [[ "${{ github.event_name }}" == "schedule" || "${{ inputs.arch }}" == "all" || "${{ inputs.arch }}" == "" ]]; then
-            echo 'arch_matrix=["x86_64","x86","aarch64","armv7", "armhf"]' >> "$GITHUB_OUTPUT"
+            echo 'arch_matrix=["x86_64","x86","aarch64","armv7"]' >> "$GITHUB_OUTPUT"
           else
             echo 'arch_matrix=["${{ inputs.arch }}"]' >> "$GITHUB_OUTPUT"
           fi
 
   build:
     needs: setup
-    runs-on: ${{ (matrix.arch == 'aarch64' || matrix.arch == 'armv7' || matrix.arch == 'armhf') && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
+    runs-on: ${{ (matrix.arch == 'aarch64' || matrix.arch == 'armv7') && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
     timeout-minutes: 90
     env:
       CCACHE_DIR: ${{ github.workspace }}/.ccache
@@ -288,7 +288,7 @@ jobs:
         body: |
           Static musl build of ${{ matrix.tool }} version ${{ steps.release-version.outputs.version }}
 
-          **Architectures:** x86_64, x86, aarch64, armv7, armhf
+          **Architectures:** x86_64, x86, aarch64, & armv7
           **Built with:** Alpine Linux ${{ env.ALPINE_VERSION }}
 
           **SHA256 Checksums:**
