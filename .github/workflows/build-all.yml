@@ -2,8 +2,8 @@ name: Build all musl static binaries
 
 on:
   # Build at 00:00 every 6th day
-  schedule:
-    - cron: "0 0 */6 * *"
+  #schedule:
+  #  - cron: "0 0 */6 * *"
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
     inputs:
@@ -75,7 +75,7 @@ permissions:
 
 jobs:
   setup:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
       arch_matrix: ${{ steps.set-matrix.outputs.arch_matrix }}
@@ -90,14 +90,14 @@ jobs:
           fi
 
           if [[ "${{ github.event_name }}" == "schedule" || "${{ inputs.arch }}" == "all" || "${{ inputs.arch }}" == "" ]]; then
-            echo 'arch_matrix=["x86_64","x86","aarch64","armv7","armhf"]' >> "$GITHUB_OUTPUT"
+            echo 'arch_matrix=["x86_64","x86","aarch64","armv7", "armhf"]' >> "$GITHUB_OUTPUT"
           else
             echo 'arch_matrix=["${{ inputs.arch }}"]' >> "$GITHUB_OUTPUT"
           fi
 
   build:
     needs: setup
-    runs-on: ${{ matrix.runner }}
+    runs-on: ${{ (matrix.arch == 'aarch64' || matrix.arch == 'armv7' || matrix.arch == 'armhf') && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
     timeout-minutes: 90
     env:
       CCACHE_DIR: ${{ github.workspace }}/.ccache
@@ -107,20 +107,9 @@ jobs:
       matrix:
         tool: ${{ fromJson(needs.setup.outputs.matrix) }}
         arch: ${{ fromJson(needs.setup.outputs.arch_matrix) }}
-        include:
-          - arch: x86_64
-            runner: ubuntu-latest
-          - arch: x86
-            runner: ubuntu-latest
-          - arch: aarch64
-            runner: ubuntu-24.04-arm
-          - arch: armv7
-            runner: ubuntu-24.04-arm
-          - arch: armhf
-            runner: ubuntu-24.04-arm
 
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
 
     - name: Read Alpine version
       id: alpine-version
@@ -154,7 +143,7 @@ jobs:
           run_second_cpp=false
 
     - name: Cache distfiles
-      uses: actions/cache@v5
+      uses: actions/cache@v6
       with:
         path: distfiles/
         key: distfiles-${{ steps.alpine-version.outputs.version }}-${{ matrix.tool }}-${{ hashFiles(format('{0}-static-musl.sh', matrix.tool)) }}
@@ -163,14 +152,14 @@ jobs:
           distfiles-${{ steps.alpine-version.outputs.version }}-
 
     - name: Cache Alpine rootfs
-      uses: actions/cache@v5
+      uses: actions/cache@v6
       with:
         path: minirootfs/alpine-minirootfs-*.tar.gz
         key: alpine-rootfs-${{ steps.alpine-version.outputs.version }}-${{ matrix.arch }}
 
     - name: Try to Restore Prebaked Alpine rootfs
       id: cache-prebaked
-      uses: actions/cache/restore@v5
+      uses: actions/cache/restore@v6
       with:
         path: minirootfs/alpine-base-${{ matrix.arch }}.tar.zst
         key: alpine-prebaked-${{ steps.alpine-version.outputs.version }}-${{ matrix.arch }}
@@ -237,7 +226,7 @@ jobs:
         tool: ${{ fromJson(needs.setup.outputs.matrix) }}
 
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
 
     - name: Read Alpine version
       id: alpine-version

@@ -10,10 +10,10 @@ Forwarded: not-needed
  1 file changed, 20 deletions(-)
 
 diff --git a/Makefile.in b/Makefile.in
-index 7c75c26..96d7d3a 100644
+index c2fe775..6d58abf 100644
 --- a/Makefile.in
 +++ b/Makefile.in
-@@ -204,15 +204,6 @@ configure.sh config.h.in: configure.ac aclocal.m4
+@@ -205,15 +205,6 @@ configure.sh config.h.in: configure.ac aclocal.m4
  	else \
  	    echo "config.h.in has CHANGED."; \
  	fi
@@ -29,7 +29,7 @@ index 7c75c26..96d7d3a 100644
  
  .PHONY: reconfigure
  reconfigure: configure.sh
-@@ -226,17 +217,6 @@ restatus:
+@@ -227,17 +218,6 @@ restatus:
  Makefile: Makefile.in config.status configure.sh config.h.in
  	@if test -f Makefile; then cp -p Makefile Makefile.old; else touch Makefile.old; fi
  	@./config.status

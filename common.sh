@@ -97,7 +97,7 @@ esac
 #   Setup tools    #
 ####################
 for tool in jq curl upx; do
-  bundled="${SCRIPT_DIR}/tools/${tool}/${tool}-${ARCH}"
+  bundled="tools/${tool}/${tool}-${ARCH}"
   if [[ -x "$bundled" ]] && "$bundled" --version &>/dev/null; then
     declare "${tool^^}=$bundled"
   elif command -v "$tool" &>/dev/null; then
@@ -168,7 +168,7 @@ check_cache() {
             fi
         fi
         return 1
-    ) 200>>"$lockfile"
+    ) 200>"$lockfile"
 }
 
 ###########################################
@@ -184,7 +184,7 @@ write_cache() {
         flock -x 200 || return 1
         echo "$2" > "$temp_file"
         mv "$temp_file" "$cache_file"
-    ) 200>>"$lockfile"
+    ) 200>"$lockfile"
 }
 
 #########################################
@@ -287,10 +287,12 @@ get_web_version() {
   local url="$1"
   local regex="$2"
   local version
-  version=$("${CURL}" -s "$url" | grep -oP "$regex" | sort -V | tail -n 1)
+  #version=$("${CURL}" -s "$url" | grep -oP "$regex" | sort -V | tail -n 1)
+  version=$("${CURL}" -s "$url" | grep -oP "$regex" | sort -V | tail -n 1) || true
   if [[ -z "$version" ]]; then
     echo "FAILED"
-    return 1
+    #return 1
+    return 0
   fi
   echo "$version"
 }
@@ -316,7 +318,11 @@ unmount_chroot() {
       grep -F "$(pwd)/${CHROOTDIR}" /proc/mounts | cut -f2 -d" " | sort -r | xargs -r sudo umount -nfR 2>/dev/null || true
     fi
 
-    sleep 3
+    # Re-check immediately; only sleep if still mounted (exponential backoff)
+    if ! grep -qF "$(pwd)/${CHROOTDIR}" /proc/mounts 2>/dev/null; then
+      return 0
+    fi
+    sleep $(( attempt + 1 ))
     (( ++attempt ))
   done
 
@@ -340,8 +346,7 @@ unmount_chroot() {
 # setup_cleanup: register unmount trap for chroot bind mounts #
 ###############################################################
 setup_cleanup() {
-  #trap unmount_chroot EXIT INT TERM
-  trap unmount_chroot EXIT
+  trap unmount_chroot EXIT INT TERM
 }
 
 #####################################################################
@@ -350,7 +355,7 @@ setup_cleanup() {
 install_host_deps() {
   echo -e "${SEA}= install dependencies${NC}"
   local DEBIAN_DEPS=(binutils coreutils patch sed)
-  [ -n "${QEMU_ARCH}" ] && DEBIAN_DEPS+=(qemu-user-static)
+  [ -n "${QEMU_ARCH}" ] && DEBIAN_DEPS+=(qemu-user-binfmt)
   sudo flock /var/lib/apt/lists/lock -c "apt-get update -qq"
   sudo apt-get install -qy --no-install-recommends "${DEBIAN_DEPS[@]}"
 }
@@ -525,13 +530,21 @@ setup_alpine_chroot() {
   # bundled tools
   echo -e "${SAND}= install prebuilt tools${NC}"
   local src
-  for prebuilt in 7zz upx uasm curl jq mold; do
-    src="tools/${prebuilt}/${prebuilt}-${ARCH}"
-    if [[ ! -f "$src" ]]; then
-      echo -e "${CRIMSON}= ERROR: ${src} not found${NC}" >&2
+  #for prebuilt in 7zz upx uasm curl jq mold; do
+  #  src="tools/${prebuilt}/${prebuilt}-${ARCH}"
+  #  if [[ ! -f "$src" ]]; then
+  #    echo -e "${CRIMSON}= ERROR: ${src} not found${NC}" >&2
+  #    exit 1
+  #  fi
+  #  cp "$src" "./${CHROOTDIR}/usr/local/bin/${prebuilt}"
+  #done
+  for tool_name in 7zz upx uasm curl jq mold; do
+    local tool_src="tools/${tool_name}/${tool_name}-${ARCH}"
+    if [[ ! -f "$tool_src" ]]; then
+      echo -e "${CRIMSON}= ERROR: ${tool_src} not found${NC}" >&2
       exit 1
     fi
-    cp "$src" "./${CHROOTDIR}/usr/local/bin/${prebuilt}"
+    cp "$tool_src" "./${CHROOTDIR}/usr/local/bin/${tool_name}"
   done
 }
 
@@ -594,15 +607,6 @@ mount_chroot() {
     sudo mount --bind "${CCACHE_DIR}" "./${CHROOTDIR}/${CCACHE_CHROOT_DIR}"
     sudo mount --make-slave "./${CHROOTDIR}/${CCACHE_CHROOT_DIR}"
     sudo mkdir -p "./${CHROOTDIR}/${CCACHE_LOG_DIR}"
-  fi
-  if [ -n "${CROSS_COMPILE_HOST_PATH:-}" ]; then
-    mkdir -p "${CHROOTDIR}/opt/cross"
-    mountpoint -q "${CHROOTDIR}/opt/cross" || mount --bind --make-slave "$CROSS_COMPILE_HOST_PATH" "${CHROOTDIR}/opt/cross"
-    # Inject the compiler paths into the chroot's environment
-    export CC="/opt/cross/bin/${CROSS_PREFIX}gcc"
-    export AR="/opt/cross/bin/${CROSS_PREFIX}ar"
-    export STRIP="/opt/cross/bin/${CROSS_PREFIX}strip"
-    export PATH="/opt/cross/bin:${PATH}"
   fi
 }
 

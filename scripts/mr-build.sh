@@ -18,7 +18,6 @@ SELECTED_TOOLS=""
 PARALLEL_JOBS=1
 CHECKSUM=false
 CLEAN_DIST=false
-USE_CROSS=false  # New Flag
 
 JUNEBUD="\033[38;2;189;218;87m"
 SKY="\033[38;2;135;206;250m"
@@ -52,45 +51,11 @@ usage() {
   echo -e "  ${SKY}--dry-run${NC}          Show which scripts would be executed without running them."
   echo -e "  ${SKY}--arch <arch>${NC}      Target architecture (x86_64, aarch64, armv7, armhf, x86)."
   echo -e "                       Overrides ARCH environment variable."
-  echo -e "  ${SKY}--cross${NC}            Download and use prebuilt musl-cross toolchains for non-native builds."
-  echo -e ""
   echo -e "  ${SKY}--checksum${NC}         Generate SHA256 checksums for all files in dist/ after building."
   echo -e "  ${SKY}--clean${NC}            Remove dist/*.tar.xz before building."
   echo -e "  ${SKY}--help${NC}             Display this help message and exit."
   echo -e ""
   exit 0
-}
-
-setup_cross_toolchain() {
-    local arch="${ARCH:-x86_64}"
-    [ "$arch" == "x86_64" ] && return 0
-
-    local tc_name=""
-    case "$arch" in
-        aarch64) tc_name="aarch64-unknown-linux-musl" ;;
-        armv7)   tc_name="armv7-unknown-linux-musleabihf" ;;
-        armhf)   tc_name="arm-unknown-linux-musleabihf" ;;
-        x86|i686) tc_name="i686-unknown-linux-musl" ;;
-        *) return 0 ;;
-    esac
-
-    local toolchain_dir="$(pwd)/toolchains"
-    local tc_path="${toolchain_dir}/${tc_name}"
-
-    if [ ! -d "$tc_path" ]; then
-        echo -e "${NEONBLUE}= Downloading $tc_name toolchain...${NC}"
-        mkdir -p "$toolchain_dir"
-        if [ "$CLANG_CROSS" = true ]; then
-          curl -L "https://github.com/gfunkmonk/clang-cross/releases/download/magazine/${tc_name}.tar.xz" | tar -xJ -C "$toolchain_dir"
-        else
-          curl -L "https://github.com/gfunkmonk/musl-cross/releases/download/prevalence/${tc_name}.tar.xz" | tar -xJ -C "$toolchain_dir"
-        fi
-    fi
-
-    # Export variables for sub-scripts to inherit
-    export CROSS_BIN_PATH="$tc_path"
-    local prefix=$(ls "${tc_path}/bin"/*-gcc | head -n1 | xargs basename | sed 's/gcc//')
-    export CROSS_PREFIX="$prefix"
 }
 
 run_tui() {
@@ -136,13 +101,11 @@ run_tui() {
     "resume"   "Skip existing" OFF \
     "checksum" "Generate SHA256" OFF \
     "clean"    "Clean dist/" OFF \
-    "cross"    "Cross-compile" OFF \
     2>&1 >/dev/tty)
 
   [[ $OPTIONS == *"resume"* ]] && RESUME=true
   [[ $OPTIONS == *"checksum"* ]] && CHECKSUM=true
   [[ $OPTIONS == *"clean"* ]] && CLEAN_DIST=true
-  [[ $OPTIONS == *"cross"* ]] && USE_CROSS=true
 
 }
 
@@ -178,9 +141,6 @@ while [[ $# -gt 0 ]]; do
     --clean)
       CLEAN_DIST=true
       ;;
-    --cross)
-      USE_CROSS=true
-      ;;
     --tool)
       SELECTED_TOOLS="$2"
       shift
@@ -190,7 +150,8 @@ while [[ $# -gt 0 ]]; do
       echo "------------------------------------------------"
       for script in *-static-musl.sh; do
         b_name=$(echo "$script" | sed 's/-static-musl//; s/\.sh//')
-        latest=$(ls dist/${b_name}-*-*.tar.xz 2>/dev/null | tail -n 1 | sed "s|dist/||; s|${b_name}-||; s|-${ARCH:-.*}.tar.xz||")
+        #latest=$(ls dist/${b_name}-*-*.tar.xz 2>/dev/null | tail -n 1 | sed "s|dist/||; s|${b_name}-||; s|-${ARCH:-.*}.tar.xz||")
+        latest=$(ls "${PWD}/dist/${b_name}"-*-*.tar.xz 2>/dev/null | tail -n 1 | sed "s|dist/||; s|${b_name}-||; s|-${ARCH:-.*}.tar.xz||")
         printf "${PEACH}%-15s${NC} %s\n" "$b_name" "${latest:-[No build found]}"
       done
       exit 0
@@ -202,11 +163,6 @@ while [[ $# -gt 0 ]]; do
   esac
   shift
 done
-
-# Initialize Cross-Toolchain if requested
-if [ "$USE_CROSS" = true ]; then
-    setup_cross_toolchain
-fi
 
 LOG_DIR="${PWD}/logs"
 LOG_FILE="${LOG_DIR}/build_log.txt"
@@ -267,13 +223,6 @@ for file in *-static-musl.sh; do
     (
         # Prevent chroot collision by giving each job a unique directory name
         export CHROOTDIR="chroot-${ARCH:-native}-${bin_name}"
-
-        # --- THE FIX: Bridge the Toolchain into the Chroot ---
-        if [ "$USE_CROSS" = true ] && [ -n "${CROSS_BIN_PATH:-}" ]; then
-            # We wait until the sub-script creates the directory, or we pre-create it
-            # Since common.sh handles mounting, we just pass the info
-            export CROSS_COMPILE_HOST_PATH="$CROSS_BIN_PATH"
-        fi
 
         echo -e "${LAGOON}Started: ${LEMON}$file${BWHITE} (Log: ${bin_name}.txt)${NC}" | tee -a "$LOG_FILE"
         chmod +x "$file"

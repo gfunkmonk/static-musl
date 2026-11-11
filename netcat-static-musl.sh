@@ -31,7 +31,7 @@ if [ -f ../patches/base64.c ]; then
     echo -e "${MAUVE}= Moving base64.c to source dir${NC}"
     mv ../patches/base64.c .
 else
-    echo -e "${TOMATO}= Error: file 'base64.c' does not exist!!."
+    echo -e "${TOMATO}= Error: file 'base64.c' does not exist!!.${NC}"
 fi
 if [ -d ../patches ]; then
    # Check if directory is not empty
@@ -40,7 +40,7 @@ if [ -d ../patches ]; then
        for p in ../patches/*; do
            if [ -f "\$p" ]; then
                echo -e "${NEONBLUE}Applying \$(basename "\$p")...${NC}"
-               patch -p1 --fuzz=4 < "\$p"
+               patch -p1 --fuzz=2 < "\$p"
            fi
        done
    fi

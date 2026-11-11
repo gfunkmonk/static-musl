@@ -1,0 +1,10 @@
+--- a/netcat.c	2026-05-30 21:24:03.959043349 -0400
++++ b/netcat.c	2026-05-30 22:08:40.649053782 -0400
+@@ -89,6 +89,7 @@
+ # define	IPTOS_DSCP_EF		0xb8
+ #endif /* IPTOS_DSCP_EF */
+ 
++# define IPTOS_DSCP_VA		0xb0
+ 
+ #include <ctype.h>
+ #include <err.h>

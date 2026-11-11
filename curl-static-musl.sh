@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -euox pipefail
+
 . "$(dirname "${BASH_SOURCE[0]}")/common.sh"
 
 echo -e "${VIOLET}= fetching latest curl version${NC}"
@@ -36,7 +37,7 @@ if [ -d ../patches ]; then
        for p in ../patches/*; do
            if [ -f "\$p" ]; then
                echo -e "${NEONBLUE}Applying \$(basename "\$p")...${NC}"
-               patch -p1 --fuzz=4 < "\$p"
+               patch -p1 --fuzz=2 < "\$p"
            fi
        done
    fi
