@@ -354,7 +354,7 @@ setup_cleanup() {
 #####################################################################
 install_host_deps() {
   echo -e "${SEA}= install dependencies${NC}"
-  local DEBIAN_DEPS=(binutils coreutils patch sed)
+  local DEBIAN_DEPS=(binutils coreutils patch sed ca-certificates)
   [ -n "${QEMU_ARCH}" ] && DEBIAN_DEPS+=(qemu-user-binfmt)
   sudo flock /var/lib/apt/lists/lock -c "apt-get update -qq"
   sudo apt-get install -qy --no-install-recommends "${DEBIAN_DEPS[@]}"
